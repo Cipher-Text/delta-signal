@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { apiGet } from '../../../../lib/api';
 import { getCurrentUser } from '../../../../lib/current-user';
-import { routes, type CitizenReport, type ReportComment, type ReportMedia } from '@nature-grid/contracts';
+import { routes, type CitizenReport, type ReportComment, type ReportMedia } from '@delta-signal/contracts';
 import { titleCase, relativeTime } from '../../../../lib/format';
 import { addCommentAction } from '../../../../lib/report-actions';
 

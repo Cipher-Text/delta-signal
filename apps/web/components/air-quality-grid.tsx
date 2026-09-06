@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { routes, type DistrictWithClimate } from '@nature-grid/contracts';
+import { routes, type DistrictWithClimate } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 
 // WHO PM2.5 AQI breakpoints

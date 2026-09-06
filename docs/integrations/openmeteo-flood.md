@@ -4,7 +4,7 @@
 
 Implemented.
 
-Nature Grid fetches a 30-day daily river-discharge forecast for every seeded Bangladesh district. This is modelled GloFAS discharge context, not an official Bangladesh flood warning.
+Delta Signal fetches a 30-day daily river-discharge forecast for every seeded Bangladesh district. This is modelled GloFAS discharge context, not an official Bangladesh flood warning.
 
 ## Provider
 
@@ -54,7 +54,7 @@ OpenMeteo documents:
 - OpenMeteo suggests varying coordinates by about 0.1 degrees to find a more representative river-discharge point.
 - This API gives simulated river discharge, not official Bangladesh flood warnings.
 
-## Possible Nature Grid Use
+## Possible Delta Signal Use
 
 Candidate use cases:
 

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { apiGet } from '../../../../lib/api';
 import { getCurrentUser } from '../../../../lib/current-user';
 import { joinFromDetailAction } from '../../../../lib/restoration-actions';
-import { routes, type RestorationProject } from '@nature-grid/contracts';
+import { routes, type RestorationProject } from '@delta-signal/contracts';
 import { titleCase, relativeTime } from '../../../../lib/format';
 
 const STATUS_BADGE: Record<string, string> = {

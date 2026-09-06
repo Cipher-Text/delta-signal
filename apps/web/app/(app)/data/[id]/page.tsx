@@ -10,7 +10,7 @@ import {
   type Occurrence,
   type PaginatedEnvelope,
   type Species,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { titleCase } from '../../../../lib/format';
 
 const ACCESS_LABEL: Record<string, { label: string; variant: string }> = {

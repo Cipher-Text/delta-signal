@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
-import { routes, type WaterBodyPagedResponse, type DistrictSummary, type WaterBodyType, type HydrologicalClass } from '@nature-grid/contracts';
+import { routes, type WaterBodyPagedResponse, type DistrictSummary, type WaterBodyType, type HydrologicalClass } from '@delta-signal/contracts';
 import { titleCase } from '../../../lib/format';
 
 const TYPE_TAG: Record<string, string> = {

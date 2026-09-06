@@ -335,7 +335,7 @@ Add urban AQI data from WAQI (World Air Quality Index) for station-level granula
 
 Built the `apps/web` routes that the nav (`public-nav.tsx`, `app-sidebar.tsx`) already linked to but that didn't exist yet — all were 404ing. Reused the sidebar `AppSidebar` shell established for `/profile` (M13), not a new layout per page.
 
-**Status (2026-08-17):** All 8 tasks done. Tasks 1–3 (`/data`, `/reports`, `/alerts`) — see `docs/progress.md` "App-Shell Pages: Data, Reports, Alerts". Building `/alerts`'s role-conditional CTA also surfaced and fixed a critical, unrelated bug: every role-gated endpoint in the API was rejecting all users due to an enum-casing mismatch between `@nature-grid/shared` (lowercase) and Prisma (uppercase) — see `docs/progress.md` "Critical RBAC Fix". Tasks 4–8 (`/observations`, `/biodiversity`, `/restoration`, `/community`, active-link check) — see `docs/progress.md` "App-Shell Pages: Observations, Biodiversity, Restoration, Community".
+**Status (2026-08-17):** All 8 tasks done. Tasks 1–3 (`/data`, `/reports`, `/alerts`) — see `docs/progress.md` "App-Shell Pages: Data, Reports, Alerts". Building `/alerts`'s role-conditional CTA also surfaced and fixed a critical, unrelated bug: every role-gated endpoint in the API was rejecting all users due to an enum-casing mismatch between `@delta-signal/shared` (lowercase) and Prisma (uppercase) — see `docs/progress.md` "Critical RBAC Fix". Tasks 4–8 (`/observations`, `/biodiversity`, `/restoration`, `/community`, active-link check) — see `docs/progress.md` "App-Shell Pages: Observations, Biodiversity, Restoration, Community".
 
 **Target:** `apps/web/app/{data,observations,reports,alerts,biodiversity,restoration,community}/`
 
@@ -385,7 +385,7 @@ Both phases landed back-to-back; see `docs/progress.md` "Phase 6a Complete" and 
 **Phase 6b (regression safety net)** — partially done:
 - First test suite (52 tests across 5 spec files) and CI workflow — Done (2026-08-21). Test suite expanded to 153 tests in 11 spec files (2026-08-29) — reports, observations, restoration, notifications, gamification, media service specs added.
 - ESLint — Done (2026-08-21, see 6a).
-- API contract enforcement — Done (2026-08-22). `@nature-grid/contracts` added as devDep to `apps/api`. `src/common/contract-types.typecheck.ts` uses `Jsonified<T>` utility + TypeScript structural assignment to verify service return types match contract types; caught by `tsc --noEmit` in CI. Also fixed `include`→`select` discipline in `datasets.service.ts`, `reports.service.ts` (`getById`), `alerts.service.ts` (`getById`), and four weather read methods.
+- API contract enforcement — Done (2026-08-22). `@delta-signal/contracts` added as devDep to `apps/api`. `src/common/contract-types.typecheck.ts` uses `Jsonified<T>` utility + TypeScript structural assignment to verify service return types match contract types; caught by `tsc --noEmit` in CI. Also fixed `include`→`select` discipline in `datasets.service.ts`, `reports.service.ts` (`getById`), `alerts.service.ts` (`getById`), and four weather read methods.
 - E2e tests — Not started.
 - Accessibility pass — Not started.
 
@@ -402,7 +402,7 @@ Cross-check this table against `docs/roadmap.md` Phase 6 and Phase 7 before rely
 | PostGIS `geography` fields | lat/lng Float is sufficient for M1–M9; PostGIS replaces when polygon queries needed |
 | BMD / FFWC integration | Requires gov approval or scraping; start after OpenMeteo/WAQI proven |
 | MinIO media storage | **No longer deferred** — `media` module fully implemented with `StorageService` (S3/MinIO), `POST /media/upload`, `POST /media/presign`. Requires `STORAGE_*` env vars. |
-| Extended user profiles (CitizenProfile, ResearcherProfile, OrganizationProfile) | Add when profile UI is built — schema straightforward, not blocking. Nature Grid uses a flat `User` + `UserRole` for now; per-role profile extensions are the natural next step once the profile page grows. |
+| Extended user profiles (CitizenProfile, ResearcherProfile, OrganizationProfile) | Add when profile UI is built — schema straightforward, not blocking. Delta Signal uses a flat `User` + `UserRole` for now; per-role profile extensions are the natural next step once the profile page grows. |
 | Agricultural stress monitoring | Soil moisture, crop stress indicators, farmer alerts. Depends on Phase 7 satellite ingestion — cannot start before it. |
 | Tree-level restoration tracking | GPS-tagged individual trees, growth photos, survival-rate analytics. `RestorationProject`/`RestorationParticipant` track projects and people, not individual plantings. |
 | Notification / subscription system | **No longer deferred** — the dependency is met (alerts and observations both shipped 2026-08-17 to 2026-08-19). Scheduled as roadmap Phase 6c, including delivery transport, which was never in this plan. |

@@ -4,9 +4,9 @@
 
 | Image | Dockerfile | Port | Notes |
 |---|---|---|---|
-| `nature-grid/api` | `apps/api/Dockerfile` | 3001 | NestJS — runs `prisma migrate deploy` on start |
-| `nature-grid/web` | `apps/web/Dockerfile` | 3000 | Next.js standalone |
-| `nature-grid/admin` | `apps/admin/Dockerfile` | 3002 | Next.js standalone (shell only) |
+| `delta-signal/api` | `apps/api/Dockerfile` | 3001 | NestJS — runs `prisma migrate deploy` on start |
+| `delta-signal/web` | `apps/web/Dockerfile` | 3000 | Next.js standalone |
+| `delta-signal/admin` | `apps/admin/Dockerfile` | 3002 | Next.js standalone (shell only) |
 
 All three build from the **repo root** as the Docker context — workspace packages
 (`packages/shared`, `packages/contracts`, `packages/database`) are required at
@@ -35,24 +35,24 @@ docker compose -f docker-compose.prod.yml down
 |---|---|---|
 | `POSTGRES_PASSWORD` | Yes | No default — will fail to start without it |
 | `JWT_SECRET` | Yes | ≥ 32 chars, no known placeholders — `openssl rand -base64 48` |
-| `POSTGRES_DB` | No | Default `nature_grid` |
-| `POSTGRES_USER` | No | Default `nature_grid` |
+| `POSTGRES_DB` | No | Default `delta_signal` |
+| `POSTGRES_USER` | No | Default `delta_signal` |
 | `CORS_ORIGIN` | No | Default `http://localhost:3000` |
 | `API_URL` | No | Default `http://api:3001` (internal service name) |
 | `SMTP_HOST` | No | Email delivery disabled if absent |
 | `SMTP_PORT` | No | Default `587` |
 | `SMTP_USER` | No | |
 | `SMTP_PASS` | No | |
-| `SMTP_FROM` | No | Default `Nature Grid Alerts <alerts@naturegrid.bd>` |
+| `SMTP_FROM` | No | Default `Delta Signal Alerts <alerts@deltasignal.org>` |
 
 ## Building individual images
 
 ```bash
 # Build only the API image (from repo root)
-docker build -f apps/api/Dockerfile -t nature-grid/api .
+docker build -f apps/api/Dockerfile -t delta-signal/api .
 
 # Build only the web image
-docker build -f apps/web/Dockerfile -t nature-grid/web .
+docker build -f apps/web/Dockerfile -t delta-signal/web .
 ```
 
 ## Database migrations

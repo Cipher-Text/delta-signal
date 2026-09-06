@@ -29,7 +29,7 @@ export class StorageService {
     const accessKey = config.get<string>('STORAGE_ACCESS_KEY');
     const secretKey = config.get<string>('STORAGE_SECRET_KEY');
     const region    = config.get<string>('STORAGE_REGION') ?? 'us-east-1';
-    this.bucket     = config.get<string>('STORAGE_BUCKET') ?? 'nature-grid';
+    this.bucket     = config.get<string>('STORAGE_BUCKET') ?? 'delta-signal';
     const usePathStyle = config.get<string>('STORAGE_USE_PATH_STYLE') !== 'false';
 
     // Public URL used to build the object's address in responses.

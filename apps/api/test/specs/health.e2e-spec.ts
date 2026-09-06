@@ -18,7 +18,7 @@ describe('Health endpoint (e2e)', () => {
 
     expect(res.body).toMatchObject({
       status: 'ok',
-      service: 'nature-grid-api',
+      service: 'delta-signal-api',
       version: expect.any(String),
       timestamp: expect.any(String),
     });

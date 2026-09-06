@@ -23,7 +23,7 @@ export default async function VerifyEmailPage({
         <div className="auth-panel">
           <div className="auth-brand">
             <div className="brand-mark">NG</div>
-            <span>Nature Grid</span>
+            <span>Delta Signal</span>
           </div>
           <div className="panel auth-panel-card">
             <div className="panel-header">
@@ -63,7 +63,7 @@ export default async function VerifyEmailPage({
         <div className="auth-panel">
           <div className="auth-brand">
             <div className="brand-mark">NG</div>
-            <span>Nature Grid</span>
+            <span>Delta Signal</span>
           </div>
           <div className="panel auth-panel-card">
             <div className="panel-header">
@@ -73,7 +73,7 @@ export default async function VerifyEmailPage({
               </div>
             </div>
             <p className="auth-switch">
-              <Link href="/reports">Continue to Nature Grid</Link>
+              <Link href="/reports">Continue to Delta Signal</Link>
             </p>
           </div>
         </div>
@@ -86,7 +86,7 @@ export default async function VerifyEmailPage({
       <div className="auth-panel">
         <div className="auth-brand">
           <div className="brand-mark">NG</div>
-          <span>Nature Grid</span>
+          <span>Delta Signal</span>
         </div>
         <div className="panel auth-panel-card">
           <div className="panel-header">

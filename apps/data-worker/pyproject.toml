@@ -1,7 +1,7 @@
 [project]
-name = "nature-grid-data-worker"
+name = "delta-signal-data-worker"
 version = "0.1.0"
-description = "GIS and scientific data worker for Nature Grid"
+description = "GIS and scientific data worker for Delta Signal"
 requires-python = ">=3.12"
 dependencies = []
 

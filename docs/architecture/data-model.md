@@ -1,6 +1,6 @@
 # Data Model
 
-Nature Grid uses PostgreSQL as the primary database. The Prisma schema lives at `packages/database/prisma/schema.prisma`. The Prisma client is regenerated via `pnpm run db:generate` from the `packages/database` directory.
+Delta Signal uses PostgreSQL as the primary database. The Prisma schema lives at `packages/database/prisma/schema.prisma`. The Prisma client is regenerated via `pnpm run db:generate` from the `packages/database` directory.
 
 Current state: **61 models, 32 enums, 12 migrations applied.**
 
@@ -181,7 +181,7 @@ All 4 weather tables are keyed by `districtId`, not raw `lat`/`lng` proximity ma
 
 `NationalEmissionReading` stores annual national GHG data fetched from the World Bank Climate Change API. One row per `(year, indicatorCode)` combination. Four indicators are synced: Total GHG, CO₂, CH₄, and N₂O. Values are in Mt CO₂e, excluding land-use change (LULUCF). Data covers 1976–2024 (66 records per indicator; 2025 is null and skipped). Populated weekly by `EmissionsScheduler` and on first boot. No user-input write paths. Implemented in `apps/api/src/emissions/`. Dataset catalog entry: "Emissions Inventory" (AIR_QUALITY / PUBLIC).
 
-Note `carbonMonoxide` on `HourlyAirQuality` is an OpenMeteo air-quality pollutant reading. It is unrelated to carbon accounting or footprint tracking, which Nature Grid does not model yet — that is roadmap Phase 7.
+Note `carbonMonoxide` on `HourlyAirQuality` is an OpenMeteo air-quality pollutant reading. It is unrelated to carbon accounting or footprint tracking, which Delta Signal does not model yet — that is roadmap Phase 7.
 
 ## Industrial Sites
 

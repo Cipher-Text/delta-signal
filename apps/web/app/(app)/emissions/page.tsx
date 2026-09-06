@@ -1,5 +1,5 @@
 import { apiGet } from '../../../lib/api';
-import { routes, type NationalEmissionReading, type EmissionIndicator } from '@nature-grid/contracts';
+import { routes, type NationalEmissionReading, type EmissionIndicator } from '@delta-signal/contracts';
 
 const INDICATOR_LABEL: Record<string, string> = {
   'EN.GHG.ALL.MT.CE.AR5': 'Total GHG',

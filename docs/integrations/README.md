@@ -1,6 +1,6 @@
 # Third-Party Data Sources
 
-Nature Grid keeps one source note per external data provider. These files document what is fetched, where it is stored, how often it syncs, and what is intentionally not covered yet.
+Delta Signal keeps one source note per external data provider. These files document what is fetched, where it is stored, how often it syncs, and what is intentionally not covered yet.
 
 | Source | Status | Data |
 | --- | --- | --- |

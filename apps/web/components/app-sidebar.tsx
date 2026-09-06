@@ -71,7 +71,7 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
       <div className="mobile-header">
         <Link className="mobile-brand" href="/reports" onClick={close}>
           <span className="brand-mark">NG</span>
-          <span>Nature Grid</span>
+          <span>Delta Signal</span>
         </Link>
         <button
           className="mobile-menu-btn"
@@ -98,7 +98,7 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
           <Link className="sidebar-brand" href="/reports" onClick={close}>
             <div className="brand-mark">NG</div>
             <div className="sidebar-brand-text">
-              <strong>Nature Grid</strong>
+              <strong>Delta Signal</strong>
               <span>Environmental intelligence</span>
             </div>
           </Link>

@@ -21,7 +21,7 @@ OpenMeteo provides weather and air-quality data for seeded Bangladesh districts.
 
 ## Fetched Data
 
-The selected variables below are a deliberately small subset of OpenMeteo's available weather and air-quality variables. The official forecast API supports additional hourly/current/daily fields such as pressure, visibility, dewpoint, wind gusts, soil data, solar radiation, and model selection. The official air-quality API also supports AQI fields, pollen, dust, aerosol optical depth, and additional gases, but Nature Grid does not request those yet.
+The selected variables below are a deliberately small subset of OpenMeteo's available weather and air-quality variables. The official forecast API supports additional hourly/current/daily fields such as pressure, visibility, dewpoint, wind gusts, soil data, solar radiation, and model selection. The official air-quality API also supports AQI fields, pollen, dust, aerosol optical depth, and additional gases, but Delta Signal does not request those yet.
 
 ### Current Weather
 
@@ -83,13 +83,13 @@ These pollutant fields are returned as hourly values. OpenMeteo documents PM, CO
 
 ### Air-Quality Fields Not Requested Yet
 
-OpenMeteo also exposes air-quality variables that Nature Grid does not currently request or store:
+OpenMeteo also exposes air-quality variables that Delta Signal does not currently request or store:
 
 - European AQI: `european_aqi`, `european_aqi_pm2_5`, `european_aqi_pm10`, `european_aqi_nitrogen_dioxide`, `european_aqi_ozone`, `european_aqi_sulphur_dioxide`
 - United States AQI: `us_aqi`, `us_aqi_pm2_5`, `us_aqi_pm10`, `us_aqi_nitrogen_dioxide`, `us_aqi_ozone`, `us_aqi_sulphur_dioxide`, `us_aqi_carbon_monoxide`
 - Other pollutants and atmospheric fields: `carbon_dioxide`, `aerosol_optical_depth`, `dust`, `methane`, `uv_index_clear_sky`, and several Europe-only pollen fields
 
-The OpenMeteo air-quality API also supports `current=` variables. Nature Grid currently uses only `hourly=` air-quality requests and then serves latest rows from stored hourly data.
+The OpenMeteo air-quality API also supports `current=` variables. Delta Signal currently uses only `hourly=` air-quality requests and then serves latest rows from stored hourly data.
 
 ## Storage
 
@@ -114,13 +114,13 @@ Each scheduler run creates an ingestion job when the `OpenMeteo` provider exists
 
 ## Forecast Windows
 
-Nature Grid currently requests:
+Delta Signal currently requests:
 
 - 3 days for hourly weather.
 - 3 days for hourly air quality.
 - 7 days for daily weather.
 
-OpenMeteo forecast docs allow weather forecasts up to 16 days. OpenMeteo air-quality docs default to 5 days and allow up to 7 days. The shorter Nature Grid hourly windows are an implementation choice, not an OpenMeteo API limit.
+OpenMeteo forecast docs allow weather forecasts up to 16 days. OpenMeteo air-quality docs default to 5 days and allow up to 7 days. The shorter Delta Signal hourly windows are an implementation choice, not an OpenMeteo API limit.
 
 ## Source Notes
 

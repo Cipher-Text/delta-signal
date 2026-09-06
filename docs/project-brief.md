@@ -2,13 +2,13 @@
 
 ## Mission
 
-Nature Grid exists to make environmental information in Bangladesh easier to collect, verify, analyze, and act on.
+Delta Signal exists to make environmental information in Bangladesh easier to collect, verify, analyze, and act on.
 
 Environmental problems in Bangladesh are not hidden — communities see them every day. A river changes color overnight. Fish die in a pond near a garment factory. Air in Dhaka becomes unbreathable in winter. Floods arrive earlier than expected. Forests are cleared quietly over weeks.
 
 The problem is not that this information does not exist. The problem is that it is fragmented. Citizens report on social media. Researchers publish in journals. Government agencies send alerts through separate systems. NGOs log restoration work in spreadsheets. None of it talks to the same map, the same database, or the same public record.
 
-Nature Grid is the shared layer. A single place where all of that comes together: live data, human observation, scientific evidence, and official warnings — organized by location, verified by role, and visible to anyone.
+Delta Signal is the shared layer. A single place where all of that comes together: live data, human observation, scientific evidence, and official warnings — organized by location, verified by role, and visible to anyone.
 
 ---
 
@@ -16,7 +16,7 @@ Nature Grid is the shared layer. A single place where all of that comes together
 
 A trusted civic environmental intelligence platform — starting with Bangladesh, designed to extend to other regions.
 
-Long term, Nature Grid should be the place a district official checks before issuing a flood advisory, the place a journalist links to when writing about Dhaka air quality, the place a school teacher opens to show students what deforestation looks like in their upazila, and the place a USAID partner uses to scope a conservation intervention.
+Long term, Delta Signal should be the place a district official checks before issuing a flood advisory, the place a journalist links to when writing about Dhaka air quality, the place a school teacher opens to show students what deforestation looks like in their upazila, and the place a USAID partner uses to scope a conservation intervention.
 
 That trust is built through:
 
@@ -35,7 +35,7 @@ Bangladesh has flood forecasts at BWDB, air quality data scattered across CASE a
 
 ### Local context is missing from international datasets
 
-OpenMeteo can return temperature for a coordinate. GBIF can return bird sightings for a bounding box. But neither of them knows that a specific union has a river running through it, that a particular upazila flooded three times last monsoon, or that an NGO has been running a mangrove restoration project 2 km from that coordinate. Nature Grid adds the local layer.
+OpenMeteo can return temperature for a coordinate. GBIF can return bird sightings for a bounding box. But neither of them knows that a specific union has a river running through it, that a particular upazila flooded three times last monsoon, or that an NGO has been running a mangrove restoration project 2 km from that coordinate. Delta Signal adds the local layer.
 
 ### Citizen knowledge is not captured
 
@@ -43,7 +43,7 @@ Bangladesh has some of the highest population density in the world. People notic
 
 ### Alerts are isolated
 
-When a cyclone or flood warning is issued, it travels through government channels that many citizens do not have access to. A farmer in a low-lying char area may not receive a warning until it is too late. Nature Grid's alert and notification system is designed to close that gap — subscribe by district, receive by email.
+When a cyclone or flood warning is issued, it travels through government channels that many citizens do not have access to. A farmer in a low-lying char area may not receive a warning until it is too late. Delta Signal's alert and notification system is designed to close that gap — subscribe by district, receive by email.
 
 ---
 
@@ -53,37 +53,37 @@ When a cyclone or flood warning is issued, it travels through government channel
 
 Razia lives near the Shitalakshya river. She has watched water quality deteriorate for years as garment factories discharge waste upstream. She photographs dead fish, discolored water, and foam at the bank. She wants to report what she sees to someone who can act on it — but she does not know who that is, and she has no confidence that a Facebook post will do anything.
 
-On Nature Grid, Razia creates a citizen account, files a report with her photos and GPS location, and tracks its status as moderators review it and the district environmental office is notified. Her verified report becomes part of the public record for her area.
+On Delta Signal, Razia creates a citizen account, files a report with her photos and GPS location, and tracks its status as moderators review it and the district environmental office is notified. Her verified report becomes part of the public record for her area.
 
 ### Environmental Researcher — Tanvir, 28, BUET
 
 Tanvir studies wetland habitat changes in the Haor basin. He takes water quality readings and documents vegetation changes across multiple sites over months. His data is scientifically valuable but trapped in spreadsheets and a departmental database that is never public.
 
-On Nature Grid, Tanvir submits structured observations with coordinates, measurement type, and evidence. A moderator validates his work, promoting it to research-grade. His observations feed into the district biodiversity record and become citable evidence for other researchers.
+On Delta Signal, Tanvir submits structured observations with coordinates, measurement type, and evidence. A moderator validates his work, promoting it to research-grade. His observations feed into the district biodiversity record and become citable evidence for other researchers.
 
 ### NGO Project Manager — Farida, 41, Khulna
 
 Farida manages a mangrove restoration project in the Sundarbans buffer zone for a local environmental NGO. Her organization planted 50,000 saplings over the last two years and wants to document progress publicly to attract donor funding and demonstrate impact.
 
-On Nature Grid, Farida's organization has a profile. She creates a restoration project, logs species planted and area covered, and adds periodic update observations. The project shows up publicly on the restoration map with a progress timeline.
+On Delta Signal, Farida's organization has a profile. She creates a restoration project, logs species planted and area covered, and adds periodic update observations. The project shows up publicly on the restoration map with a progress timeline.
 
 ### District Official — Karim, 52, Sylhet
 
 Karim works in the district environment office. During monsoon season he needs to issue flood impact warnings quickly, track which unions are affected, and coordinate with upazila officers. Currently he sends WhatsApp messages to a group.
 
-On Nature Grid, Karim has a government role. He creates an alert, selects affected zones, sets severity, and publishes. Alert subscribers in those zones receive email notifications. The alert appears on the public board and stays in the historical record after it expires.
+On Delta Signal, Karim has a government role. He creates an alert, selects affected zones, sets severity, and publishes. Alert subscribers in those zones receive email notifications. The alert appears on the public board and stays in the historical record after it expires.
 
 ### Academic Field Scientist — Ayesha, 36, Jahangirnagar University
 
 Ayesha studies bird migration patterns in the Tanguar Haor wetland. She uses eBird and GBIF to cross-reference her sightings but wants a local platform that connects her biodiversity data with the reporting and climate data from the same location.
 
-On Nature Grid, Ayesha submits species observations tagged to a specific union. She can cross-reference her sightings against the union's 30-day climate summary (temperature trend, precipitation), nearby citizen reports (water quality issues), and GBIF-synced species occurrence records — all in the same view.
+On Delta Signal, Ayesha submits species observations tagged to a specific union. She can cross-reference her sightings against the union's 30-day climate summary (temperature trend, precipitation), nearby citizen reports (water quality issues), and GBIF-synced species occurrence records — all in the same view.
 
 ---
 
 ## Value Proposition by Audience
 
-| Audience | What Nature Grid gives them |
+| Audience | What Delta Signal gives them |
 |---|---|
 | Citizens | A trusted place to file environmental reports with real verification and public follow-through |
 | Researchers | A public platform for validated observations connected to geography, climate, and other domain data |
@@ -100,7 +100,7 @@ On Nature Grid, Ayesha submits species observations tagged to a specific union. 
 
 Bangladesh's 4-level administrative hierarchy — Division → District → Upazila → Union — is the primary geographic frame for all data in the platform.
 
-| Level | Count | Role in Nature Grid |
+| Level | Count | Role in Delta Signal |
 |---|---|---|
 | Division | 8 | Highest-level climate aggregation; alert zones |
 | District | 64 | Alert targeting; climate summaries; restoration project scope |
@@ -161,11 +161,11 @@ Separate app for moderators and admins. Report moderation queue, user role manag
 
 ## What Makes This Different
 
-Nature Grid is not:
+Delta Signal is not:
 
 - A data warehouse. It does not store raw sensor streams or satellite imagery (yet).
 - A government portal. It is not affiliated with any ministry and is not an official alert system.
 - A social network. Reports and observations are verified before they are public, not crowdsourced by vote.
 - A research database. Research-grade observations are a layer on top of a broader civic platform, not the core product.
 
-Nature Grid is a civic intelligence layer. It aggregates live data, human evidence, scientific observations, and official warnings into a coherent, verifiable, public-first picture of environmental conditions in Bangladesh — at the resolution of a union, the accuracy of a verified reviewer, and the timeliness of a nightly climate sync.
+Delta Signal is a civic intelligence layer. It aggregates live data, human evidence, scientific observations, and official warnings into a coherent, verifiable, public-first picture of environmental conditions in Bangladesh — at the resolution of a union, the accuracy of a verified reviewer, and the timeliness of a nightly climate sync.

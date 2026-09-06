@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
 import { getCurrentUser } from '../../../lib/current-user';
 import { submitReportAction } from '../../../lib/report-actions';
-import { routes, type CitizenReport, type PaginatedEnvelope } from '@nature-grid/contracts';
+import { routes, type CitizenReport, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { titleCase, relativeTime } from '../../../lib/format';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
 import ListPagination from '../../../components/list-pagination';

@@ -39,7 +39,7 @@ export default function PersonaFooter() {
         </p>
         <h2>Are you a Citizen, Researcher, or NGO?</h2>
         <p className="persona-footer-sub">
-          Nature Grid is free and open. Sign up to contribute data, submit reports,
+          Delta Signal is free and open. Sign up to contribute data, submit reports,
           join restoration projects, or download datasets for research.
         </p>
       </div>

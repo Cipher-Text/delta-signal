@@ -4,7 +4,7 @@
 
 Implemented (2026-08-26).
 
-Nature Grid now uses the OpenMeteo forecast and air-quality APIs to build operational climate summaries at union level. See the Implementation section below for details. The OpenMeteo Climate API (long-range climate model projections) remains a separate future candidate — see "Possible Nature Grid Use" below.
+Delta Signal now uses the OpenMeteo forecast and air-quality APIs to build operational climate summaries at union level. See the Implementation section below for details. The OpenMeteo Climate API (long-range climate model projections) remains a separate future candidate — see "Possible Delta Signal Use" below.
 
 ## Implementation
 
@@ -26,7 +26,7 @@ Up to 1,000 union coordinates are sent per HTTP request. With 4,540 unions, the 
 
 **Aggregation:** After raw data is upserted, 30-day rolling averages are recomputed bottom-up — Union → Upazila → District → Division — via bulk `UPDATE … FROM (SELECT … GROUP BY)` SQL (one pass per geographic level).
 
-> **Note:** This implementation uses the standard OpenMeteo forecast API and air-quality API, NOT the OpenMeteo Climate API (`climate-api.open-meteo.com`). The goal is operational climate summaries at union level for Nature Grid's public data pages and alert context. The long-range climate projection API documented below remains a future candidate.
+> **Note:** This implementation uses the standard OpenMeteo forecast API and air-quality API, NOT the OpenMeteo Climate API (`climate-api.open-meteo.com`). The goal is operational climate summaries at union level for Delta Signal's public data pages and alert context. The long-range climate projection API documented below remains a future candidate.
 
 ## Provider
 
@@ -95,7 +95,7 @@ OpenMeteo documents climate data from `1950-01-01` to `2050-01-01` and recommend
 - Model uncertainty is significant; OpenMeteo recommends running analyses across multiple models and evaluating performance.
 - Returned latitude and longitude identify the selected grid cell, which may differ from the requested coordinate.
 
-## Possible Nature Grid Use
+## Possible Delta Signal Use
 
 Candidate use cases:
 

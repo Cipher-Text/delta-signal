@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { routes, type CitizenReport, type Alert, type PaginatedEnvelope } from '@nature-grid/contracts';
+import { routes, type CitizenReport, type Alert, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 import { titleCase, relativeTime } from '../lib/format';
 

@@ -1,6 +1,6 @@
 # Business Logic
 
-This document explains the domain rules behind Nature Grid and the reasoning for each. It is written for people who need to understand what the system does and why — not just how the code works.
+This document explains the domain rules behind Delta Signal and the reasoning for each. It is written for people who need to understand what the system does and why — not just how the code works.
 
 ---
 
@@ -10,7 +10,7 @@ This document explains the domain rules behind Nature Grid and the reasoning for
 
 When a citizen reports a polluted river, that report is not immediately shown as verified fact on a public map. It starts as `submitted` — it happened, someone filed it, but it has not been reviewed. Moderators or admins move it through a workflow. A record only reaches the public as `verified` after a human has reviewed the evidence.
 
-This distinction matters because Nature Grid aggregates data that is used for real decisions — by journalists, researchers, and government officials. A false or duplicate report shown as verified damages the platform's credibility. Unverified reports are still stored and visible to moderators; they just do not appear as validated public evidence.
+This distinction matters because Delta Signal aggregates data that is used for real decisions — by journalists, researchers, and government officials. A false or duplicate report shown as verified damages the platform's credibility. Unverified reports are still stored and visible to moderators; they just do not appear as validated public evidence.
 
 ### Reports and observations are different things
 
@@ -184,9 +184,9 @@ Why keep expired alerts? Historical alert records are the platform's evidence ba
 
 ## Climate Data Logic
 
-### What climate data is in Nature Grid
+### What climate data is in Delta Signal
 
-Nature Grid fetches daily environmental readings for every union from OpenMeteo's forecast API (weather) and air-quality API. This is operational data — today's conditions and the recent trend — not long-range climate projections.
+Delta Signal fetches daily environmental readings for every union from OpenMeteo's forecast API (weather) and air-quality API. This is operational data — today's conditions and the recent trend — not long-range climate projections.
 
 **What is stored per union per day (`UnionDailyClimate`):**
 
@@ -270,7 +270,7 @@ Why bother with access policies on environmental data? Some datasets contain per
 
 ### What an organization is
 
-Organizations in Nature Grid represent institutions that act as environmental stakeholders — NGOs, academic departments, government agencies, community groups, or private environmental partners. They own projects, campaigns, datasets, and observations.
+Organizations in Delta Signal represent institutions that act as environmental stakeholders — NGOs, academic departments, government agencies, community groups, or private environmental partners. They own projects, campaigns, datasets, and observations.
 
 An organization is not the same as a user. A user is an individual account. An organization is an institutional actor. One person can be a member of multiple organizations.
 

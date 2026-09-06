@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { apiGet } from '../../../../../lib/api';
-import { routes, type Species, type Occurrence, type PaginatedEnvelope } from '@nature-grid/contracts';
+import { routes, type Species, type Occurrence, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { relativeTime } from '../../../../../lib/format';
 
 export default async function SpeciesDetailPage({

@@ -45,7 +45,7 @@ services:
       SMTP_PORT: "${SMTP_PORT:-1025}"
       SMTP_USER: "${SMTP_USER:-}"
       SMTP_PASS: "${SMTP_PASS:-}"
-      SMTP_FROM: "${SMTP_FROM:-Nature Grid <alerts@naturegrid.bd>}"
+      SMTP_FROM: "${SMTP_FROM:-Delta Signal <alerts@deltasignal.org>}"
     depends_on:
       redis:
         condition: service_healthy

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { routes, type Dataset, type PaginatedEnvelope } from '@nature-grid/contracts';
+import { routes, type Dataset, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 import { titleCase } from '../lib/format';
 

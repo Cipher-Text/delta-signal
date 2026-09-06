@@ -5,8 +5,8 @@ import { loginAction } from '../../lib/auth-actions';
 // accidentally embed it in the JS bundle even if the seed panel is shown.
 const SEED_PASSWORD = process.env.NEXT_PUBLIC_SEED_PASSWORD ?? '';
 const ADMIN_SEED_USERS = [
-  { email: 'moderator@naturegrid.bd', label: 'Moderator' },
-  { email: 'admin@naturegrid.bd', label: 'Admin' },
+  { email: 'moderator@deltasignal.org', label: 'Moderator' },
+  { email: 'admin@deltasignal.org', label: 'Admin' },
 ];
 
 export default function LoginPage({
@@ -20,7 +20,7 @@ export default function LoginPage({
     <main className="login-page">
       <div className="login-card">
         <header>
-          <p className="brand">Nature Grid</p>
+          <p className="brand">Delta Signal</p>
           <h1>Admin Console</h1>
           <p className="subtitle">Sign in with a Moderator or Admin account to continue.</p>
         </header>

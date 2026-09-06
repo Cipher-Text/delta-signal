@@ -51,7 +51,7 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
   if (nodeEnv === 'production' && !config.CORS_ORIGIN) {
     errors.push(
       'CORS_ORIGIN is not set — in production this would block all browser requests. ' +
-        'Set it to a comma-separated list of allowed origins, e.g. "https://naturegrid.bd"',
+        'Set it to a comma-separated list of allowed origins, e.g. "https://deltasignal.org"',
     );
   }
 
@@ -62,7 +62,7 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
   if (nodeEnv === 'production' && !config.APP_URL) {
     errors.push(
       'APP_URL is not set — password-reset and email-verification links will point to ' +
-        'http://localhost:3000. Set it to your production frontend URL, e.g. "https://naturegrid.bd"',
+        'http://localhost:3000. Set it to your production frontend URL, e.g. "https://deltasignal.org"',
     );
   }
 

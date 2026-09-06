@@ -1,6 +1,6 @@
 # Feature Map
 
-Nature Grid's feature set is organised by domain area. Status reflects what is built and live as of the last progress update — see `docs/progress.md` for detail on each item.
+Delta Signal's feature set is organised by domain area. Status reflects what is built and live as of the last progress update — see `docs/progress.md` for detail on each item.
 
 Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 

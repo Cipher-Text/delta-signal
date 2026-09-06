@@ -1,6 +1,6 @@
 # Roadmap
 
-Nature Grid is built public-first toward a serious environmental intelligence platform. Dates are intentionally omitted until team capacity and release targets are known.
+Delta Signal is built public-first toward a serious environmental intelligence platform. Dates are intentionally omitted until team capacity and release targets are known.
 
 ## Phase 0: Product and Architecture Baseline
 
@@ -69,7 +69,7 @@ Exit criteria met:
 
 - Public read APIs exist for locations, dataset summaries, verified reports, and active alerts.
 - Authenticated APIs exist for report and alert contribution.
-- ~~Moderator/admin permissions are enforced for status change flows.~~ This was **not actually true** until 2026-08-17 — a `@nature-grid/shared` enum-casing bug made every role check fail, so moderator/admin permissions rejected everyone rather than enforcing anything. Genuinely true now; see `docs/progress.md` "Critical RBAC Fix".
+- ~~Moderator/admin permissions are enforced for status change flows.~~ This was **not actually true** until 2026-08-17 — a `@delta-signal/shared` enum-casing bug made every role check fail, so moderator/admin permissions rejected everyone rather than enforcing anything. Genuinely true now; see `docs/progress.md` "Critical RBAC Fix".
 
 Remaining gaps (carry into Phase 3):
 
@@ -142,7 +142,7 @@ Deliverables:
 
 Exit criteria met:
 
-- ~~Nature Grid can connect evidence, measurements, reports, alerts, projects, and outcomes.~~ **Met** — citizens submit reports/observations; restoration projects link participants; community posts attach to districts; all cross-referenced by user.
+- ~~Delta Signal can connect evidence, measurements, reports, alerts, projects, and outcomes.~~ **Met** — citizens submit reports/observations; restoration projects link participants; community posts attach to districts; all cross-referenced by user.
 - ~~Advanced domains remain modular and do not overload generic observations.~~ **Met** — `community`, `gamification`, `notifications`, `biodiversity`, `restoration`, `analytics` each own their schemas and endpoints.
 
 ## Phase 6: Production Hardening
@@ -165,7 +165,7 @@ Ordered roughly by risk: the security items are cheap and block any real deploym
 - ~~First test suite covering `auth` and RBAC.~~ Done (2026-08-21). 52 tests across `RolesGuard`, `JwtAuthGuard`, `AuthService`, the refresh-token utilities and env validation. Fully mocked — no database needed. Each historical bug has a named regression test, and all six were mutation-checked: reintroducing the bug makes the suite fail. Expanded to 153 tests in 11 spec files (2026-08-29) — reports, observations, restoration, notifications, gamification, media service coverage added.
 - ~~CI on pull requests.~~ Done (2026-08-21); updated (2026-08-29) to add `pnpm audit --prod --audit-level=high` in the `verify` job and a parallel `docker-build` job (`docker build -f apps/api/Dockerfile`). Note the repo has no git remote yet, so nothing runs until one is added.
 - ~~Install a working lint setup.~~ Done (2026-08-21). `.eslintrc.json` added for `apps/api`, `apps/web`, and `apps/admin`. `pnpm lint` now runs cleanly across all three apps; added to local verification workflow but deliberately kept out of CI until the rule set is stable.
-- ~~API contract tests.~~ Done (2026-08-22). `@nature-grid/contracts` added as a devDependency to `apps/api`. `src/common/contract-types.typecheck.ts` uses TypeScript's structural type system to assert that every service's return type (after JSON serialisation — `Date`→`string` via a `Jsonified<T>` utility) is assignable to its contract type. Checked by the existing `tsc --noEmit` step in CI. Also fixed `include`→`select` discipline in `datasets.service.ts`, `reports.service.ts` (`getById`), `alerts.service.ts` (`getById`), and four weather read methods — eliminating unintended field leakage (e.g. `createdAt` from weather readings not in the contract).
+- ~~API contract tests.~~ Done (2026-08-22). `@delta-signal/contracts` added as a devDependency to `apps/api`. `src/common/contract-types.typecheck.ts` uses TypeScript's structural type system to assert that every service's return type (after JSON serialisation — `Date`→`string` via a `Jsonified<T>` utility) is assignable to its contract type. Checked by the existing `tsc --noEmit` step in CI. Also fixed `include`→`select` discipline in `datasets.service.ts`, `reports.service.ts` (`getById`), `alerts.service.ts` (`getById`), and four weather read methods — eliminating unintended field leakage (e.g. `createdAt` from weather readings not in the contract).
 - ~~End-to-end tests for the public and authenticated flows.~~ Done (2026-09-02) — 45 tests across 4 spec files (`health.e2e-spec.ts`, `auth.e2e-spec.ts`, `public.e2e-spec.ts`, `protected.e2e-spec.ts`). Full NestJS app bootstrapped against a real database; BullMQ and throttler stubbed. Covers auth register/login/refresh/logout token lifecycle, all public read endpoints, CITIZEN/RESEARCHER/MODERATOR/ADMIN authenticated flows, and role/permission enforcement. CI `e2e` job added with a postgres:16 service container and `prisma migrate deploy`. See `docs/progress.md` "2026-09-02 E2E Test Suite".
 - Accessibility pass.
 
@@ -205,7 +205,7 @@ Exit criteria:
 
 Status: In Progress — 3 of 11 domains complete. Emissions tracking (World Bank API), satellite radiation, and marine weather done. Frontend: `/emissions` page live (2026-09-02 rewrite). Remaining frontend gap: radiation and marine data have no public web page yet — data is collected by cron jobs but not visible to users. Priority before adding new domains: surface radiation and marine data in `apps/web`. Remaining 8 domains (Industrial Facility Registry, ApiCallLog, structured surveys, climate forecasting, carbon accounting, research platform, Python data-worker, satellite/remote sensing) still planned.
 
-Goal: Extend Nature Grid into the richer environmental science domains that the core platform was designed to support but that require deeper infrastructure, specialist data sources, or a larger user base before they pay off. Each domain here either has a clear data dependency on Phase 3–6 work, or requires specialist review before scoping.
+Goal: Extend Delta Signal into the richer environmental science domains that the core platform was designed to support but that require deeper infrastructure, specialist data sources, or a larger user base before they pay off. Each domain here either has a clear data dependency on Phase 3–6 work, or requires specialist review before scoping.
 
 Order is not fixed. Satellite ingestion is the most infrastructure-heavy and depends on PostGIS, media storage, and the Python data-worker all landing first, so it is likely last.
 
@@ -239,7 +239,7 @@ Status: *Planned* — two independent tracks, different blockers:
 
 **Infrastructure-dependent track:** Crop suitability analysis, land-cover change detection, and satellite forest monitoring depend on PostGIS polygon geometry (Phase 7 infrastructure item), a working Python data-worker (Phase 7 prerequisite), and at least two years of land-cover reference data. These should not be started until Phase 7's satellite/remote sensing proof-of-concept is stable.
 
-Goal: Establish structured environmental data layers for Bangladesh's forests, land cover, and agricultural geography. The product boundary is explicit: this phase captures how environment, climate, land, water, and soil shape agricultural areas of Bangladesh — it does not build farm-management software, farmer ERP, or any commercial agricultural tooling. Nature Grid describes the environmental system; it does not manage the farmer's response to it.
+Goal: Establish structured environmental data layers for Bangladesh's forests, land cover, and agricultural geography. The product boundary is explicit: this phase captures how environment, climate, land, water, and soil shape agricultural areas of Bangladesh — it does not build farm-management software, farmer ERP, or any commercial agricultural tooling. Delta Signal describes the environmental system; it does not manage the farmer's response to it.
 
 ### Forest & Protected Areas
 
@@ -264,7 +264,7 @@ Goal: Establish structured environmental data layers for Bangladesh's forests, l
 | **Agro-Ecological Zones (AEZ)** | Bangladesh's 30 agro-ecological zone boundaries as a named geographic layer — characterised by soil type, drainage class, flood regime, elevation band, and climatic conditions. Each AEZ links to its intersecting districts and upazilas, typical crop associations, and agricultural limitations. Provides a scientific basis for crop suitability analysis beyond administrative-boundary heuristics. Source: BARC/FAO AEZ classification for Bangladesh. | *Planned* |
 | **Agricultural Production Statistics** | Crop production data in the Data Hub: cultivated area, harvested area, total production, and yield per crop, season, year, and administrative unit (division, district, upazila where data exists). Sources: BBS Agricultural Sample Survey, DAE seasonal reports. Stored with explicit source, methodology, and reference period. Enables production trend analysis and region-level comparisons; does not project future output. | *Planned* |
 | **Soil Reference Data** | District- and upazila-level soil characterisation layer — texture class, drainage class, pH range, salinity class, and organic matter content — sourced from SRDI (Soil Resource Development Institute of Bangladesh). Stored as a reference layer, not a farm-level soil test or fertilizer prescription tool. Feeds into crop suitability analysis and AEZ descriptions. | *Planned* — requires sourced SRDI data |
-| **Crop Calendar** | Regional and AEZ-level crop calendars for Bangladesh's major crops (Boro, Aus, Aman, wheat, jute, potato, mustard, and others) covering land preparation, sowing, growing, and harvesting stages with approximate date ranges by region. Connects to Nature Grid's existing weather and flood data for seasonal environmental context. | *Planned* |
+| **Crop Calendar** | Regional and AEZ-level crop calendars for Bangladesh's major crops (Boro, Aus, Aman, wheat, jute, potato, mustard, and others) covering land preparation, sowing, growing, and harvesting stages with approximate date ranges by region. Connects to Delta Signal's existing weather and flood data for seasonal environmental context. | *Planned* |
 
 Exit criteria:
 
@@ -282,7 +282,7 @@ Exit criteria:
 
 Status: *Future* — depends on Phase 8 (forest registry, AEZ, crop catalog, soil reference, land cover datasets), Phase 7 satellite/remote sensing foundation, PostGIS polygon geometry, Python data-worker, and a stable Phase 6 production environment.
 
-Goal: Derive actionable environmental intelligence by connecting Nature Grid's existing domains — climate, weather, flood, water, biodiversity, citizen reports, restoration — with the land, forest, soil, and agricultural layers from Phase 8. This phase shifts from data accumulation to cross-domain synthesis. Outputs remain environmental intelligence with stated methodology and confidence; they do not become guaranteed farming advice or automated regulatory decisions.
+Goal: Derive actionable environmental intelligence by connecting Delta Signal's existing domains — climate, weather, flood, water, biodiversity, citizen reports, restoration — with the land, forest, soil, and agricultural layers from Phase 8. This phase shifts from data accumulation to cross-domain synthesis. Outputs remain environmental intelligence with stated methodology and confidence; they do not become guaranteed farming advice or automated regulatory decisions.
 
 ### Forest Intelligence
 
@@ -315,7 +315,7 @@ Goal: Derive actionable environmental intelligence by connecting Nature Grid's e
 
 | Domain | What it adds | Status |
 | --- | --- | --- |
-| **Integrated Geographic Views** | District, upazila, and union detail pages evolve into full environmental system views of a place: climate summary, weather, water and flood conditions, forest and protected area proximity, land cover composition, biodiversity highlights, AEZ characteristics, crop calendar, crop distribution, crop suitability signals, pollution sources, citizen reports, restoration projects, active alerts, and hazard event history — integrated rather than siloed by dataset category. The goal is for Nature Grid to describe the environmental system of a place, not merely a list of data layers for that coordinate. | *Future* — depends on Phase 8 and Phase 9 cross-domain data being available for the same geographic units |
+| **Integrated Geographic Views** | District, upazila, and union detail pages evolve into full environmental system views of a place: climate summary, weather, water and flood conditions, forest and protected area proximity, land cover composition, biodiversity highlights, AEZ characteristics, crop calendar, crop distribution, crop suitability signals, pollution sources, citizen reports, restoration projects, active alerts, and hazard event history — integrated rather than siloed by dataset category. The goal is for Delta Signal to describe the environmental system of a place, not merely a list of data layers for that coordinate. | *Future* — depends on Phase 8 and Phase 9 cross-domain data being available for the same geographic units |
 
 Exit criteria:
 
@@ -334,12 +334,12 @@ Exit criteria:
 
 Not a committed roadmap phase. These represent the aspirational horizon — directional signals that should inform architectural decisions without being treated as near-term deliverables. Each requires validated data foundations, specialist domain partnerships, or independent scientific methodology review before any public-facing claim is made.
 
-- **Explainable environmental risk models** — Decision-support outputs that explain, step by step, why a crop area, forest, or watershed is at environmental risk, drawing on multiple Nature Grid data streams with transparent methodology. Requires scientific validation partnerships before deployment.
+- **Explainable environmental risk models** — Decision-support outputs that explain, step by step, why a crop area, forest, or watershed is at environmental risk, drawing on multiple Delta Signal data streams with transparent methodology. Requires scientific validation partnerships before deployment.
 - **Forecast-driven agricultural advisories** — Seasonal advisories connecting weather and flood forecasts to crop calendar stage and crop environmental requirements for specific regions. Requires validated agricultural science partnerships and clear disclaimers before moving beyond informational context.
 - **Forest and ecosystem health composite indicators** — Per-forest-area health signals derived from canopy cover trends, encroachment and fire signals, biodiversity observation density, restoration activity, and alert history — synthesised into a readable condition summary rather than a raw data list.
 - **Satellite and citizen-report cross-validation** — Comparing citizen deforestation and encroachment reports against satellite-derived change signals to identify probable confirmations and reduce false positives in both data streams.
 - **Historical agricultural and environmental correlation analysis** — Multi-year analysis connecting flood exposure, precipitation trends, temperature change, land-cover shifts, and AEZ characteristics with production statistics. Intended as a research-grade tool with explicit methodology disclosure, not a yield forecast product.
-- **Cross-domain geographic intelligence** — A district or union view that narrows to a specific season and synthesises all Nature Grid data streams into a coherent environmental narrative of that place at that time, readable without domain expertise.
+- **Cross-domain geographic intelligence** — A district or union view that narrows to a specific season and synthesises all Delta Signal data streams into a coherent environmental narrative of that place at that time, readable without domain expertise.
 
 None of these should be built before the Phase 8 data foundations and Phase 9 cross-domain infrastructure are stable and independently validated.
 
@@ -347,10 +347,10 @@ None of these should be built before the Phase 8 data foundations and Phase 9 cr
 
 ## Platform Scope Boundaries
 
-Nature Grid is an environmental and geographic intelligence platform. The following are explicitly outside scope — building them would shift Nature Grid into a different product category and dilute its core identity as a civic environmental intelligence layer.
+Delta Signal is an environmental and geographic intelligence platform. The following are explicitly outside scope — building them would shift Delta Signal into a different product category and dilute its core identity as a civic environmental intelligence layer.
 
-**Agricultural and farm operations** — Nature Grid describes how the environment shapes agriculture; it does not manage what farmers do about it. Out of scope: farm accounting, crop planning software, precision agriculture advisory, fertilizer or seed recommendations without validated scientific methodology, agricultural input procurement, seed or fertilizer ecommerce, crop commodity trading, farmer loan origination or credit scoring, machinery rental, warehouse management, agricultural logistics, and farm-level workforce management. These could be built as separate products consuming Nature Grid's public environmental APIs and open datasets.
+**Agricultural and farm operations** — Delta Signal describes how the environment shapes agriculture; it does not manage what farmers do about it. Out of scope: farm accounting, crop planning software, precision agriculture advisory, fertilizer or seed recommendations without validated scientific methodology, agricultural input procurement, seed or fertilizer ecommerce, crop commodity trading, farmer loan origination or credit scoring, machinery rental, warehouse management, agricultural logistics, and farm-level workforce management. These could be built as separate products consuming Delta Signal's public environmental APIs and open datasets.
 
 **Industrial operations** — The `emissions` module ingests national-level GHG data from the World Bank as environmental monitoring data. It is not an industrial ERP, a regulatory compliance filing system, a production management tool, or a B2B industrial services directory.
 
-**Commercial platforms** — Nature Grid does not provide a marketplace, a transactional layer, a commercial subscription product for businesses, or a payment rail of any kind.
+**Commercial platforms** — Delta Signal does not provide a marketplace, a transactional layer, a commercial subscription product for businesses, or a payment rail of any kind.

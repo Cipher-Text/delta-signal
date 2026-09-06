@@ -76,8 +76,8 @@ describe('validateEnv', () => {
         validateEnv({
           ...VALID,
           NODE_ENV: 'production',
-          CORS_ORIGIN: 'https://naturegrid.bd',
-          APP_URL: 'https://naturegrid.bd',
+          CORS_ORIGIN: 'https://deltasignal.org',
+          APP_URL: 'https://deltasignal.org',
         }),
       ).not.toThrow();
     });
@@ -96,7 +96,7 @@ describe('validateEnv', () => {
   describe('CORS_ORIGIN in production', () => {
     it('requires CORS_ORIGIN when NODE_ENV is production', () => {
       expect(() =>
-        validateEnv({ ...VALID, NODE_ENV: 'production', APP_URL: 'https://naturegrid.bd' }),
+        validateEnv({ ...VALID, NODE_ENV: 'production', APP_URL: 'https://deltasignal.org' }),
       ).toThrow(/CORS_ORIGIN is not set/);
     });
 
@@ -105,8 +105,8 @@ describe('validateEnv', () => {
         validateEnv({
           ...VALID,
           NODE_ENV: 'production',
-          CORS_ORIGIN: 'https://naturegrid.bd',
-          APP_URL: 'https://naturegrid.bd',
+          CORS_ORIGIN: 'https://deltasignal.org',
+          APP_URL: 'https://deltasignal.org',
         }),
       ).not.toThrow();
     });

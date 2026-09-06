@@ -41,7 +41,7 @@ import type {
   OrgAdminDashboard,
   FacilityPagedResponse,
   FacilityDetail,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 
 import type { ReportsService } from '../reports/reports.service';
 import type { AlertsService } from '../alerts/alerts.service';

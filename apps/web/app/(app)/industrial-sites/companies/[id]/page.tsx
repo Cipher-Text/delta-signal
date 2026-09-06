@@ -8,7 +8,7 @@ import {
   type CompanyType,
   type ComplianceStatus,
   type FacilityType,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { titleCase, relativeTime } from '../../../../../lib/format';
 
 const COMPANY_TYPE_LABEL: Record<CompanyType, string> = {

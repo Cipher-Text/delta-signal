@@ -11,7 +11,7 @@ export default async function PublicNav() {
     <header className="public-nav">
       <Link className="public-brand" href="/">
         <span className="brand-mark">NG</span>
-        <span>Nature Grid</span>
+        <span>Delta Signal</span>
       </Link>
 
       <nav aria-label="Public sections">

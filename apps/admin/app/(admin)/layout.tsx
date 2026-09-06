@@ -31,7 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="admin-layout">
       <aside className="sidebar">
         <div className="sidebar-brand">
-          <p className="brand">Nature Grid</p>
+          <p className="brand">Delta Signal</p>
           <h2>Admin Console</h2>
         </div>
 

@@ -4,18 +4,18 @@
  * Replace the arrays with fetch() calls when the backend is ready.
  *
  * Migration guide (once the API is live):
- *   Metric           → PlatformMetrics  from @nature-grid/shared
- *   DatasetRow        → DatasetSummary   from @nature-grid/shared
- *   ReportPreview     → CitizenReport    from @nature-grid/shared
- *   AlertPreview      → EnvironmentalAlert from @nature-grid/shared
- *   Fetch via routes  from @nature-grid/contracts
+ *   Metric           → PlatformMetrics  from @delta-signal/shared
+ *   DatasetRow        → DatasetSummary   from @delta-signal/shared
+ *   ReportPreview     → CitizenReport    from @delta-signal/shared
+ *   AlertPreview      → EnvironmentalAlert from @delta-signal/shared
+ *   Fetch via routes  from @delta-signal/contracts
  *
  * COMMUNITY_FEED/CommunityItem removed — Community has no planned API module
  * (see docs/architecture/feature-map.md), so community-section.tsx and the
  * /community page both show an honest empty state instead of fabricated feed data.
  */
 
-import type { AlertSeverity } from '@nature-grid/shared';
+import type { AlertSeverity } from '@delta-signal/shared';
 
 export interface Metric {
   label: string;

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { routes, type PlatformMetrics } from '@nature-grid/contracts';
+import { routes, type PlatformMetrics } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 
 export default async function HeroSection() {

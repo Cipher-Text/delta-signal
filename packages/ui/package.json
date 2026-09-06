@@ -1,5 +1,5 @@
 {
-  "name": "@nature-grid/ui",
+  "name": "@delta-signal/ui",
   "version": "0.1.0",
   "private": true,
   "main": "src/index.ts",

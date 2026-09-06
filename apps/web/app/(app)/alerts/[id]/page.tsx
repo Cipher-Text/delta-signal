@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { apiGet } from '../../../../lib/api';
-import { routes, type Alert } from '@nature-grid/contracts';
+import { routes, type Alert } from '@delta-signal/contracts';
 import { titleCase } from '../../../../lib/format';
 
 const SEVERITY_BADGE: Record<string, string> = {

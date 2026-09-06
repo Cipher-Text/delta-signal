@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { routes, type DivisionWithClimate, type DistrictWithClimate } from '@nature-grid/contracts';
+import { routes, type DivisionWithClimate, type DistrictWithClimate } from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
 

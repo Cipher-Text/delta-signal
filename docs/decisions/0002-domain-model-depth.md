@@ -6,7 +6,7 @@ Proposed
 
 ## Context
 
-Nature Grid is an environmental intelligence platform, not only a CRUD application. The current scaffold includes broad modules such as reports, observations, datasets, alerts, biodiversity, organizations, media, and ingestion. That is enough for a first skeleton, but several environmental domains need stronger modeling before serious backend implementation.
+Delta Signal is an environmental intelligence platform, not only a CRUD application. The current scaffold includes broad modules such as reports, observations, datasets, alerts, biodiversity, organizations, media, and ingestion. That is enough for a first skeleton, but several environmental domains need stronger modeling before serious backend implementation.
 
 Important under-modeled concepts include:
 
@@ -24,7 +24,7 @@ Important under-modeled concepts include:
 
 ## Decision
 
-Nature Grid should evolve toward a domain model centered on place, time, evidence, measurement, events, action, and outcomes.
+Delta Signal should evolve toward a domain model centered on place, time, evidence, measurement, events, action, and outcomes.
 
 The conceptual model is:
 

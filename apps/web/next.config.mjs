@@ -34,13 +34,13 @@ const nextConfig = {
   output: 'standalone',
 
   // Point file tracing at the monorepo root so standalone output includes
-  // workspace package files (@nature-grid/shared, @nature-grid/contracts).
+  // workspace package files (@delta-signal/shared, @delta-signal/contracts).
   experimental: {
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
 
   // Compile workspace TypeScript packages — they ship source, not pre-built JS.
-  transpilePackages: ['@nature-grid/shared', '@nature-grid/contracts'],
+  transpilePackages: ['@delta-signal/shared', '@delta-signal/contracts'],
 
   async headers() {
     return [

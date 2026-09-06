@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { routes } from '@nature-grid/contracts';
+import { routes } from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
 import { relativeTime } from '../../../../../lib/format';

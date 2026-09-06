@@ -18,7 +18,7 @@ import type {
   PlatformMetrics,
   WaterLevelTrend,
   WaterLevelThresholdStatus,
-} from '@nature-grid/shared';
+} from '@delta-signal/shared';
 
 // Re-export shared types that callers expect to find here
 export type {
@@ -41,7 +41,7 @@ export type {
   PlatformMetrics,
   WaterLevelTrend,
   WaterLevelThresholdStatus,
-} from '@nature-grid/shared';
+} from '@delta-signal/shared';
 
 // ─── API Prefix ───────────────────────────────────────────────────────────────
 

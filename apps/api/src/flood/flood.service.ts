@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { WaterLevelStation } from '@prisma/client';
-import type { WaterLevelThresholdStatus } from '@nature-grid/shared';
+import type { WaterLevelThresholdStatus } from '@delta-signal/shared';
 import { PrismaService } from '../database/prisma.service';
 import { FloodOpenMeteoClient } from './flood-openmeteo.client';
 import { clampPagination } from '../common/pagination';

@@ -9,8 +9,8 @@ module.exports = {
   moduleNameMapper: {
     '^@nestjs/bullmq$': '<rootDir>/__mocks__/@nestjs/bullmq.js',
     '^bullmq$': '<rootDir>/__mocks__/bullmq.js',
-    '^@nature-grid/shared$': '<rootDir>/../../packages/shared/src/index.ts',
-    '^@nature-grid/contracts$': '<rootDir>/../../packages/contracts/src/index.ts',
+    '^@delta-signal/shared$': '<rootDir>/../../packages/shared/src/index.ts',
+    '^@delta-signal/contracts$': '<rootDir>/../../packages/contracts/src/index.ts',
   },
   // Load test env vars in every worker before any module is imported.
   setupFiles: ['<rootDir>/test/env-setup.js'],

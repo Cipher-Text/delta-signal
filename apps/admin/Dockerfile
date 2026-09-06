@@ -22,7 +22,7 @@ COPY apps/admin/ ./apps/admin/
 COPY tsconfig.base.json ./
 
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm --filter @nature-grid/admin build
+RUN pnpm --filter @delta-signal/admin build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner

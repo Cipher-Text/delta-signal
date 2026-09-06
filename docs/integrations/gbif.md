@@ -25,7 +25,7 @@ The current query is:
 country=BD&hasCoordinate=true&limit=300&offset=<offset>
 ```
 
-The sync uses GBIF occurrence search, filtered to Bangladesh records that have coordinates. The bare endpoint URL returns global records, so it should not be used as the Nature Grid production query without these filters.
+The sync uses GBIF occurrence search, filtered to Bangladesh records that have coordinates. The bare endpoint URL returns global records, so it should not be used as the Delta Signal production query without these filters.
 
 Query parameters:
 
@@ -82,9 +82,9 @@ GBIF data is stored in:
 
 Species are upserted by `gbifKey`. Occurrences are upserted by `gbifOccurrenceKey`, which keeps daily re-syncs idempotent.
 
-The browser reads these stored records through the Nature Grid API; it does not call GBIF directly. The `/biodiversity` page shows species and occurrence tables, and the Data Hub detail route `/data/:id` shows a GBIF species and recent-occurrence preview for the Biodiversity Occurrences dataset.
+The browser reads these stored records through the Delta Signal API; it does not call GBIF directly. The `/biodiversity` page shows species and occurrence tables, and the Data Hub detail route `/data/:id` shows a GBIF species and recent-occurrence preview for the Biodiversity Occurrences dataset.
 
-GBIF gives coordinates, not Nature Grid district IDs. The current implementation assigns `districtId` by nearest seeded district centroid. This is an approximation until polygon boundary or PostGIS point-in-polygon matching is added.
+GBIF gives coordinates, not Delta Signal district IDs. The current implementation assigns `districtId` by nearest seeded district centroid. This is an approximation until polygon boundary or PostGIS point-in-polygon matching is added.
 
 ## Schedule
 

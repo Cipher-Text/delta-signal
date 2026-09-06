@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
-import { routes, type Dataset, type Provider, type PaginatedEnvelope } from '@nature-grid/contracts';
+import { routes, type Dataset, type Provider, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { titleCase } from '../../../lib/format';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';

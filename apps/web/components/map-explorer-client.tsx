@@ -4,7 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import Link from 'next/link';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet';
 import { useEffect, useMemo, useState } from 'react';
-import type { CurrentWeatherReading, HourlyAirQualityReading, StationFloodForecast, WaterBody, WaterLevelStation } from '@nature-grid/contracts';
+import type { CurrentWeatherReading, HourlyAirQualityReading, StationFloodForecast, WaterBody, WaterLevelStation } from '@delta-signal/contracts';
 import type { MapAlert, MapDistrict, MapReport, MapLayer } from './map-client';
 
 const BD_BOUNDS: [[number, number], [number, number]] = [[20.3, 87.8], [26.8, 92.8]];
@@ -46,6 +46,6 @@ export default function MapExplorerClient({ districts, alerts, reports, weather,
       {layer === 'stations' && filteredStations.map((s) => <CircleMarker key={s.id} center={[s.latitude!, s.longitude!]} radius={7} pathOptions={{ color: '#c2410c', fillColor: '#ffedd5', fillOpacity: .95, weight: 2 }}><Popup><div className="map-popup"><span className="popup-kicker">Water-level station</span><strong>{s.name}</strong><span>{s.riverName ?? 'River not specified'}</span><Link href={`/water-bodies/stations/${s.id}`}>View station →</Link></div></Popup></CircleMarker>)}
     </MapContainer></div>
     <aside className="map-selected-panel" aria-live="polite">{selected ? <><div className="selected-panel-header"><div><span className="popup-kicker">District</span><h2>{selected.name}</h2><p>{selected.division ? `${selected.division} Division` : 'Bangladesh'}</p></div><button type="button" className="panel-close" aria-label="Clear selected district" onClick={() => setSelectedId(null)}>×</button></div><div className="selected-stats"><div><span>Temperature</span><strong>{weatherById.get(selected.id)?.temperature2m != null ? `${weatherById.get(selected.id)!.temperature2m}°C` : 'Unavailable'}</strong></div><div><span>PM2.5</span><strong>{airById.get(selected.id)?.pm25 != null ? `${airById.get(selected.id)!.pm25} µg/m³` : 'Unavailable'}</strong></div><div><span>Active alerts</span><strong>{alerts.filter((a) => a.districtId === selected.id).length}</strong></div><div><span>Verified reports</span><strong>{reports.filter((r) => r.districtName === selected.name).length}</strong></div></div><Link className="button" href={`/locations/districts/${selected.id}`}>View district profile</Link></> : <><span className="popup-kicker">{layerLabel}</span><h2>Explore environmental signals</h2><p>Select a district or marker to inspect the latest available information.</p></>}</aside>
-    <div className="map-freshness">{layer === 'weather' || layer === 'air-quality' ? 'Source: Open-Meteo · Observed readings' : layer === 'reports' ? 'Source: Nature Grid verified reports' : layer === 'alerts' ? 'Source: Nature Grid operational alerts' : 'Source: Nature Grid water registry'}{!isLive && ' · Some data unavailable'}</div>
+    <div className="map-freshness">{layer === 'weather' || layer === 'air-quality' ? 'Source: Open-Meteo · Observed readings' : layer === 'reports' ? 'Source: Delta Signal verified reports' : layer === 'alerts' ? 'Source: Delta Signal operational alerts' : 'Source: Delta Signal water registry'}{!isLive && ' · Some data unavailable'}</div>
   </div>;
 }

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { ModeratorDashboard } from '@nature-grid/contracts';
+import type { ModeratorDashboard } from '@delta-signal/contracts';
 import type { CurrentUser } from '../../../../lib/current-user';
 import { DashboardHeader, StatCard, BarChart, TrendChart, SectionHeader } from '../components/DashboardPrimitives';
 

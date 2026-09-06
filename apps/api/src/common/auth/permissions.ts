@@ -1,4 +1,4 @@
-import type { Permission, UserRole } from '@nature-grid/shared';
+import type { Permission, UserRole } from '@delta-signal/shared';
 
 const ROLE_PERMISSIONS: Partial<Record<UserRole, Permission[]>> = {
   ADMIN: ['organizations.manage'],

@@ -1,6 +1,6 @@
-# Nature Grid
+# Delta Signal
 
-Nature Grid is a civic environmental intelligence platform for Bangladesh. It connects citizens, researchers, NGOs, and government agencies around a shared picture of the country's environmental health — bringing together live weather, air quality, biodiversity records, citizen reports, and official alerts into one public grid.
+Delta Signal is a civic environmental intelligence platform for Bangladesh. It connects citizens, researchers, NGOs, and government agencies around a shared picture of the country's environmental health — bringing together live weather, air quality, biodiversity records, citizen reports, and official alerts into one public grid.
 
 The homepage at `/` is a complete public environmental board. No login required to see what is happening. Login is needed only to contribute, download data, or access advanced workflows.
 
@@ -12,7 +12,7 @@ Full product brief: [docs/project-brief.md](docs/project-brief.md)
 
 Bangladesh faces some of the most concentrated environmental pressures in the world. Floods, poor air quality, water contamination, deforestation in the Sundarbans, and climate-driven agricultural stress affect hundreds of millions of people. Yet environmental data is fragmented — scattered across government departments, academic institutions, NGOs, and international datasets, rarely visible in one place and rarely actionable at the local level.
 
-Nature Grid is built to change that. It is not a scientific data warehouse and not a government portal. It is a platform where a citizen in Sylhet can report a polluted canal, a researcher at BUET can submit a validated water-quality observation, an NGO in Khulna can log a mangrove restoration project, and the district office can issue a flood warning — all in the same system, all connected to the same geography.
+Delta Signal is built to change that. It is not a scientific data warehouse and not a government portal. It is a platform where a citizen in Sylhet can report a polluted canal, a researcher at BUET can submit a validated water-quality observation, an NGO in Khulna can log a mangrove restoration project, and the district office can issue a flood warning — all in the same system, all connected to the same geography.
 
 ---
 

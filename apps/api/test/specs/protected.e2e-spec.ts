@@ -30,10 +30,10 @@ describe('Protected endpoints (e2e)', () => {
     prisma = app.get(PrismaService);
 
     [citizenToken, researcherToken, moderatorToken, adminToken] = await Promise.all([
-      loginAs(app, 'citizen@naturegrid.bd').then((t) => t.accessToken),
-      loginAs(app, 'researcher@naturegrid.bd').then((t) => t.accessToken),
-      loginAs(app, 'moderator@naturegrid.bd').then((t) => t.accessToken),
-      loginAs(app, 'admin@naturegrid.bd').then((t) => t.accessToken),
+      loginAs(app, 'citizen@deltasignal.org').then((t) => t.accessToken),
+      loginAs(app, 'researcher@deltasignal.org').then((t) => t.accessToken),
+      loginAs(app, 'moderator@deltasignal.org').then((t) => t.accessToken),
+      loginAs(app, 'admin@deltasignal.org').then((t) => t.accessToken),
     ]);
   });
 
@@ -73,7 +73,7 @@ describe('Protected endpoints (e2e)', () => {
         .expect(200);
 
       expect(res.body).toMatchObject({
-        email: 'citizen@naturegrid.bd',
+        email: 'citizen@deltasignal.org',
         role: 'CITIZEN',
         permissions: expect.any(Array),
       });

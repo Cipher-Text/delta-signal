@@ -1,5 +1,5 @@
 import { IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
-import type { OrganizationType } from '@nature-grid/shared';
+import type { OrganizationType } from '@delta-signal/shared';
 
 const ORGANIZATION_TYPES: OrganizationType[] = [
   'GOVERNMENT_AGENCY',

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
 import { getCurrentUser } from '../../../lib/current-user';
-import { routes, type Alert, type PaginatedEnvelope } from '@nature-grid/contracts';
+import { routes, type Alert, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { titleCase } from '../../../lib/format';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';

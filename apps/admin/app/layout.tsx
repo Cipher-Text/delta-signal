@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Nature Grid Admin',
-  description: 'Administrative console for Nature Grid.',
+  title: 'Delta Signal Admin',
+  description: 'Administrative console for Delta Signal.',
 };
 
 export default function RootLayout({

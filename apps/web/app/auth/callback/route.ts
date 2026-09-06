@@ -20,7 +20,7 @@ import {
   ACCESS_TOKEN_MAX_AGE_SECONDS,
   REFRESH_TOKEN_MAX_AGE_SECONDS,
 } from '../../../lib/session-constants';
-import type { AuthResponse } from '@nature-grid/contracts';
+import type { AuthResponse } from '@delta-signal/contracts';
 
 const API_BASE_URL = process.env.API_URL ?? 'http://localhost:3001';
 const isProd = process.env.NODE_ENV === 'production';

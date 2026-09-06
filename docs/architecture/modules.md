@@ -477,7 +477,7 @@ If audit event volume grows, extract to a dedicated `AuditModule` with its own s
 
 `SeedService` is registered directly in `AppModule` (not its own module) and seeds development fixtures on first boot via `OnModuleInit`:
 - 6 user accounts (one per role: CITIZEN, RESEARCHER, ORGANIZATION_ADMIN, GOVERNMENT, MODERATOR, ADMIN) with password `NatureGrid123!`
-- 1 seed organization (`Nature Grid Bangladesh`, `NGO`) with the org-admin user attached as an `ADMIN` member
+- 1 seed organization (`Delta Signal Bangladesh`, `NGO`) with the org-admin user attached as an `ADMIN` member
 
 These accounts exist only for local development and should not be created in production.
 

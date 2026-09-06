@@ -1,6 +1,6 @@
 # Initial API
 
-The first API should reproduce Open Nature's useful backend surface while preparing for the broader Nature Grid domain model.
+The first API should reproduce Open Nature's useful backend surface while preparing for the broader Delta Signal domain model.
 
 ## Auth
 

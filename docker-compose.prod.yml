@@ -1,13 +1,13 @@
 # Production stack — pulls pre-built Docker Hub images.
 # Do NOT use for local development; use docker-compose.yml instead.
 #
-# Required env vars (written to /opt/nature-grid/.env by deploy.yml):
+# Required env vars (written to /opt/delta-signal/.env by deploy.yml):
 #   DOCKERHUB_USERNAME  — Docker Hub account that owns the images
 #   IMAGE_TAG           — Git SHA of the build to run (set automatically by CI)
 #   POSTGRES_PASSWORD   — database password (no default)
 #   JWT_SECRET          — API signing key ≥32 chars (no default)
-#   CORS_ORIGIN         — comma-separated allowed origins, e.g. https://naturegrid.bd
-#   APP_URL             — public web URL, e.g. https://naturegrid.bd (used in auth emails)
+#   CORS_ORIGIN         — comma-separated allowed origins, e.g. https://deltasignal.org
+#   APP_URL             — public web URL, e.g. https://deltasignal.org (used in auth emails)
 #
 # Optional env vars (graceful degradation when absent):
 #   SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / SMTP_FROM
@@ -24,13 +24,13 @@ services:
   postgres:
     image: postgis/postgis:16-3.4
     environment:
-      POSTGRES_DB:       ${POSTGRES_DB:-nature_grid}
-      POSTGRES_USER:     ${POSTGRES_USER:-nature_grid}
+      POSTGRES_DB:       ${POSTGRES_DB:-delta_signal}
+      POSTGRES_USER:     ${POSTGRES_USER:-delta_signal}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nature_grid} -d ${POSTGRES_DB:-nature_grid}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-delta_signal} -d ${POSTGRES_DB:-delta_signal}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,10 +51,10 @@ services:
     # Not exposed to host — only reachable by the API container.
 
   api:
-    image: ${DOCKERHUB_USERNAME}/nature-grid-api:${IMAGE_TAG:-latest}
+    image: ${DOCKERHUB_USERNAME}/delta-signal-api:${IMAGE_TAG:-latest}
     environment:
       DATABASE_URL: >-
-        postgresql://${POSTGRES_USER:-nature_grid}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-nature_grid}?schema=public
+        postgresql://${POSTGRES_USER:-delta_signal}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-delta_signal}?schema=public
       REDIS_URL:    redis://redis:6379
       JWT_SECRET:   ${JWT_SECRET}
       PORT:         3001
@@ -98,7 +98,7 @@ services:
     restart: unless-stopped
 
   web:
-    image: ${DOCKERHUB_USERNAME}/nature-grid-web:${IMAGE_TAG:-latest}
+    image: ${DOCKERHUB_USERNAME}/delta-signal-web:${IMAGE_TAG:-latest}
     environment:
       API_URL:  ${API_URL:-http://api:3001}
       PORT:     3000
@@ -111,7 +111,7 @@ services:
     restart: unless-stopped
 
   admin:
-    image: ${DOCKERHUB_USERNAME}/nature-grid-admin:${IMAGE_TAG:-latest}
+    image: ${DOCKERHUB_USERNAME}/delta-signal-admin:${IMAGE_TAG:-latest}
     environment:
       API_URL:  ${API_URL:-http://api:3001}
       PORT:     3002

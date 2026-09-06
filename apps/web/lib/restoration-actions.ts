@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { routes, type RestorationProject } from '@nature-grid/contracts';
+import { routes, type RestorationProject } from '@delta-signal/contracts';
 import { apiPostAuthed, ApiError } from './api';
 import { ACCESS_TOKEN_COOKIE } from './session-constants';
 

@@ -12,8 +12,8 @@ module.exports = {
     '^@nestjs/bullmq$': '<rootDir>/../__mocks__/@nestjs/bullmq.js',
     '^bullmq$': '<rootDir>/../__mocks__/bullmq.js',
     // tsconfig.base.json path aliases — ts-jest does not read them itself.
-    '^@nature-grid/shared$': '<rootDir>/../../../packages/shared/src/index.ts',
-    '^@nature-grid/contracts$': '<rootDir>/../../../packages/contracts/src/index.ts',
+    '^@delta-signal/shared$': '<rootDir>/../../../packages/shared/src/index.ts',
+    '^@delta-signal/contracts$': '<rootDir>/../../../packages/contracts/src/index.ts',
   },
   clearMocks: true,
   collectCoverageFrom: ['**/*.ts', '!**/*.module.ts', '!main.ts'],

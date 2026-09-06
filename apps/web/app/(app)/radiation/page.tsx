@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
-import { routes, type SatelliteRadiationReading, type DistrictSummary } from '@nature-grid/contracts';
+import { routes, type SatelliteRadiationReading, type DistrictSummary } from '@delta-signal/contracts';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {

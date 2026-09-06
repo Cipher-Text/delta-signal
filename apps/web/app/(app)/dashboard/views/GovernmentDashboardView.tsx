@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { GovernmentDashboard } from '@nature-grid/contracts';
+import type { GovernmentDashboard } from '@delta-signal/contracts';
 import type { CurrentUser } from '../../../../lib/current-user';
 import { DashboardHeader, StatCard, BarChart, SectionHeader } from '../components/DashboardPrimitives';
 import { titleCase } from '../../../../lib/format';

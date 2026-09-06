@@ -53,8 +53,8 @@ async function bootstrap() {
   );
 
   const swaggerConfig = new DocumentBuilder()
-    .setTitle('Nature Grid API')
-    .setDescription('API reference for Nature Grid services')
+    .setTitle('Delta Signal API')
+    .setDescription('API reference for Delta Signal services')
     .setVersion('0.1.0')
     .addBearerAuth()
     .build();

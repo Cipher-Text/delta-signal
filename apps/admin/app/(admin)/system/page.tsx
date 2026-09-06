@@ -94,7 +94,7 @@ export default async function SystemHealthPage() {
             <div className="system-card-indicator" />
             <div>
               <strong>{isHealthy ? 'Operational' : 'Unreachable'}</strong>
-              <p>{health?.service ?? 'nature-grid-api'} · v{health?.version ?? '—'}</p>
+              <p>{health?.service ?? 'delta-signal-api'} · v{health?.version ?? '—'}</p>
               {health?.timestamp && (
                 <p className="system-card-ts">
                   Last checked: {formatDateTime(health.timestamp)}

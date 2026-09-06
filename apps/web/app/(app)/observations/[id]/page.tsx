@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { apiGet } from '../../../../lib/api';
-import { routes, type Observation } from '@nature-grid/contracts';
+import { routes, type Observation } from '@delta-signal/contracts';
 import { titleCase, relativeTime } from '../../../../lib/format';
 
 const TRUST_BADGE: Record<string, string> = {

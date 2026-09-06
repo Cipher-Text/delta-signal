@@ -7,7 +7,7 @@ import {
   type StationFloodForecast,
   type WaterLevelThresholdStatus,
   type WaterLevelTrend,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { relativeTime } from '../../../../../lib/format';
 
 const STATUS_TAG: Record<NonNullable<WaterLevelThresholdStatus>, string> = {

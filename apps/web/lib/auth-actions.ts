@@ -1,7 +1,7 @@
 'use server';
 
 import { redirect } from 'next/navigation';
-import { routes, type AuthResponse } from '@nature-grid/contracts';
+import { routes, type AuthResponse } from '@delta-signal/contracts';
 import { apiPost, ApiError } from './api';
 import { setSessionCookies, clearSessionCookies, getRefreshToken } from './session';
 

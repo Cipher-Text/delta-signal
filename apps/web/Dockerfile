@@ -25,7 +25,7 @@ COPY tsconfig.base.json ./
 
 # NEXT_TELEMETRY_DISABLED keeps the build quiet in CI/Docker
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm --filter @nature-grid/web build
+RUN pnpm --filter @delta-signal/web build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS runner

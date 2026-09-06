@@ -63,8 +63,8 @@ jobs:
           file: apps/api/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-api:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-api:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-api:latest
 
       - name: Build & push web image
         uses: docker/build-push-action@v5
@@ -73,8 +73,8 @@ jobs:
           file: apps/web/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-web:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-web:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-web:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-web:latest
 
       - name: Build & push admin image
         uses: docker/build-push-action@v5
@@ -83,8 +83,8 @@ jobs:
           file: apps/admin/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-admin:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-admin:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-admin:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-admin:latest
 
       # ── Copy updated compose file to VPS ──────────────────────────────────
       - name: Copy compose file to VPS
@@ -94,7 +94,7 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key:      ${{ secrets.DEPLOY_SSH_KEY }}
           source:   docker-compose.prod.yml
-          target:   /opt/nature-grid
+          target:   /opt/delta-signal
 
       # ── SSH into VPS, write .env, pull images, restart ────────────────────
       - name: Deploy via SSH
@@ -134,8 +134,8 @@ jobs:
             STORAGE_BUCKET,STORAGE_REGION,STORAGE_USE_PATH_STYLE,STORAGE_PUBLIC_URL
           script: |
             set -e
-            mkdir -p /opt/nature-grid
-            cd /opt/nature-grid
+            mkdir -p /opt/delta-signal
+            cd /opt/delta-signal
 
             # Write production .env — overwritten on every deploy so secrets
             # stay in sync with GitHub environment secrets.
@@ -165,9 +165,9 @@ jobs:
             chmod 600 .env
 
             # Pull the exact images built from this commit.
-            docker pull ${DOCKERHUB_USERNAME}/nature-grid-api:${IMAGE_TAG}
-            docker pull ${DOCKERHUB_USERNAME}/nature-grid-web:${IMAGE_TAG}
-            docker pull ${DOCKERHUB_USERNAME}/nature-grid-admin:${IMAGE_TAG}
+            docker pull ${DOCKERHUB_USERNAME}/delta-signal-api:${IMAGE_TAG}
+            docker pull ${DOCKERHUB_USERNAME}/delta-signal-web:${IMAGE_TAG}
+            docker pull ${DOCKERHUB_USERNAME}/delta-signal-admin:${IMAGE_TAG}
 
             # Restart app services; postgres/redis restart only if config changed.
             docker compose -f docker-compose.prod.yml up -d --remove-orphans

@@ -8,7 +8,7 @@ export class HealthController {
   getHealth() {
     return {
       status: 'ok',
-      service: 'nature-grid-api',
+      service: 'delta-signal-api',
       timestamp: new Date().toISOString(),
       version: '0.1.0',
     };

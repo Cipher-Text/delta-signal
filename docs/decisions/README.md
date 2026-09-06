@@ -1,6 +1,6 @@
 # Decisions
 
-Architecture decision records for Nature Grid.
+Architecture decision records for Delta Signal.
 
 | ADR | Status | Summary |
 | --- | --- | --- |

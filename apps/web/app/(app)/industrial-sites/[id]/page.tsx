@@ -6,7 +6,7 @@ import {
   routes,
   type FacilityDetail,
   type ComplianceStatus,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { titleCase, relativeTime } from '../../../../lib/format';
 
 const COMPLIANCE_TAG: Record<ComplianceStatus, string> = {

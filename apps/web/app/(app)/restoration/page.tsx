@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { apiGet, apiGetAuthed } from '../../../lib/api';
 import { getCurrentUser } from '../../../lib/current-user';
 import { createRestorationProjectAction, joinRestorationProjectAction } from '../../../lib/restoration-actions';
-import { routes, type RestorationProject, type PaginatedEnvelope } from '@nature-grid/contracts';
+import { routes, type RestorationProject, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { titleCase } from '../../../lib/format';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';

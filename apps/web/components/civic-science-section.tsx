@@ -16,7 +16,7 @@ import {
   type RestorationProject,
   type PaginatedEnvelope,
   type PlatformMetrics,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 import { titleCase, relativeTime } from '../lib/format';
 import CivicScienceTabs, {

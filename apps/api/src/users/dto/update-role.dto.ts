@@ -1,5 +1,5 @@
 import { IsIn } from 'class-validator';
-import type { UserRole } from '@nature-grid/shared';
+import type { UserRole } from '@delta-signal/shared';
 
 const ASSIGNABLE_ROLES: UserRole[] = [
   'CITIZEN',

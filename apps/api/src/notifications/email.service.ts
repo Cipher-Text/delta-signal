@@ -43,7 +43,7 @@ export class EmailService {
     const port = Number(config.get<string>('SMTP_PORT') ?? 587);
     const user = config.get<string>('SMTP_USER');
     const pass = config.get<string>('SMTP_PASS');
-    this.smtpFrom = config.get<string>('SMTP_FROM') ?? 'Nature Grid Alerts <alerts@naturegrid.bd>';
+    this.smtpFrom = config.get<string>('SMTP_FROM') ?? 'Delta Signal Alerts <alerts@deltasignal.org>';
 
     if (!host) {
       this.transporter = null;
@@ -64,11 +64,11 @@ export class EmailService {
       this.logger.debug(`Skipping password-reset email to ${to} — SMTP not configured`);
       return;
     }
-    const subject = 'Nature Grid — Reset your password';
+    const subject = 'Delta Signal — Reset your password';
     const body = [
       `Hello ${displayName},`,
       '',
-      'We received a request to reset the password for your Nature Grid account.',
+      'We received a request to reset the password for your Delta Signal account.',
       '',
       'Click the link below to choose a new password (expires in 1 hour):',
       resetUrl,
@@ -77,7 +77,7 @@ export class EmailService {
       'Your password will not change unless you click the link above.',
       '',
       '---',
-      'Nature Grid — Environmental Monitoring Platform',
+      'Delta Signal — Environmental Monitoring Platform',
     ].join('\n');
 
     await this.transporter.sendMail({ from: this.smtpFrom, to, subject, text: body });
@@ -88,18 +88,18 @@ export class EmailService {
       this.logger.debug(`Skipping verification email to ${to} — SMTP not configured`);
       return;
     }
-    const subject = 'Nature Grid — Verify your email address';
+    const subject = 'Delta Signal — Verify your email address';
     const body = [
       `Hello ${displayName},`,
       '',
-      'Thank you for registering with Nature Grid.',
+      'Thank you for registering with Delta Signal.',
       'Please verify your email address by clicking the link below (expires in 24 hours):',
       verificationUrl,
       '',
-      'If you did not create a Nature Grid account, you can safely ignore this email.',
+      'If you did not create a Delta Signal account, you can safely ignore this email.',
       '',
       '---',
-      'Nature Grid — Environmental Monitoring Platform',
+      'Delta Signal — Environmental Monitoring Platform',
     ].join('\n');
 
     await this.transporter.sendMail({ from: this.smtpFrom, to, subject, text: body });
@@ -134,7 +134,7 @@ export class EmailService {
     }
 
     const area = alert.district?.name ?? 'Nationwide';
-    const subject = `[${alert.severity}] Nature Grid Alert: ${alert.title}`;
+    const subject = `[${alert.severity}] Delta Signal Alert: ${alert.title}`;
     const body = [
       `Hello ${displayName},`,
       '',
@@ -149,8 +149,8 @@ export class EmailService {
       ...(alert.instructions ? ['', 'Instructions:', alert.instructions] : []),
       '',
       '---',
-      'You are receiving this because you subscribed to Nature Grid alert notifications.',
-      'Visit Nature Grid to manage your subscriptions.',
+      'You are receiving this because you subscribed to Delta Signal alert notifications.',
+      'Visit Delta Signal to manage your subscriptions.',
     ].join('\n');
 
     await this.transporter.sendMail({

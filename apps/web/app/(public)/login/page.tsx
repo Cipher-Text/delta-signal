@@ -6,12 +6,12 @@ import { loginAction } from '../../../lib/auth-actions';
 // accidentally embed it in the JS bundle even if the seed panel is shown.
 const SEED_PASSWORD = process.env.NEXT_PUBLIC_SEED_PASSWORD ?? '';
 const SEED_USERS = [
-  { email: 'citizen@naturegrid.bd', label: 'Citizen' },
-  { email: 'researcher@naturegrid.bd', label: 'Researcher' },
-  { email: 'organization.admin@naturegrid.bd', label: 'Organization Admin' },
-  { email: 'government@naturegrid.bd', label: 'Government' },
-  { email: 'moderator@naturegrid.bd', label: 'Moderator' },
-  { email: 'admin@naturegrid.bd', label: 'Admin' },
+  { email: 'citizen@deltasignal.org', label: 'Citizen' },
+  { email: 'researcher@deltasignal.org', label: 'Researcher' },
+  { email: 'organization.admin@deltasignal.org', label: 'Organization Admin' },
+  { email: 'government@deltasignal.org', label: 'Government' },
+  { email: 'moderator@deltasignal.org', label: 'Moderator' },
+  { email: 'admin@deltasignal.org', label: 'Admin' },
 ];
 
 export default function LoginPage({
@@ -26,14 +26,14 @@ export default function LoginPage({
       <div className="auth-panel">
         <div className="auth-brand">
           <div className="brand-mark">NG</div>
-          <span>Nature Grid</span>
+          <span>Delta Signal</span>
         </div>
 
         <div className="panel auth-panel-card">
           <div className="panel-header">
             <div>
               <h2>Sign in</h2>
-              <p>Access your Nature Grid account</p>
+              <p>Access your Delta Signal account</p>
             </div>
           </div>
 

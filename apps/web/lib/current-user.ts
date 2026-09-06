@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { routes } from '@nature-grid/contracts';
+import { routes } from '@delta-signal/contracts';
 import { apiGetAuthed } from './api';
 import { ACCESS_TOKEN_COOKIE } from './session-constants';
 

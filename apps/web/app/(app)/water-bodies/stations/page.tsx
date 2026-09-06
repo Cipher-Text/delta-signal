@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { apiGet } from '../../../../lib/api';
-import { routes, type WaterLevelStationPagedResponse, type DistrictSummary, type WaterBodyPagedResponse } from '@nature-grid/contracts';
+import { routes, type WaterLevelStationPagedResponse, type DistrictSummary, type WaterBodyPagedResponse } from '@delta-signal/contracts';
 
 export default async function WaterLevelStationsPage({
   searchParams,

@@ -10,7 +10,7 @@ import {
   type GovernmentDashboard,
   type ResearcherDashboard,
   type OrgAdminDashboard,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import AdminDashboardView from './views/AdminDashboardView';
 import ModeratorDashboardView from './views/ModeratorDashboardView';
 import GovernmentDashboardView from './views/GovernmentDashboardView';

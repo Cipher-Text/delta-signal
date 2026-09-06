@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { routes, type Alert, type CitizenReport } from '@nature-grid/contracts';
+import { routes, type Alert, type CitizenReport } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 import type { MapDistrict, MapAlert, MapReport } from './map-client';
 

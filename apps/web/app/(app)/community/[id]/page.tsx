@@ -9,7 +9,7 @@ import {
   deletePostAction,
   deleteCommentAction,
 } from '../../../../lib/community-actions';
-import { routes, type CommunityPostDetail } from '@nature-grid/contracts';
+import { routes, type CommunityPostDetail } from '@delta-signal/contracts';
 import { relativeTime } from '../../../../lib/format';
 import { ACCESS_TOKEN_COOKIE } from '../../../../lib/session-constants';
 

@@ -1,5 +1,5 @@
 {
-  "name": "@nature-grid/web",
+  "name": "@delta-signal/web",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -10,8 +10,8 @@
     "test": "echo \"No web tests configured yet\""
   },
   "dependencies": {
-    "@nature-grid/contracts": "workspace:*",
-    "@nature-grid/shared": "workspace:*",
+    "@delta-signal/contracts": "workspace:*",
+    "@delta-signal/shared": "workspace:*",
     "leaflet": "^1.9.4",
     "next": "^14.2.23",
     "react": "^18.3.1",

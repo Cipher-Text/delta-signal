@@ -1,4 +1,4 @@
-# @nature-grid/ui
+# @delta-signal/ui
 
-Shared React components for Nature Grid apps.
+Shared React components for Delta Signal apps.
 

@@ -1,7 +1,7 @@
 // ─── Roles ────────────────────────────────────────────────────────────────────
 
 /**
- * All user roles in Nature Grid, from least to most privileged.
+ * All user roles in Delta Signal, from least to most privileged.
  * Matches the Prisma `UserRole` enum exactly — these values are what
  * `request.user.role` actually contains at runtime, so casing must match.
  * `guest` isn't a real Prisma value (unauthenticated requests have no role

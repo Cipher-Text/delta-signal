@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { UserRole } from '@nature-grid/shared';
+import type { UserRole } from '@delta-signal/shared';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 import type { JwtPayload } from '../decorators/current-user.decorator';
 import type { Request } from 'express';

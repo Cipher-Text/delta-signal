@@ -30,9 +30,9 @@ COPY apps/api/   ./apps/api/
 COPY tsconfig.base.json ./
 
 # Generate Prisma client for the builder's platform (linux/amd64 or arm64)
-RUN pnpm --filter @nature-grid/database run db:generate
+RUN pnpm --filter @delta-signal/database run db:generate
 
-RUN pnpm --filter @nature-grid/api build
+RUN pnpm --filter @delta-signal/api build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 FROM base AS runner
@@ -63,7 +63,7 @@ RUN pnpm install --frozen-lockfile --prod
 # prisma CLI is a devDep so it's absent after --prod install. Install it globally
 # just long enough to generate the client for this platform, then remove it.
 RUN npm install -g prisma@6 && \
-    pnpm --filter @nature-grid/database run db:generate
+    pnpm --filter @delta-signal/database run db:generate
 
 # Copy compiled application from builder
 COPY --from=builder /repo/apps/api/dist ./apps/api/dist

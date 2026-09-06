@@ -76,7 +76,7 @@ OpenMeteo documents marine forecasts as 7 days by default, with up to 16 days av
 - OpenMeteo states marine data is not suitable for coastal navigation and does not replace nautical references.
 - Returned latitude and longitude identify the selected marine grid cell, which may differ from the requested coordinate.
 
-## Possible Nature Grid Use
+## Possible Delta Signal Use
 
 Candidate use cases:
 

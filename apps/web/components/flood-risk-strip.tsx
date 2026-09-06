@@ -1,4 +1,4 @@
-import { routes, type StationFloodForecast } from '@nature-grid/contracts';
+import { routes, type StationFloodForecast } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 
 type RiskLevel = 'HIGH' | 'ELEVATED';

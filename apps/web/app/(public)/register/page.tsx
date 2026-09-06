@@ -11,7 +11,7 @@ export default function RegisterPage({
       <div className="auth-panel">
         <div className="auth-brand">
           <div className="brand-mark">NG</div>
-          <span>Nature Grid</span>
+          <span>Delta Signal</span>
         </div>
 
         <div className="panel auth-panel-card">

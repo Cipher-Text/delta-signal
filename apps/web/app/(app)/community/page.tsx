@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
 import { getCurrentUser } from '../../../lib/current-user';
 import { createPostAction } from '../../../lib/community-actions';
-import { routes, type CommunityPostSummary, type PaginatedEnvelope } from '@nature-grid/contracts';
+import { routes, type CommunityPostSummary, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { relativeTime } from '../../../lib/format';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
 import ListPagination from '../../../components/list-pagination';

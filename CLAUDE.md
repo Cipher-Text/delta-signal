@@ -34,7 +34,7 @@ pnpm exec jest --coverage                       # Coverage report
 
 ## Architecture
 
-**Nx monorepo** with pnpm workspaces. Three TS apps share packages via path aliases (`@nature-grid/*` → `packages/*/src`).
+**Nx monorepo** with pnpm workspaces. Three TS apps share packages via path aliases (`@delta-signal/*` → `packages/*/src`).
 
 ```
 apps/api          NestJS modular monolith    :3001
@@ -131,7 +131,7 @@ Fetch helpers: `apiGet` (cached), `apiGetAuthed`, `apiPost`, `apiPostAuthed` (ne
 
 **Profile page tabs** (URL param `?tab=...`): `personal` (bio, phone, occupation, expertise, research interests, social links, institution, education), `location` (district, country, visibility), `achievements` (profile completeness widget, badge showcase, contribution points, level), `alerts` (severity subscriptions), `security` (password change, session management).
 
-`apps/web` depends on `@nature-grid/contracts` for route constants and DTOs. `apps/api` has `@nature-grid/contracts` as a **devDependency only** — it is never imported in production code, but `apps/api/src/common/contract-types.typecheck.ts` uses it for compile-time contract enforcement: every service return type is asserted against its contract type via `tsc --noEmit` in CI. A service dropping a required field or changing a field type will produce a `TS2322` error and fail the build.
+`apps/web` depends on `@delta-signal/contracts` for route constants and DTOs. `apps/api` has `@delta-signal/contracts` as a **devDependency only** — it is never imported in production code, but `apps/api/src/common/contract-types.typecheck.ts` uses it for compile-time contract enforcement: every service return type is asserted against its contract type via `tsc --noEmit` in CI. A service dropping a required field or changing a field type will produce a `TS2322` error and fail the build.
 
 **Contracts gap:** `packages/contracts/src/index.ts` does not yet list routes for `radiation` or `marine` — these API endpoints exist but the web app does not consume them yet. Add contract entries before building frontend pages for those features.
 
@@ -239,7 +239,7 @@ Complex queries use raw SQL via `prisma.$queryRaw`.
 
 `apps/web` and `apps/admin` have no tests (`echo "No web tests configured yet"`).
 
-CI (`.github/workflows/ci.yml`): `pnpm install --frozen-lockfile` → `pnpm audit --prod --audit-level=high` → `prisma generate` → `prisma validate` → `tsc --noEmit` × 3 → `jest` → `pnpm build`. A parallel `docker-build` job runs `docker build -f apps/api/Dockerfile -t nature-grid/api:ci .`. Remote is `Cipher-Text/nature-grid` on GitHub — CI runs on every push to `main` and on PRs. CD (`.github/workflows/deploy.yml`) builds and pushes images to Docker Hub then deploys to VPS via SSH (`appleboy/ssh-action`) — triggered automatically after CI passes on `main` or manually via `workflow_dispatch`.
+CI (`.github/workflows/ci.yml`): `pnpm install --frozen-lockfile` → `pnpm audit --prod --audit-level=high` → `prisma generate` → `prisma validate` → `tsc --noEmit` × 3 → `jest` → `pnpm build`. A parallel `docker-build` job runs `docker build -f apps/api/Dockerfile -t delta-signal/api:ci .`. Remote is `Cipher-Text/delta-signal` on GitHub — CI runs on every push to `main` and on PRs. CD (`.github/workflows/deploy.yml`) builds and pushes images to Docker Hub then deploys to VPS via SSH (`appleboy/ssh-action`) — triggered automatically after CI passes on `main` or manually via `workflow_dispatch`.
 
 ## Key environment variables
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { AdminDashboard } from '@nature-grid/contracts';
+import type { AdminDashboard } from '@delta-signal/contracts';
 import type { CurrentUser } from '../../../../lib/current-user';
 import { DashboardHeader, StatCard, BarChart, SectionHeader } from '../components/DashboardPrimitives';
 
@@ -30,7 +30,7 @@ export default function AdminDashboardView({
 
   return (
     <>
-      <DashboardHeader title="Platform Overview" subtitle="Real-time snapshot of the Nature Grid platform" />
+      <DashboardHeader title="Platform Overview" subtitle="Real-time snapshot of the Delta Signal platform" />
 
       {/* KPI strip */}
       <div className="stat-grid">

@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { apiGet } from '../../../../lib/api';
-import { routes, type WaterBody } from '@nature-grid/contracts';
+import { routes, type WaterBody } from '@delta-signal/contracts';
 import { titleCase } from '../../../../lib/format';
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {

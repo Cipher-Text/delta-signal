@@ -11,11 +11,11 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@nature-grid/ui": ["packages/ui/src/index.ts"],
-      "@nature-grid/contracts": ["packages/contracts/src/index.ts"],
-      "@nature-grid/database": ["packages/database/src/index.ts"],
-      "@nature-grid/config": ["packages/config/src/index.ts"],
-      "@nature-grid/shared": ["packages/shared/src/index.ts"]
+      "@delta-signal/ui": ["packages/ui/src/index.ts"],
+      "@delta-signal/contracts": ["packages/contracts/src/index.ts"],
+      "@delta-signal/database": ["packages/database/src/index.ts"],
+      "@delta-signal/config": ["packages/config/src/index.ts"],
+      "@delta-signal/shared": ["packages/shared/src/index.ts"]
     }
   }
 }

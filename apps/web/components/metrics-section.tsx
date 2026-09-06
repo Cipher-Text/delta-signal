@@ -1,4 +1,4 @@
-import { routes, type PlatformMetrics } from '@nature-grid/contracts';
+import { routes, type PlatformMetrics } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 
 interface Metric {
@@ -52,7 +52,7 @@ export default async function MetricsSection() {
       <div className="section-intro">
         <p className="eyebrow">About the public record</p>
         <h2>Platform coverage</h2>
-        <p>These counts describe what Nature Grid contains, not Bangladesh’s environmental condition.</p>
+        <p>These counts describe what Delta Signal contains, not Bangladesh’s environmental condition.</p>
       </div>
       <div className="metric-grid">
       {!isLive && (

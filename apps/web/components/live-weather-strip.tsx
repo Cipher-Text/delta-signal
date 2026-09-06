@@ -1,4 +1,4 @@
-import { routes, type CurrentWeatherReading } from '@nature-grid/contracts';
+import { routes, type CurrentWeatherReading } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 
 export default async function LiveWeatherStrip() {

@@ -1,4 +1,4 @@
-# Nature Grid API
+# Delta Signal API
 
 NestJS core API. This should start as a modular monolith and remain organized around domain boundaries.
 

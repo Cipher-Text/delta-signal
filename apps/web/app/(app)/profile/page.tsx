@@ -12,11 +12,11 @@ import {
   type GamificationSummary,
   type BadgeSummary,
   type MissingField,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { titleCase, relativeTime } from '../../../lib/format';
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
 import { updateProfileAction, changePasswordAction } from '../../../lib/profile-actions';
-import { ENVIRONMENTAL_EXPERTISE, ENVIRONMENTAL_RESEARCH_INTERESTS } from '@nature-grid/shared';
+import { ENVIRONMENTAL_EXPERTISE, ENVIRONMENTAL_RESEARCH_INTERESTS } from '@delta-signal/shared';
 import TagInput from '../../../components/tag-input';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
 

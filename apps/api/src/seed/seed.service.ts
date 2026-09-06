@@ -11,23 +11,23 @@ const SEED_USERS: {
   displayName: string;
   role: UserRole;
 }[] = [
-  { email: 'citizen@naturegrid.bd', displayName: 'Seed Citizen', role: 'CITIZEN' },
-  { email: 'researcher@naturegrid.bd', displayName: 'Seed Researcher', role: 'RESEARCHER' },
+  { email: 'citizen@deltasignal.org', displayName: 'Seed Citizen', role: 'CITIZEN' },
+  { email: 'researcher@deltasignal.org', displayName: 'Seed Researcher', role: 'RESEARCHER' },
   {
-    email: 'organization.admin@naturegrid.bd',
+    email: 'organization.admin@deltasignal.org',
     displayName: 'Seed Organization Admin',
     role: 'ORGANIZATION_ADMIN',
   },
-  { email: 'government@naturegrid.bd', displayName: 'Seed Government', role: 'GOVERNMENT' },
-  { email: 'moderator@naturegrid.bd', displayName: 'Seed Moderator', role: 'MODERATOR' },
-  { email: 'admin@naturegrid.bd', displayName: 'Seed Admin', role: 'ADMIN' },
+  { email: 'government@deltasignal.org', displayName: 'Seed Government', role: 'GOVERNMENT' },
+  { email: 'moderator@deltasignal.org', displayName: 'Seed Moderator', role: 'MODERATOR' },
+  { email: 'admin@deltasignal.org', displayName: 'Seed Admin', role: 'ADMIN' },
 ];
 
 const SEED_ORGANIZATION = {
-  name: 'Nature Grid Bangladesh',
+  name: 'Delta Signal Bangladesh',
   type: 'NGO' as OrganizationType,
   description: 'Seed organization for local development and admin workflows.',
-  website: 'https://naturegrid.bd',
+  website: 'https://deltasignal.org',
   country: 'Bangladesh',
   isVerified: true,
 };
@@ -208,7 +208,7 @@ export class SeedService implements OnModuleInit {
         data: SEED_ORGANIZATION,
       });
       const admin = await this.prisma.user.findUnique({
-        where: { email: 'organization.admin@naturegrid.bd' },
+        where: { email: 'organization.admin@deltasignal.org' },
         select: { id: true },
       });
       if (admin) {
@@ -223,7 +223,7 @@ export class SeedService implements OnModuleInit {
 
     const organization = await this.prisma.organization.create({ data: SEED_ORGANIZATION });
     const admin = await this.prisma.user.findUnique({
-      where: { email: 'organization.admin@naturegrid.bd' },
+      where: { email: 'organization.admin@deltasignal.org' },
       select: { id: true },
     });
     if (admin) {

@@ -12,7 +12,7 @@ import {
   type PaginatedEnvelope,
   type MarineForecast,
   type SatelliteRadiationReading,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
 import { titleCase, relativeTime } from '../../../../../lib/format';

@@ -1,6 +1,6 @@
 # Access Model
 
-Nature Grid should be useful before login. The public site is not only a marketing page; it is a single-page public environmental board with summaries, maps, alerts, verified reports, biodiversity highlights, restoration work, and community activity.
+Delta Signal should be useful before login. The public site is not only a marketing page; it is a single-page public environmental board with summaries, maps, alerts, verified reports, biodiversity highlights, restoration work, and community activity.
 
 ## Public Without Login
 

@@ -1,5 +1,5 @@
 {
-  "name": "@nature-grid/database",
+  "name": "@delta-signal/database",
   "version": "0.1.0",
   "private": true,
   "main": "src/index.ts",

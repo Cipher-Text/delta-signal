@@ -6,7 +6,7 @@ Accepted
 
 ## Decision
 
-Nature Grid will use a pnpm workspace and Nx monorepo containing independently deployable applications:
+Delta Signal will use a pnpm workspace and Nx monorepo containing independently deployable applications:
 
 - `apps/web`
 - `apps/admin`

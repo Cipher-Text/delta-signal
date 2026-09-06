@@ -15,7 +15,7 @@ describe('Auth flows (e2e)', () => {
   let prisma: PrismaService;
 
   // Unique per test run so parallel runs don't collide.
-  const testEmail = `e2e.auth.${Date.now()}@test.naturegrid.bd`;
+  const testEmail = `e2e.auth.${Date.now()}@test.deltasignal.org`;
   const testPassword = 'E2eTestPassword123!';
   const testDisplayName = 'E2E Auth User';
 

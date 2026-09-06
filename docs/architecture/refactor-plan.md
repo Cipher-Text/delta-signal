@@ -1,6 +1,6 @@
 # Refactor Plan
 
-Nature Grid should not copy Open Nature file-for-file. The refactor should carry over proven feature logic and discard mock-only coupling.
+Delta Signal should not copy Open Nature file-for-file. The refactor should carry over proven feature logic and discard mock-only coupling.
 
 ## Step 1: Documentation and Boundaries
 

@@ -43,7 +43,7 @@ jobs:
       # Must run before any typecheck: apps/api imports types from the
       # generated Prisma client, which does not exist in a fresh install.
       - name: Generate Prisma client
-        run: pnpm --filter @nature-grid/database run db:generate
+        run: pnpm --filter @delta-signal/database run db:generate
 
       - name: Validate Prisma schema
         run: pnpm exec prisma validate
@@ -113,7 +113,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Generate Prisma client
-        run: pnpm --filter @nature-grid/database run db:generate
+        run: pnpm --filter @delta-signal/database run db:generate
 
       - name: Apply migrations
         run: pnpm exec prisma migrate deploy
@@ -134,4 +134,4 @@ jobs:
       # entrypoint issues, and production-install failures that the JS build
       # step above cannot see. Runs in parallel with verify — no dependency.
       - name: Build API Docker image
-        run: docker build -f apps/api/Dockerfile -t nature-grid/api:ci .
+        run: docker build -f apps/api/Dockerfile -t delta-signal/api:ci .

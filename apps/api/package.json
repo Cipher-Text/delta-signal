@@ -1,5 +1,5 @@
 {
-  "name": "@nature-grid/api",
+  "name": "@delta-signal/api",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,8 +15,8 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1121.0",
     "@aws-sdk/s3-request-presigner": "^3.1121.0",
-    "@nature-grid/database": "workspace:*",
-    "@nature-grid/shared": "workspace:*",
+    "@delta-signal/database": "workspace:*",
+    "@delta-signal/shared": "workspace:*",
     "@nestjs/bullmq": "^12.0.0",
     "@nestjs/common": "^10.4.15",
     "@nestjs/config": "^3.3.0",
@@ -44,7 +44,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
-    "@nature-grid/contracts": "workspace:*",
+    "@delta-signal/contracts": "workspace:*",
     "@nestjs/cli": "^10.4.8",
     "@nestjs/schematics": "^10.2.3",
     "@nestjs/testing": "^10.4.15",

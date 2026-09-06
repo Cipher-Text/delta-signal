@@ -1,6 +1,6 @@
 # Roles and Permissions
 
-Nature Grid has six database roles plus `guest` (a documentation-only term for unauthenticated visitors). The permission model is DB-backed and runtime-configurable via the admin console — role grants can be changed without a code redeploy.
+Delta Signal has six database roles plus `guest` (a documentation-only term for unauthenticated visitors). The permission model is DB-backed and runtime-configurable via the admin console — role grants can be changed without a code redeploy.
 
 > **Casing:** role names are written lowercase in this document as product terms. The actual runtime values are **UPPERCASE**, matching the Prisma `UserRole` enum exactly (`CITIZEN`, `RESEARCHER`, `ORGANIZATION_ADMIN`, `GOVERNMENT`, `MODERATOR`, `ADMIN`). Always pass the uppercase form to `@Roles(...)` — a case mismatch between the guard and the enum shipped a bug that rejected every user, including admins (see `docs/progress.md` "Critical RBAC Fix"). `guest` is **not** a Prisma value; unauthenticated requests carry no role at all.
 

@@ -1,6 +1,6 @@
 # Frontend Design Mocks
 
-Revised static design mocks for Nature Grid. Open `index.html` in a browser to start.
+Revised static design mocks for Delta Signal. Open `index.html` in a browser to start.
 
 All pages are linked — navigate between them using the sidebar (app pages) or the top nav (public page).
 

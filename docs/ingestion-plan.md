@@ -1,6 +1,6 @@
 # Ingestion Plan
 
-Source analysis: `open-nature/apps/backend` (partial implementation, Spring Boot) and `open-nature-backend2` (entity model only). This document captures what was learned and translates it into a concrete NestJS/Prisma plan for nature-grid. No Java code will be ported — logic and patterns will be re-implemented in TypeScript.
+Source analysis: `open-nature/apps/backend` (partial implementation, Spring Boot) and `open-nature-backend2` (entity model only). This document captures what was learned and translates it into a concrete NestJS/Prisma plan for delta-signal. No Java code will be ported — logic and patterns will be re-implemented in TypeScript.
 
 ---
 
@@ -43,7 +43,7 @@ The gap analysis, API research, and "what NOT to port" sections below are still 
 
 ### open-nature-backend2 (entity model only)
 
-Added these well-designed entities not yet in nature-grid:
+Added these well-designed entities not yet in delta-signal:
 - `WeatherData` — full time-series per reading (temp, humidity, pressure, wind, precipitation, cloud, UV, AQI, raw JSON)
 - `AirQualityData` — PM2.5, PM10, O3, NO2, SO2, CO, CO2, CH4, NH3, health recommendations
 - `WeatherAggregate` / `AqiAggregate` — daily rollups per division/district
@@ -56,7 +56,7 @@ Added these well-designed entities not yet in nature-grid:
 
 ---
 
-## What nature-grid already has (do not duplicate)
+## What delta-signal already has (do not duplicate)
 
 This table reflects the state at the time of original planning. The schema now has 35 models. See `docs/architecture/data-model.md` for the full current model list.
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { routes, type DivisionWithClimate } from '@nature-grid/contracts';
+import { routes, type DivisionWithClimate } from '@delta-signal/contracts';
 import { apiGet } from '../../../lib/api';
 
 function aqiClass(pm25: number | null): { label: string; css: string } {

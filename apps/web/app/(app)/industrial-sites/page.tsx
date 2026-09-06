@@ -8,7 +8,7 @@ import {
   type ComplianceStatus,
   type CompanyType,
   type DistrictSummary,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { titleCase } from '../../../lib/format';
 
 // ─── Label maps ──────────────────────────────────────────────────────────────

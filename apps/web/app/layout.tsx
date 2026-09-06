@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Nature Grid — Bangladesh Environmental Intelligence',
+  title: 'Delta Signal — Bangladesh Environmental Intelligence',
   description:
     'Public environmental board for Bangladesh. Browse active alerts, verified reports, datasets, biodiversity records, and restoration projects — no login required.',
 };

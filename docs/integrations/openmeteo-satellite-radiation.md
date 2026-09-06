@@ -63,7 +63,7 @@ Important daily fields include:
 - OpenMeteo exposes satellite/model selection. Bangladesh should be covered by India/Asia sources such as JMA JAXA Himawari and EUMETSAT IODC, but source selection should be verified with live API calls before implementation.
 - OpenMeteo says satellite data can be available in 10, 15, or 30 minute steps, while the API returns hourly data by default unless native temporal resolution is requested.
 
-## Possible Nature Grid Use
+## Possible Delta Signal Use
 
 Candidate use cases:
 

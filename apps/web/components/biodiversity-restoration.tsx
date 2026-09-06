@@ -5,7 +5,7 @@ import {
   type Occurrence,
   type RestorationProject,
   type PaginatedEnvelope,
-} from '@nature-grid/contracts';
+} from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 
 interface ProjectPreview {
