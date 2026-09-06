@@ -90,7 +90,7 @@ Seeding happens in service `onModuleInit()` hooks (idempotent upserts):
 - `ProvidersService` — seeds OpenMeteo, GBIF, and World Bank provider records
 - `DatasetsService` — seeds 9 dataset catalog records (OpenMeteo Weather, OpenMeteo Flood, District Air Quality Index, Water Body Registry, Biodiversity Occurrences, Sundarbans Monitoring, Emissions Inventory, OpenMeteo Marine Weather, OpenMeteo Satellite Radiation)
 - `PermissionsService` — seeds 11 named permissions (`reports.create`, `reports.moderate`, `alerts.manage`, `restoration.create`, `restoration.join`, `observations.create`, `observations.verify`, `observations.delete`, `organizations.access`, `organizations.manage`, `users.manage`) and default role grants
-- `CompaniesService` — seeds 42 company records (two-pass: parents before subsidiaries) and 44 industrial facility records (lookup by `Company.name @unique`) — see `companies.seed.ts` and `facilities/facilities.seed.ts`
+- `CompaniesService` — seeds **801 company records** (two-pass: parents before subsidiaries) and **1,451 industrial facility records** (lookup by `Company.name @unique`) — real Bangladeshi entities from the Mapped in Bangladesh (MiB) directory plus verified facilities (tanneries, power plants, etc.); see `companies.seed.ts`, `mib-companies.seed.ts`, `facilities/facilities.seed.ts`, `facilities/mib-facilities.seed.ts`. Seeding uses pre-loaded lookup maps (3 queries total on boot regardless of dataset size) to avoid N+1 startup penalty.
 - `SeedService` — seeds 6 dev user accounts (one per role, password `NatureGrid123!`) and a seed organization for local development
 
 Every mutation writes an `AuditEvent` record (action, userId, entityType, entityId, meta, ipAddress).
@@ -239,7 +239,7 @@ Complex queries use raw SQL via `prisma.$queryRaw`.
 
 `apps/web` and `apps/admin` have no tests (`echo "No web tests configured yet"`).
 
-CI (`.github/workflows/ci.yml`): `pnpm install --frozen-lockfile` → `pnpm audit --prod --audit-level=high` → `prisma generate` → `prisma validate` → `tsc --noEmit` × 3 → `jest` → `pnpm build`. A parallel `docker-build` job runs `docker build -f apps/api/Dockerfile -t nature-grid/api:ci .`. The repo has no git remote yet, so no workflow has executed in CI.
+CI (`.github/workflows/ci.yml`): `pnpm install --frozen-lockfile` → `pnpm audit --prod --audit-level=high` → `prisma generate` → `prisma validate` → `tsc --noEmit` × 3 → `jest` → `pnpm build`. A parallel `docker-build` job runs `docker build -f apps/api/Dockerfile -t nature-grid/api:ci .`. Remote is `Cipher-Text/nature-grid` on GitHub — CI runs on every push to `main` and on PRs. CD (`.github/workflows/deploy.yml`) builds and pushes images to Docker Hub then deploys to VPS via SSH (`appleboy/ssh-action`) — triggered automatically after CI passes on `main` or manually via `workflow_dispatch`.
 
 ## Key environment variables
 

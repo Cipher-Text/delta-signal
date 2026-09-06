@@ -61,22 +61,20 @@ export class CompaniesService {
   }
 
   private async seedCompanies() {
-    // First pass: create companies without parentCompanyId
-    const existingCompanies = await this.prisma.company.findMany({ select: { id: true, name: true } });
-    const nameToId = new Map(existingCompanies.map((company) => [company.name, company.id]));
+    // Pre-load lookups in 2 queries — avoids per-record DB calls in the loop.
+    const [existingCompanies, allDistricts] = await Promise.all([
+      this.prisma.company.findMany({ select: { id: true, name: true } }),
+      this.prisma.district.findMany({ select: { id: true, name: true } }),
+    ]);
+    const nameToId = new Map(existingCompanies.map((c) => [c.name, c.id]));
+    const districtNameToId = new Map(allDistricts.map((d) => [d.name, d.id]));
 
+    let created = 0;
+
+    // First pass: create parent companies (no parentCompanyName).
     for (const entry of COMPANY_SEED_DATA) {
       if (entry.parentCompanyName) continue;
       if (nameToId.has(entry.name)) continue;
-
-      let districtId: string | undefined;
-      if (entry.headquarterDistrictName) {
-        const d = await this.prisma.district.findFirst({
-          where: { name: entry.headquarterDistrictName },
-          select: { id: true },
-        });
-        districtId = d?.id;
-      }
 
       const company = await this.prisma.company.create({
         data: {
@@ -87,31 +85,26 @@ export class CompaniesService {
           establishedYear: entry.establishedYear,
           employeeCount: entry.employeeCount,
           website: entry.website,
-          headquarterDistrictId: districtId,
+          headquarterDistrictId: entry.headquarterDistrictName
+            ? districtNameToId.get(entry.headquarterDistrictName)
+            : undefined,
         },
         select: { id: true, name: true },
       });
       nameToId.set(company.name, company.id);
+      created++;
     }
 
-    // Second pass: create subsidiaries (need parent IDs resolved)
+    // Second pass: create subsidiaries (parent IDs now resolved in nameToId).
     for (const entry of COMPANY_SEED_DATA) {
       if (!entry.parentCompanyName) continue;
+      if (nameToId.has(entry.name)) continue;
 
       const parentId = nameToId.get(entry.parentCompanyName);
       if (!parentId) {
         this.logger.warn(`Parent company not found for seed: ${entry.parentCompanyName} (${entry.name})`);
         continue;
       }
-      if (nameToId.has(entry.name)) continue;
-      let districtId: string | undefined;
-      if (entry.headquarterDistrictName) {
-        const d = await this.prisma.district.findFirst({
-          where: { name: entry.headquarterDistrictName },
-          select: { id: true },
-        });
-        districtId = d?.id;
-      }
 
       const company = await this.prisma.company.create({
         data: {
@@ -122,39 +115,48 @@ export class CompaniesService {
           establishedYear: entry.establishedYear,
           employeeCount: entry.employeeCount,
           website: entry.website,
-          headquarterDistrictId: districtId,
+          headquarterDistrictId: entry.headquarterDistrictName
+            ? districtNameToId.get(entry.headquarterDistrictName)
+            : undefined,
           parentCompanyId: parentId,
         },
         select: { id: true, name: true },
       });
       nameToId.set(company.name, company.id);
+      created++;
     }
 
-    this.logger.log(`Verified ${COMPANY_SEED_DATA.length} company seed records.`);
+    if (created > 0) {
+      this.logger.log(`Seeded ${created} new companies (${COMPANY_SEED_DATA.length} total in seed data).`);
+    } else {
+      this.logger.log(`Companies already seeded (${COMPANY_SEED_DATA.length} records).`);
+    }
   }
 
   private async seedFacilities() {
-    for (const entry of FACILITY_SEED_DATA) {
-      const existingFacility = await this.prisma.industrialFacility.findFirst({
-        where: { name: entry.name },
-        select: { id: true },
-      });
-      if (existingFacility) continue;
+    // Pre-load all lookups in 3 queries — avoids N×3 per-record DB calls.
+    const [existingFacilities, allDistricts, allCompanies] = await Promise.all([
+      this.prisma.industrialFacility.findMany({ select: { name: true } }),
+      this.prisma.district.findMany({ select: { id: true, name: true } }),
+      this.prisma.company.findMany({ select: { id: true, name: true } }),
+    ]);
+    const existingNames = new Set(existingFacilities.map((f) => f.name));
+    const districtNameToId = new Map(allDistricts.map((d) => [d.name, d.id]));
+    const companyNameToId = new Map(allCompanies.map((c) => [c.name, c.id]));
 
-      const district = await this.prisma.district.findFirst({
-        where: { name: entry.districtName },
-        select: { id: true },
-      });
-      if (!district) {
+    let created = 0;
+
+    for (const entry of FACILITY_SEED_DATA) {
+      if (existingNames.has(entry.name)) continue;
+
+      const districtId = districtNameToId.get(entry.districtName);
+      if (!districtId) {
         this.logger.warn(`District not found for facility seed: ${entry.districtName} (${entry.name})`);
         continue;
       }
 
-      const company = await this.prisma.company.findUnique({
-        where: { name: entry.companyName },
-        select: { id: true },
-      });
-      if (!company) {
+      const companyId = companyNameToId.get(entry.companyName);
+      if (!companyId) {
         this.logger.warn(`Company not found for facility seed: ${entry.companyName} (${entry.name})`);
         continue;
       }
@@ -166,19 +168,24 @@ export class CompaniesService {
           description: entry.description,
           facilityType: entry.facilityType,
           complianceStatus: entry.complianceStatus,
-          companyId: company.id,
+          companyId,
           lat: entry.lat,
           lng: entry.lng,
-          districtId: district.id,
+          districtId,
           establishedYear: entry.establishedYear,
           productionCapacity: entry.productionCapacity,
           landArea: entry.landArea,
           etpInstalled: entry.etpInstalled ?? false,
         },
       });
+      created++;
     }
 
-    this.logger.log(`Seeded ${FACILITY_SEED_DATA.length} industrial facilities.`);
+    if (created > 0) {
+      this.logger.log(`Seeded ${created} new facilities (${FACILITY_SEED_DATA.length} total in seed data).`);
+    } else {
+      this.logger.log(`Facilities already seeded (${FACILITY_SEED_DATA.length} records).`);
+    }
   }
 
   list(
