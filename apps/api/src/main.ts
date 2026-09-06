@@ -69,4 +69,21 @@ async function bootstrap() {
   logger.log(`API docs running on http://localhost:${port}/api/docs`);
 }
 
+// Catch promise rejections that were never .catch()-ed anywhere in the process.
+// NestJS .catch() blocks on fire-and-forget calls cover most cases, but a
+// process-level handler is the last safety net for anything that slips through.
+process.on('unhandledRejection', (reason: unknown) => {
+  new Logger('Process').error(
+    'Unhandled promise rejection',
+    reason instanceof Error ? reason.stack : String(reason),
+  );
+});
+
+// Uncaught synchronous exceptions in async code outside the NestJS lifecycle.
+// Log and exit — running in an unknown state is worse than restarting cleanly.
+process.on('uncaughtException', (err: Error) => {
+  new Logger('Process').error('Uncaught exception', err.stack);
+  process.exit(1);
+});
+
 void bootstrap();

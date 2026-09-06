@@ -1,7 +1,6 @@
 name: Deploy
 
-# Trigger manually or on push to main after CI passes.
-# Adjust the trigger to match your release process.
+# Trigger manually or automatically after CI passes on main.
 on:
   workflow_dispatch:
     inputs:
@@ -16,7 +15,7 @@ on:
     branches: [main]
     types: [completed]
 
-# Only one deploy runs at a time; a newer one cancels an in-flight run.
+# Only one deploy runs at a time; a newer push cancels an in-flight run.
 concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: true
@@ -30,7 +29,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
 
-    # Set the target environment for secrets resolution.
+    # Resolves secrets from the chosen GitHub environment (production/staging).
     environment: ${{ inputs.environment || 'production' }}
 
     steps:
@@ -46,27 +45,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # ── Security audit ─────────────────────────────────────────────────────
-      # Fails the deploy on high/critical CVEs in production dependencies.
+      # Fail the deploy on any high/critical CVE in production dependencies.
       - name: Audit dependencies
         run: pnpm audit --prod --audit-level=high
 
-      # ── Build Docker images ────────────────────────────────────────────────
-      - name: Log in to container registry
+      # ── Build & push Docker images to Docker Hub ───────────────────────────
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          # TODO: replace with your registry (ghcr.io, ECR, GCR, Docker Hub …)
-          # For GitHub Container Registry use:
-          #   registry: ghcr.io
-          #   username: ${{ github.actor }}
-          #   password: ${{ secrets.GITHUB_TOKEN }}
-          registry: ${{ secrets.REGISTRY_URL }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
-      - name: Set image tag
-        id: tag
-        run: echo "tag=${{ secrets.REGISTRY_URL }}/nature-grid:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build & push API image
         uses: docker/build-push-action@v5
@@ -75,8 +63,8 @@ jobs:
           file: apps/api/Dockerfile
           push: true
           tags: |
-            ${{ steps.tag.outputs.tag }}-api
-            ${{ secrets.REGISTRY_URL }}/nature-grid-api:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-api:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-api:latest
 
       - name: Build & push web image
         uses: docker/build-push-action@v5
@@ -85,8 +73,8 @@ jobs:
           file: apps/web/Dockerfile
           push: true
           tags: |
-            ${{ steps.tag.outputs.tag }}-web
-            ${{ secrets.REGISTRY_URL }}/nature-grid-web:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-web:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-web:latest
 
       - name: Build & push admin image
         uses: docker/build-push-action@v5
@@ -95,35 +83,94 @@ jobs:
           file: apps/admin/Dockerfile
           push: true
           tags: |
-            ${{ steps.tag.outputs.tag }}-admin
-            ${{ secrets.REGISTRY_URL }}/nature-grid-admin:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-admin:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/nature-grid-admin:latest
 
-      # ── Deploy ─────────────────────────────────────────────────────────────
-      # TODO: replace this step with your actual deployment mechanism.
-      #
-      # Option A — SSH + docker-compose (simple VPS):
-      #
-      #   - name: Deploy via SSH
-      #     uses: appleboy/ssh-action@v1
-      #     with:
-      #       host: ${{ secrets.DEPLOY_HOST }}
-      #       username: ${{ secrets.DEPLOY_USER }}
-      #       key: ${{ secrets.DEPLOY_SSH_KEY }}
-      #       script: |
-      #         cd /opt/nature-grid
-      #         echo "IMAGE_TAG=${{ github.sha }}" > .env.deploy
-      #         docker compose -f docker-compose.prod.yml pull
-      #         docker compose -f docker-compose.prod.yml up -d --remove-orphans
-      #         docker image prune -f
-      #
-      # Option B — AWS ECS:
-      #   Use aws-actions/amazon-ecs-deploy-task-definition
-      #
-      # Option C — Kubernetes:
-      #   Use azure/k8s-deploy or helm/chart-releaser-action
-      #
-      - name: Deploy (TODO — configure for your platform)
-        run: |
-          echo "Deploy step not yet configured."
-          echo "See the comments in this file for common deployment patterns."
-          echo "Image tag: ${{ steps.tag.outputs.tag }}"
+      # ── Copy updated compose file to VPS ──────────────────────────────────
+      - name: Copy compose file to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key:      ${{ secrets.DEPLOY_SSH_KEY }}
+          source:   docker-compose.prod.yml
+          target:   /opt/nature-grid
+
+      # ── SSH into VPS, write .env, pull images, restart ────────────────────
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        env:
+          IMAGE_TAG:              ${{ github.sha }}
+          DOCKERHUB_USERNAME:     ${{ secrets.DOCKERHUB_USERNAME }}
+          POSTGRES_PASSWORD:      ${{ secrets.POSTGRES_PASSWORD }}
+          JWT_SECRET:             ${{ secrets.JWT_SECRET }}
+          CORS_ORIGIN:            ${{ secrets.CORS_ORIGIN }}
+          APP_URL:                ${{ secrets.APP_URL }}
+          SMTP_HOST:              ${{ secrets.SMTP_HOST }}
+          SMTP_PORT:              ${{ secrets.SMTP_PORT }}
+          SMTP_USER:              ${{ secrets.SMTP_USER }}
+          SMTP_PASS:              ${{ secrets.SMTP_PASS }}
+          SMTP_FROM:              ${{ secrets.SMTP_FROM }}
+          GOOGLE_CLIENT_ID:       ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET:   ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_CALLBACK_URL:    ${{ secrets.GOOGLE_CALLBACK_URL }}
+          STORAGE_ENDPOINT:       ${{ secrets.STORAGE_ENDPOINT }}
+          STORAGE_ACCESS_KEY:     ${{ secrets.STORAGE_ACCESS_KEY }}
+          STORAGE_SECRET_KEY:     ${{ secrets.STORAGE_SECRET_KEY }}
+          STORAGE_BUCKET:         ${{ secrets.STORAGE_BUCKET }}
+          STORAGE_REGION:         ${{ secrets.STORAGE_REGION }}
+          STORAGE_USE_PATH_STYLE: ${{ secrets.STORAGE_USE_PATH_STYLE }}
+          STORAGE_PUBLIC_URL:     ${{ secrets.STORAGE_PUBLIC_URL }}
+        with:
+          host:     ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key:      ${{ secrets.DEPLOY_SSH_KEY }}
+          envs: >-
+            IMAGE_TAG,DOCKERHUB_USERNAME,
+            POSTGRES_PASSWORD,JWT_SECRET,CORS_ORIGIN,APP_URL,
+            SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASS,SMTP_FROM,
+            GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_CALLBACK_URL,
+            STORAGE_ENDPOINT,STORAGE_ACCESS_KEY,STORAGE_SECRET_KEY,
+            STORAGE_BUCKET,STORAGE_REGION,STORAGE_USE_PATH_STYLE,STORAGE_PUBLIC_URL
+          script: |
+            set -e
+            mkdir -p /opt/nature-grid
+            cd /opt/nature-grid
+
+            # Write production .env — overwritten on every deploy so secrets
+            # stay in sync with GitHub environment secrets.
+            cat > .env << EOF
+            DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
+            IMAGE_TAG=${IMAGE_TAG}
+            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+            JWT_SECRET=${JWT_SECRET}
+            CORS_ORIGIN=${CORS_ORIGIN}
+            APP_URL=${APP_URL}
+            SMTP_HOST=${SMTP_HOST}
+            SMTP_PORT=${SMTP_PORT:-587}
+            SMTP_USER=${SMTP_USER}
+            SMTP_PASS=${SMTP_PASS}
+            SMTP_FROM=${SMTP_FROM}
+            GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+            GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+            GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
+            STORAGE_ENDPOINT=${STORAGE_ENDPOINT}
+            STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY}
+            STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY}
+            STORAGE_BUCKET=${STORAGE_BUCKET}
+            STORAGE_REGION=${STORAGE_REGION:-us-east-1}
+            STORAGE_USE_PATH_STYLE=${STORAGE_USE_PATH_STYLE:-false}
+            STORAGE_PUBLIC_URL=${STORAGE_PUBLIC_URL}
+            EOF
+            chmod 600 .env
+
+            # Pull the exact images built from this commit.
+            docker pull ${DOCKERHUB_USERNAME}/nature-grid-api:${IMAGE_TAG}
+            docker pull ${DOCKERHUB_USERNAME}/nature-grid-web:${IMAGE_TAG}
+            docker pull ${DOCKERHUB_USERNAME}/nature-grid-admin:${IMAGE_TAG}
+
+            # Restart app services; postgres/redis restart only if config changed.
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+
+            # Remove image layers from previous deploys to free disk space.
+            docker image prune -f

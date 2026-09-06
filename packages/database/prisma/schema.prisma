@@ -1065,6 +1065,8 @@ model RestorationProject {
 
   @@index([category])
   @@index([status])
+  @@index([organizationId])
+  @@index([createdById])
   @@index([districtId])
   @@index([upazilaId])
   @@index([unionId])
