@@ -31,6 +31,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <div className="admin-layout">
       <aside className="sidebar">
         <div className="sidebar-brand">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Delta Signal" width={32} height={32} style={{ borderRadius: '7px', marginBottom: '10px' }} />
           <p className="brand">Delta Signal</p>
           <h2>Admin Console</h2>
         </div>

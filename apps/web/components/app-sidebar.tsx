@@ -70,7 +70,7 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
       {/* Mobile top bar */}
       <div className="mobile-header">
         <Link className="mobile-brand" href="/reports" onClick={close}>
-          <span className="brand-mark">NG</span>
+          <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={36} height={36} />
           <span>Delta Signal</span>
         </Link>
         <button
@@ -96,7 +96,7 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
         {/* Brand header */}
         <div className="sidebar-header">
           <Link className="sidebar-brand" href="/reports" onClick={close}>
-            <div className="brand-mark">NG</div>
+            <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={38} height={38} />
             <div className="sidebar-brand-text">
               <strong>Delta Signal</strong>
               <span>Environmental intelligence</span>

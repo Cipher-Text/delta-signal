@@ -10,7 +10,7 @@ export default function RegisterPage({
     <main className="auth-page">
       <div className="auth-panel">
         <div className="auth-brand">
-          <div className="brand-mark">NG</div>
+          <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={36} height={36} />
           <span>Delta Signal</span>
         </div>
 

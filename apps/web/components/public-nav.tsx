@@ -10,7 +10,7 @@ export default async function PublicNav() {
   return (
     <header className="public-nav">
       <Link className="public-brand" href="/">
-        <span className="brand-mark">NG</span>
+        <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={36} height={36} />
         <span>Delta Signal</span>
       </Link>
 

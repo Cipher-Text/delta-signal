@@ -20,6 +20,8 @@ export default function LoginPage({
     <main className="login-page">
       <div className="login-card">
         <header>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Delta Signal" width={36} height={36} style={{ borderRadius: '8px', marginBottom: '12px' }} />
           <p className="brand">Delta Signal</p>
           <h1>Admin Console</h1>
           <p className="subtitle">Sign in with a Moderator or Admin account to continue.</p>
