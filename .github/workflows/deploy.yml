@@ -86,11 +86,11 @@ jobs:
           username: ${{ secrets.DEPLOY_USER }}
           key:      ${{ secrets.DEPLOY_SSH_KEY }}
           source:   docker-compose.prod.yml
-          target:   /opt/delta-signal
+          target:   /opt/platform/apps/delta-signal
 
       # ── SSH into VPS, pull images, restart ─────────────────────────────────
       # Application config (DATABASE_URL, JWT_SECRET, MAIL_*, GOOGLE_*, STORAGE_*,
-      # etc.) lives in /opt/delta-signal/.env ON THE VM ITSELF and is managed
+      # etc.) lives in /opt/platform/apps/delta-signal/.env ON THE VM ITSELF and is managed
       # there directly — this workflow never writes, generates, or overwrites
       # it. Only build-time values (which image tag to run) are passed in.
       - name: Deploy via SSH
@@ -105,11 +105,11 @@ jobs:
           envs: IMAGE_TAG,DOCKERHUB_USERNAME
           script: |
             set -e
-            mkdir -p /opt/delta-signal
-            cd /opt/delta-signal
+            mkdir -p /opt/platform/apps/delta-signal
+            cd /opt/platform/apps/delta-signal
 
             # .env must already exist here with the application's real config.
-            test -f .env || { echo "Missing /opt/delta-signal/.env on the VM — create it before deploying." >&2; exit 1; }
+            test -f .env || { echo "Missing /opt/platform/apps/delta-signal/.env on the VM — create it before deploying." >&2; exit 1; }
 
             # Pull the exact images built from this commit.
             docker pull ${DOCKERHUB_USERNAME}/delta-signal-api:${IMAGE_TAG}

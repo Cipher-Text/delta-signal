@@ -1,7 +1,7 @@
 # Production stack — pulls pre-built Docker Hub images.
 # Do NOT use for local development; use docker-compose.yml instead.
 #
-# Required env vars — must already exist in /opt/delta-signal/.env on the VM,
+# Required env vars — must already exist in /opt/platform/apps/delta-signal/.env on the VM,
 # maintained there directly. deploy.yml does NOT write or manage this file;
 # it only exports IMAGE_TAG/DOCKERHUB_USERNAME into the SSH session's shell
 # env for this one deploy (docker compose prefers shell env over .env for
