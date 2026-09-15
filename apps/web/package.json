@@ -12,6 +12,7 @@
   "dependencies": {
     "@delta-signal/contracts": "workspace:*",
     "@delta-signal/shared": "workspace:*",
+    "@next/third-parties": "^14.2.23",
     "leaflet": "^1.9.4",
     "next": "^14.2.23",
     "react": "^18.3.1",
