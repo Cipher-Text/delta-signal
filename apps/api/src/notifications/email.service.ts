@@ -1,15 +1,13 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
-import { ConfigService } from '@nestjs/config';
 import { Queue } from 'bullmq';
-import * as nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
 import type { AlertSeverity } from '@prisma/client';
 import {
   EMAIL_QUEUE,
   type PasswordResetJobData,
   type EmailVerificationJobData,
 } from './notifications.constants';
+import { MAIL_TRANSPORT, type MailTransport } from './mail/mail-transport.interface';
 
 /** Retry configuration for transactional emails (not alert fan-out). */
 const EMAIL_JOB_OPTS = {
@@ -18,6 +16,11 @@ const EMAIL_JOB_OPTS = {
   removeOnComplete: true,
   removeOnFail: 50, // keep last 50 failed jobs for inspection
 } as const;
+
+// Fixed per email type, independent of which mail transport is active —
+// recipients should always see the same sender for the same kind of email.
+const NO_REPLY_FROM = 'Delta Signal <noreply@deltasignal.org>';
+const ALERTS_FROM = 'Delta Signal Alerts <alerts@deltasignal.org>';
 
 export interface AlertForEmail {
   id: string;
@@ -31,39 +34,12 @@ export interface AlertForEmail {
 
 @Injectable()
 export class EmailService {
-  private readonly logger = new Logger(EmailService.name);
-  private readonly transporter: Transporter | null;
-  private readonly smtpFrom: string;
-
   constructor(
-    config: ConfigService,
+    @Inject(MAIL_TRANSPORT) private readonly mail: MailTransport,
     @InjectQueue(EMAIL_QUEUE) private readonly emailQueue: Queue,
-  ) {
-    const host = config.get<string>('SMTP_HOST');
-    const port = Number(config.get<string>('SMTP_PORT') ?? 587);
-    const user = config.get<string>('SMTP_USER');
-    const pass = config.get<string>('SMTP_PASS');
-    this.smtpFrom = config.get<string>('SMTP_FROM') ?? 'Delta Signal Alerts <alerts@deltasignal.org>';
-
-    if (!host) {
-      this.transporter = null;
-      this.logger.warn('SMTP_HOST not set — email delivery disabled. Set SMTP_HOST to enable alert notifications.');
-      return;
-    }
-
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure: port === 465,
-      auth: user && pass ? { user, pass } : undefined,
-    });
-  }
+  ) {}
 
   async sendPasswordResetEmail(to: string, displayName: string, resetUrl: string): Promise<void> {
-    if (!this.transporter) {
-      this.logger.debug(`Skipping password-reset email to ${to} — SMTP not configured`);
-      return;
-    }
     const subject = 'Delta Signal — Reset your password';
     const body = [
       `Hello ${displayName},`,
@@ -80,14 +56,10 @@ export class EmailService {
       'Delta Signal — Environmental Monitoring Platform',
     ].join('\n');
 
-    await this.transporter.sendMail({ from: this.smtpFrom, to, subject, text: body });
+    await this.mail.send({ to, subject, text: body, from: NO_REPLY_FROM });
   }
 
   async sendVerificationEmail(to: string, displayName: string, verificationUrl: string): Promise<void> {
-    if (!this.transporter) {
-      this.logger.debug(`Skipping verification email to ${to} — SMTP not configured`);
-      return;
-    }
     const subject = 'Delta Signal — Verify your email address';
     const body = [
       `Hello ${displayName},`,
@@ -102,12 +74,12 @@ export class EmailService {
       'Delta Signal — Environmental Monitoring Platform',
     ].join('\n');
 
-    await this.transporter.sendMail({ from: this.smtpFrom, to, subject, text: body });
+    await this.mail.send({ to, subject, text: body, from: NO_REPLY_FROM });
   }
 
   // ── Queued variants (add to BullMQ — caller does not wait for delivery) ──────
 
-  /** Enqueue a password-reset email with automatic retry on transient SMTP failure. */
+  /** Enqueue a password-reset email with automatic retry on transient delivery failure. */
   async queuePasswordReset(to: string, displayName: string, resetUrl: string): Promise<void> {
     await this.emailQueue.add(
       'password-reset',
@@ -116,7 +88,7 @@ export class EmailService {
     );
   }
 
-  /** Enqueue an email-verification link with automatic retry on transient SMTP failure. */
+  /** Enqueue an email-verification link with automatic retry on transient delivery failure. */
   async queueVerification(to: string, displayName: string, verificationUrl: string): Promise<void> {
     await this.emailQueue.add(
       'email-verification',
@@ -128,11 +100,6 @@ export class EmailService {
   // ── Direct send (used by EmailProcessor and NotificationsService internally) ──
 
   async sendAlertEmail(to: string, displayName: string, alert: AlertForEmail): Promise<void> {
-    if (!this.transporter) {
-      this.logger.debug(`Skipping email to ${to} — SMTP not configured`);
-      return;
-    }
-
     const area = alert.district?.name ?? 'Nationwide';
     const subject = `[${alert.severity}] Delta Signal Alert: ${alert.title}`;
     const body = [
@@ -153,11 +120,6 @@ export class EmailService {
       'Visit Delta Signal to manage your subscriptions.',
     ].join('\n');
 
-    await this.transporter.sendMail({
-      from: this.smtpFrom,
-      to,
-      subject,
-      text: body,
-    });
+    await this.mail.send({ to, subject, text: body, from: ALERTS_FROM });
   }
 }
