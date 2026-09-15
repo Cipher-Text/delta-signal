@@ -1,6 +1,6 @@
 name: Deploy
 
-# Trigger manually or automatically after CI passes on main.
+# Manual only — triggered from the Actions tab, never automatically after CI.
 on:
   workflow_dispatch:
     inputs:
@@ -10,10 +10,6 @@ on:
         default: production
         type: choice
         options: [production, staging]
-  workflow_run:
-    workflows: [CI]
-    branches: [main]
-    types: [completed]
 
 # Only one deploy runs at a time; a newer push cancels an in-flight run.
 concurrency:
@@ -24,10 +20,6 @@ jobs:
   deploy:
     name: Build & deploy
     runs-on: ubuntu-latest
-    # On workflow_run trigger, only proceed when CI actually passed.
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
 
     # Resolves secrets from the chosen GitHub environment (production/staging).
     environment: ${{ inputs.environment || 'production' }}
@@ -96,80 +88,37 @@ jobs:
           source:   docker-compose.prod.yml
           target:   /opt/delta-signal
 
-      # ── SSH into VPS, write .env, pull images, restart ────────────────────
+      # ── SSH into VPS, pull images, restart ─────────────────────────────────
+      # Application config (DATABASE_URL, JWT_SECRET, MAIL_*, GOOGLE_*, STORAGE_*,
+      # etc.) lives in /opt/delta-signal/.env ON THE VM ITSELF and is managed
+      # there directly — this workflow never writes, generates, or overwrites
+      # it. Only build-time values (which image tag to run) are passed in.
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         env:
-          IMAGE_TAG:              ${{ github.sha }}
-          DOCKERHUB_USERNAME:     ${{ secrets.DOCKERHUB_USERNAME }}
-          POSTGRES_PASSWORD:      ${{ secrets.POSTGRES_PASSWORD }}
-          JWT_SECRET:             ${{ secrets.JWT_SECRET }}
-          CORS_ORIGIN:            ${{ secrets.CORS_ORIGIN }}
-          APP_URL:                ${{ secrets.APP_URL }}
-          SMTP_HOST:              ${{ secrets.SMTP_HOST }}
-          SMTP_PORT:              ${{ secrets.SMTP_PORT }}
-          SMTP_USER:              ${{ secrets.SMTP_USER }}
-          SMTP_PASS:              ${{ secrets.SMTP_PASS }}
-          SMTP_FROM:              ${{ secrets.SMTP_FROM }}
-          GOOGLE_CLIENT_ID:       ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET:   ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_CALLBACK_URL:    ${{ secrets.GOOGLE_CALLBACK_URL }}
-          STORAGE_ENDPOINT:       ${{ secrets.STORAGE_ENDPOINT }}
-          STORAGE_ACCESS_KEY:     ${{ secrets.STORAGE_ACCESS_KEY }}
-          STORAGE_SECRET_KEY:     ${{ secrets.STORAGE_SECRET_KEY }}
-          STORAGE_BUCKET:         ${{ secrets.STORAGE_BUCKET }}
-          STORAGE_REGION:         ${{ secrets.STORAGE_REGION }}
-          STORAGE_USE_PATH_STYLE: ${{ secrets.STORAGE_USE_PATH_STYLE }}
-          STORAGE_PUBLIC_URL:     ${{ secrets.STORAGE_PUBLIC_URL }}
+          IMAGE_TAG:          ${{ github.sha }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
         with:
           host:     ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key:      ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: >-
-            IMAGE_TAG,DOCKERHUB_USERNAME,
-            POSTGRES_PASSWORD,JWT_SECRET,CORS_ORIGIN,APP_URL,
-            SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASS,SMTP_FROM,
-            GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,GOOGLE_CALLBACK_URL,
-            STORAGE_ENDPOINT,STORAGE_ACCESS_KEY,STORAGE_SECRET_KEY,
-            STORAGE_BUCKET,STORAGE_REGION,STORAGE_USE_PATH_STYLE,STORAGE_PUBLIC_URL
+          envs: IMAGE_TAG,DOCKERHUB_USERNAME
           script: |
             set -e
             mkdir -p /opt/delta-signal
             cd /opt/delta-signal
 
-            # Write production .env — overwritten on every deploy so secrets
-            # stay in sync with GitHub environment secrets.
-            cat > .env << EOF
-            DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME}
-            IMAGE_TAG=${IMAGE_TAG}
-            POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-            JWT_SECRET=${JWT_SECRET}
-            CORS_ORIGIN=${CORS_ORIGIN}
-            APP_URL=${APP_URL}
-            SMTP_HOST=${SMTP_HOST}
-            SMTP_PORT=${SMTP_PORT:-587}
-            SMTP_USER=${SMTP_USER}
-            SMTP_PASS=${SMTP_PASS}
-            SMTP_FROM=${SMTP_FROM}
-            GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-            GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-            GOOGLE_CALLBACK_URL=${GOOGLE_CALLBACK_URL}
-            STORAGE_ENDPOINT=${STORAGE_ENDPOINT}
-            STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY}
-            STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY}
-            STORAGE_BUCKET=${STORAGE_BUCKET}
-            STORAGE_REGION=${STORAGE_REGION:-us-east-1}
-            STORAGE_USE_PATH_STYLE=${STORAGE_USE_PATH_STYLE:-false}
-            STORAGE_PUBLIC_URL=${STORAGE_PUBLIC_URL}
-            EOF
-            chmod 600 .env
+            # .env must already exist here with the application's real config.
+            test -f .env || { echo "Missing /opt/delta-signal/.env on the VM — create it before deploying." >&2; exit 1; }
 
             # Pull the exact images built from this commit.
             docker pull ${DOCKERHUB_USERNAME}/delta-signal-api:${IMAGE_TAG}
             docker pull ${DOCKERHUB_USERNAME}/delta-signal-web:${IMAGE_TAG}
             docker pull ${DOCKERHUB_USERNAME}/delta-signal-admin:${IMAGE_TAG}
 
-            # Restart app services; postgres/redis restart only if config changed.
+            # IMAGE_TAG/DOCKERHUB_USERNAME come from this SSH session's shell env
+            # (exported above), which docker compose prefers over .env for the
+            # same keys — everything else is read from the VM's own .env.
             docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
             # Remove image layers from previous deploys to free disk space.

@@ -1,7 +1,11 @@
 # Production stack — pulls pre-built Docker Hub images.
 # Do NOT use for local development; use docker-compose.yml instead.
 #
-# Required env vars (written to /opt/delta-signal/.env by deploy.yml):
+# Required env vars — must already exist in /opt/delta-signal/.env on the VM,
+# maintained there directly. deploy.yml does NOT write or manage this file;
+# it only exports IMAGE_TAG/DOCKERHUB_USERNAME into the SSH session's shell
+# env for this one deploy (docker compose prefers shell env over .env for
+# those two keys — everything else below comes from the VM's .env):
 #   DOCKERHUB_USERNAME  — Docker Hub account that owns the images
 #   IMAGE_TAG           — Git SHA of the build to run (set automatically by CI)
 #   POSTGRES_PASSWORD   — database password (no default)
@@ -10,7 +14,10 @@
 #   APP_URL             — public web URL, e.g. https://deltasignal.org (used in auth emails)
 #
 # Optional env vars (graceful degradation when absent):
+#   MAIL_PROVIDER (smtp | mailgun | ses — defaults to smtp)
 #   SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / SMTP_FROM
+#   MAILGUN_API_KEY / MAILGUN_DOMAIN / MAILGUN_FROM / MAILGUN_BASE_URL
+#   SES_ACCESS_KEY / SES_SECRET_KEY / SES_REGION / SES_FROM
 #   GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_CALLBACK_URL
 #   STORAGE_ENDPOINT / STORAGE_ACCESS_KEY / STORAGE_SECRET_KEY
 #   STORAGE_BUCKET / STORAGE_REGION / STORAGE_USE_PATH_STYLE / STORAGE_PUBLIC_URL
@@ -61,12 +68,22 @@ services:
       NODE_ENV:     production
       CORS_ORIGIN:  ${CORS_ORIGIN}
       APP_URL:      ${APP_URL}
-      # ── SMTP (optional — email silently disabled when SMTP_HOST is unset) ──
-      SMTP_HOST:    ${SMTP_HOST:-}
-      SMTP_PORT:    ${SMTP_PORT:-587}
-      SMTP_USER:    ${SMTP_USER:-}
-      SMTP_PASS:    ${SMTP_PASS:-}
-      SMTP_FROM:    ${SMTP_FROM:-}
+      # ── Mail (optional — provider picked by MAIL_PROVIDER, defaults to smtp;
+      #    email silently disabled if the active provider's own vars are unset) ─
+      MAIL_PROVIDER:    ${MAIL_PROVIDER:-smtp}
+      SMTP_HOST:        ${SMTP_HOST:-}
+      SMTP_PORT:        ${SMTP_PORT:-587}
+      SMTP_USER:        ${SMTP_USER:-}
+      SMTP_PASS:        ${SMTP_PASS:-}
+      SMTP_FROM:        ${SMTP_FROM:-}
+      MAILGUN_API_KEY:  ${MAILGUN_API_KEY:-}
+      MAILGUN_DOMAIN:   ${MAILGUN_DOMAIN:-}
+      MAILGUN_FROM:     ${MAILGUN_FROM:-}
+      MAILGUN_BASE_URL: ${MAILGUN_BASE_URL:-}
+      SES_ACCESS_KEY:   ${SES_ACCESS_KEY:-}
+      SES_SECRET_KEY:   ${SES_SECRET_KEY:-}
+      SES_REGION:       ${SES_REGION:-us-east-1}
+      SES_FROM:         ${SES_FROM:-}
       # ── Google OAuth (optional — /auth/google returns 404 when unset) ─────
       GOOGLE_CLIENT_ID:     ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}

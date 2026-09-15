@@ -38,14 +38,28 @@ services:
       # remove both vars from your deployment environment.
       BOOTSTRAP_ADMIN_EMAIL: "${BOOTSTRAP_ADMIN_EMAIL:-}"
       BOOTSTRAP_ADMIN_PASSWORD: "${BOOTSTRAP_ADMIN_PASSWORD:-}"
-      # ── SMTP ───────────────────────────────────────────────────────────────
-      # In Docker, reference the mailpit service by name. For an external SMTP
-      # provider in production, override SMTP_HOST/PORT in your deployment env.
+      # ── Mail ───────────────────────────────────────────────────────────────
+      # MAIL_PROVIDER picks the active transport (smtp | mailgun | ses).
+      # In Docker, SMTP defaults to the mailpit service by name — override
+      # SMTP_HOST/PORT for an external SMTP provider.
+      MAIL_PROVIDER: "${MAIL_PROVIDER:-smtp}"
       SMTP_HOST: "${SMTP_HOST:-mailpit}"
       SMTP_PORT: "${SMTP_PORT:-1025}"
       SMTP_USER: "${SMTP_USER:-}"
       SMTP_PASS: "${SMTP_PASS:-}"
       SMTP_FROM: "${SMTP_FROM:-Delta Signal <alerts@deltasignal.org>}"
+      MAILGUN_API_KEY: "${MAILGUN_API_KEY:-}"
+      MAILGUN_DOMAIN: "${MAILGUN_DOMAIN:-}"
+      MAILGUN_FROM: "${MAILGUN_FROM:-}"
+      MAILGUN_BASE_URL: "${MAILGUN_BASE_URL:-}"
+      SES_ACCESS_KEY: "${SES_ACCESS_KEY:-}"
+      SES_SECRET_KEY: "${SES_SECRET_KEY:-}"
+      SES_REGION: "${SES_REGION:-us-east-1}"
+      SES_FROM: "${SES_FROM:-}"
+      # ── Google OAuth (optional — /auth/google returns 404 when unset) ──────
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+      GOOGLE_CALLBACK_URL: "${GOOGLE_CALLBACK_URL:-}"
     depends_on:
       redis:
         condition: service_healthy
