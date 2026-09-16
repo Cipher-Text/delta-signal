@@ -14,6 +14,8 @@ function mockPrisma() {
     citizenReport:          { count: jest.fn().mockResolvedValue(0) },
     observation:            { count: jest.fn().mockResolvedValue(0) },
     restorationParticipant: { count: jest.fn().mockResolvedValue(0) },
+    communityPost:          { count: jest.fn().mockResolvedValue(0) },
+    postComment:            { count: jest.fn().mockResolvedValue(0) },
   };
 }
 
@@ -65,13 +67,14 @@ describe('earnedKeysForCategory', () => {
 
 describe('computeLevel', () => {
   it.each([
-    [0,    1, 'Newcomer',             100],
-    [99,   1, 'Newcomer',             100],
-    [100,  2, 'Contributor',          300],
-    [300,  3, 'Advocate',             600],
-    [600,  4, 'Champion',            1200],
-    [1200, 5, 'Environmental Leader',  -1],
-    [9999, 5, 'Environmental Leader',  -1],
+    [0,    1, 'Newcomer',                100],
+    [99,   1, 'Newcomer',                100],
+    [100,  2, 'Contributor',              400],
+    [400,  3, 'Advocate',                 900],
+    [900,  4, 'Champion',                1800],
+    [1800, 5, 'Environmental Leader',    3500],
+    [3500, 6, 'Guardian of Bangladesh',    -1],
+    [9999, 6, 'Guardian of Bangladesh',    -1],
   ])('%d points → level %d (%s)', (points, level, label, nextLevelPoints) => {
     expect(computeLevel(points)).toEqual({ level, label, nextLevelPoints });
   });
