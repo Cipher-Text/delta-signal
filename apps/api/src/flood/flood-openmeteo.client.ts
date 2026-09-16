@@ -10,8 +10,8 @@ const FLOOD_PARAMS = [
   'river_discharge_min',
   'river_discharge_p25',
   'river_discharge_p75',
-  'river_discharge_p10',
-  'river_discharge_p90',
+  // Note: OpenMeteo's flood API only exposes p25/p75 percentiles — p10/p90
+  // are not valid daily variables and make the whole request fail with 400.
 ].join(',');
 const FLOOD_FORECAST_DAYS = 30;
 const MAX_ATTEMPTS = 3;
