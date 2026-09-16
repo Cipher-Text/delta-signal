@@ -28,6 +28,7 @@ const ALL_PERMISSIONS: { key: string; description: string }[] = [
 const DEFAULT_GRANTS: { role: string; key: string }[] = [
   { role: 'CITIZEN',            key: 'reports.create' },
   { role: 'CITIZEN',            key: 'restoration.join' },
+  { role: 'CITIZEN',            key: 'observations.create' },
   { role: 'RESEARCHER',         key: 'reports.create' },
   { role: 'RESEARCHER',         key: 'restoration.join' },
   { role: 'RESEARCHER',         key: 'observations.create' },
