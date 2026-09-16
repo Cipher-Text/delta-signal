@@ -1,8 +1,13 @@
 name: Deploy
 
-# Manual only — triggered from the Actions tab, never automatically after CI.
+# Runs automatically once the "CI" workflow completes successfully on main,
+# or manually from the Actions tab at any time.
 on:
   workflow_dispatch: {}
+  workflow_run:
+    workflows: ["CI"]
+    branches: [main]
+    types: [completed]
 
 # Only one deploy runs at a time; a newer push cancels an in-flight run.
 concurrency:
@@ -13,9 +18,18 @@ jobs:
   deploy:
     name: Build & push images
     runs-on: ubuntu-latest
+    # Manual runs always proceed; workflow_run-triggered runs only proceed if
+    # CI actually passed (workflow_run fires on every CI conclusion, including failure).
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    env:
+      # workflow_run's own github.sha is deploy.yml's ref on main, not the commit
+      # CI just validated — pin everything to the commit CI actually ran against.
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEPLOY_SHA }}
 
       - uses: pnpm/action-setup@v4
 
@@ -45,7 +59,7 @@ jobs:
           file: apps/api/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-api:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-api:${{ env.DEPLOY_SHA }}
             ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-api:latest
 
       - name: Build & push web image
@@ -55,7 +69,7 @@ jobs:
           file: apps/web/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-web:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-web:${{ env.DEPLOY_SHA }}
             ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-web:latest
 
       - name: Build & push admin image
@@ -65,7 +79,7 @@ jobs:
           file: apps/admin/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-admin:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-admin:${{ env.DEPLOY_SHA }}
             ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-admin:latest
 
       # Deploy to the VPS is manual: SSH in, `docker compose pull` the tag
