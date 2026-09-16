@@ -2,14 +2,7 @@ name: Deploy
 
 # Manual only — triggered from the Actions tab, never automatically after CI.
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Target environment'
-        required: true
-        default: production
-        type: choice
-        options: [production, staging]
+  workflow_dispatch: {}
 
 # Only one deploy runs at a time; a newer push cancels an in-flight run.
 concurrency:
@@ -18,11 +11,8 @@ concurrency:
 
 jobs:
   deploy:
-    name: Build & deploy
+    name: Build & push images
     runs-on: ubuntu-latest
-
-    # Resolves secrets from the chosen GitHub environment (production/staging).
-    environment: ${{ inputs.environment || 'production' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -78,48 +68,6 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-admin:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/delta-signal-admin:latest
 
-      # ── Copy updated compose file to VPS ──────────────────────────────────
-      - name: Copy compose file to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host:     ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key:      ${{ secrets.DEPLOY_SSH_KEY }}
-          source:   docker-compose.prod.yml
-          target:   /opt/platform/apps/delta-signal
-
-      # ── SSH into VPS, pull images, restart ─────────────────────────────────
-      # Application config (DATABASE_URL, JWT_SECRET, MAIL_*, GOOGLE_*, STORAGE_*,
-      # etc.) lives in /opt/platform/apps/delta-signal/.env ON THE VM ITSELF and is managed
-      # there directly — this workflow never writes, generates, or overwrites
-      # it. Only build-time values (which image tag to run) are passed in.
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        env:
-          IMAGE_TAG:          ${{ github.sha }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-        with:
-          host:     ${{ secrets.DEPLOY_HOST }}
-          username: ${{ secrets.DEPLOY_USER }}
-          key:      ${{ secrets.DEPLOY_SSH_KEY }}
-          envs: IMAGE_TAG,DOCKERHUB_USERNAME
-          script: |
-            set -e
-            mkdir -p /opt/platform/apps/delta-signal
-            cd /opt/platform/apps/delta-signal
-
-            # .env must already exist here with the application's real config.
-            test -f .env || { echo "Missing /opt/platform/apps/delta-signal/.env on the VM — create it before deploying." >&2; exit 1; }
-
-            # Pull the exact images built from this commit.
-            docker pull ${DOCKERHUB_USERNAME}/delta-signal-api:${IMAGE_TAG}
-            docker pull ${DOCKERHUB_USERNAME}/delta-signal-web:${IMAGE_TAG}
-            docker pull ${DOCKERHUB_USERNAME}/delta-signal-admin:${IMAGE_TAG}
-
-            # IMAGE_TAG/DOCKERHUB_USERNAME come from this SSH session's shell env
-            # (exported above), which docker compose prefers over .env for the
-            # same keys — everything else is read from the VM's own .env.
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
-
-            # Remove image layers from previous deploys to free disk space.
-            docker image prune -f
+      # Deploy to the VPS is manual: SSH in, `docker compose pull` the tag
+      # above, then `docker compose up -d`. This workflow only builds and
+      # pushes images — it does not touch the VM.
