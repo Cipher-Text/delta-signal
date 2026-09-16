@@ -79,17 +79,18 @@ function titleCase(str: string) {
   return str.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default async function AuditPage({
-  searchParams,
-}: {
-  searchParams: {
-    page?: string;
-    action?: string;
-    entityType?: string;
-    userId?: string;
-  };
-}) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function AuditPage(
+  props: {
+    searchParams: Promise<{
+      page?: string;
+      action?: string;
+      entityType?: string;
+      userId?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const page = Math.max(1, Number(searchParams.page ?? 1));
   const { action, entityType, userId } = searchParams;
 

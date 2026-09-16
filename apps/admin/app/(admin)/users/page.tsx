@@ -81,12 +81,13 @@ function decodeJwtSub(token: string): string | null {
   }
 }
 
-export default async function UsersPage({
-  searchParams,
-}: {
-  searchParams: { page?: string; search?: string; success?: string; error?: string };
-}) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function UsersPage(
+  props: {
+    searchParams: Promise<{ page?: string; search?: string; success?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const page = Math.max(1, Number(searchParams.page ?? 1));
   const search = searchParams.search ?? '';
   const currentUserId = decodeJwtSub(accessToken);

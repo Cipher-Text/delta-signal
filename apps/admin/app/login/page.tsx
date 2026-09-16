@@ -9,11 +9,12 @@ const ADMIN_SEED_USERS = [
   { email: 'admin@deltasignal.org', label: 'Admin' },
 ];
 
-export default function LoginPage({
-  searchParams,
-}: {
-  searchParams: { error?: string };
-}) {
+export default async function LoginPage(
+  props: {
+    searchParams: Promise<{ error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const showSeedLogin = process.env.NEXT_PUBLIC_ENABLE_SEED_LOGIN === 'true';
 
   return (

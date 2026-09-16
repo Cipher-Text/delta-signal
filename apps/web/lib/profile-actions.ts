@@ -71,6 +71,6 @@ export async function changePasswordAction(formData: FormData) {
   }
 
   // All sessions are revoked server-side — log the user out locally too.
-  clearSessionCookies();
+  await clearSessionCookies();
   redirect(`/login?message=${encodeURIComponent('Password changed. Please sign in with your new password.')}`);
 }

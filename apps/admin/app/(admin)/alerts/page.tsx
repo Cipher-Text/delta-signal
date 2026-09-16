@@ -78,12 +78,13 @@ function formatDateTime(dateStr: string) {
   });
 }
 
-export default async function AlertsPage({
-  searchParams,
-}: {
-  searchParams: { tab?: string; page?: string; success?: string; error?: string };
-}) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function AlertsPage(
+  props: {
+    searchParams: Promise<{ tab?: string; page?: string; success?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const activeTab =
     (STATUS_TABS.find((t) => t.value === searchParams.tab)?.value ?? 'ACTIVE') as AlertStatus;
   const page = Math.max(1, Number(searchParams.page ?? 1));

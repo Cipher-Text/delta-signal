@@ -12,7 +12,7 @@ export async function updateProjectStatusAction(formData: FormData) {
   const tab = String(formData.get('tab') ?? 'ALL');
   const page = String(formData.get('page') ?? '1');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {

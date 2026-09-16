@@ -82,18 +82,19 @@ function relativeTime(dateStr: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-export default async function ObservationsPage({
-  searchParams,
-}: {
-  searchParams: {
-    tab?: string;
-    category?: string;
-    page?: string;
-    success?: string;
-    error?: string;
-  };
-}) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function ObservationsPage(
+  props: {
+    searchParams: Promise<{
+      tab?: string;
+      category?: string;
+      page?: string;
+      success?: string;
+      error?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const tab = (searchParams.tab as TrustLevel | 'ALL') ?? 'UNVERIFIED';
   const category = searchParams.category ?? '';
   const page = Math.max(1, Number(searchParams.page ?? 1));

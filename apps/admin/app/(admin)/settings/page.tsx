@@ -155,7 +155,7 @@ const TOKEN_GROUPS: { label: string; tokens: { name: string; value: string; swat
 ];
 
 export default async function SettingsPage() {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   let user: AdminUser;

@@ -77,12 +77,13 @@ function formatDate(dateStr: string | null) {
   });
 }
 
-export default async function RestorationAdminPage({
-  searchParams,
-}: {
-  searchParams: { tab?: string; page?: string; success?: string; error?: string };
-}) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function RestorationAdminPage(
+  props: {
+    searchParams: Promise<{ tab?: string; page?: string; success?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const tab = (searchParams.tab as ProjectStatus | 'ALL') ?? 'ALL';
   const page = Math.max(1, Number(searchParams.page ?? 1));
 

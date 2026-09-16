@@ -35,9 +35,7 @@ const nextConfig = {
 
   // Point file tracing at the monorepo root so standalone output includes
   // workspace package files (@delta-signal/shared, @delta-signal/contracts).
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, '../../'),
-  },
+  outputFileTracingRoot: path.join(__dirname, '../../'),
 
   // Compile workspace TypeScript packages — they ship source, not pre-built JS.
   transpilePackages: ['@delta-signal/shared', '@delta-signal/contracts'],

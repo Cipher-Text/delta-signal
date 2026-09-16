@@ -18,7 +18,7 @@ export async function createAlertAction(formData: FormData) {
   // datetime-local gives "YYYY-MM-DDTHH:MM" — append seconds + Z for valid ISO8601
   const expiresAt = expiresAtRaw ? `${String(expiresAtRaw)}:00.000Z` : undefined;
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {
@@ -39,7 +39,7 @@ export async function createAlertAction(formData: FormData) {
 export async function cancelAlertAction(formData: FormData) {
   const id = String(formData.get('id') ?? '');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {
@@ -61,7 +61,7 @@ export async function editAlertAction(formData: FormData) {
   const expiresAtRaw = formData.get('expiresAt');
   const expiresAt = expiresAtRaw ? `${String(expiresAtRaw)}:00.000Z` : undefined;
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {

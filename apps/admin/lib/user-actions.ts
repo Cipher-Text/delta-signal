@@ -11,7 +11,7 @@ export async function updateRoleAction(formData: FormData) {
   const role = String(formData.get('role') ?? '');
   const returnPage = String(formData.get('returnPage') ?? '1');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {
@@ -29,7 +29,7 @@ export async function deactivateUserAction(formData: FormData) {
   const id = String(formData.get('id') ?? '');
   const returnPage = String(formData.get('returnPage') ?? '1');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {
@@ -48,7 +48,7 @@ export async function reactivateUserAction(formData: FormData) {
   const returnPage = String(formData.get('returnPage') ?? '1');
   const search = String(formData.get('search') ?? '');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {

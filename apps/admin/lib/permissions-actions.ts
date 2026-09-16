@@ -6,7 +6,7 @@ import { ADMIN_ACCESS_TOKEN_COOKIE } from './session-constants';
 import { apiPost, apiDelete } from './api';
 
 export async function grantPermissionAction(formData: FormData) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   const role = String(formData.get('role') ?? '');
@@ -22,7 +22,7 @@ export async function grantPermissionAction(formData: FormData) {
 }
 
 export async function revokePermissionAction(formData: FormData) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   const role = String(formData.get('role') ?? '');

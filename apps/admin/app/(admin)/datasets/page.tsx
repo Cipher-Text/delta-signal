@@ -71,12 +71,13 @@ function relativeTime(dateStr: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-export default async function DatasetsPage({
-  searchParams,
-}: {
-  searchParams: { success?: string; error?: string };
-}) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function DatasetsPage(
+  props: {
+    searchParams: Promise<{ success?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
 
   const result = await apiGet<AdminListResponse>('/api/v1/datasets/admin', accessToken);
 

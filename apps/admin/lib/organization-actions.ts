@@ -6,8 +6,9 @@ import { cookies } from 'next/headers';
 import { apiDelete, apiPatch, apiPost, ApiError } from './api';
 import { ADMIN_ACCESS_TOKEN_COOKIE } from './session-constants';
 
-function tokenOrRedirect() {
-  const token = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+async function tokenOrRedirect() {
+  const store = await cookies();
+  const token = store.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!token) redirect('/login');
   return token;
 }
@@ -17,7 +18,7 @@ function errorMessage(err: unknown) {
 }
 
 export async function createOrganizationAction(formData: FormData) {
-  const token = tokenOrRedirect();
+  const token = await tokenOrRedirect();
   try {
     await apiPost('/api/v1/admin/organizations', {
       name: String(formData.get('name') ?? ''),
@@ -34,7 +35,7 @@ export async function createOrganizationAction(formData: FormData) {
 }
 
 export async function updateOrganizationAction(formData: FormData) {
-  const token = tokenOrRedirect();
+  const token = await tokenOrRedirect();
   const id = String(formData.get('id') ?? '');
   const payload: Record<string, unknown> = {};
 
@@ -66,7 +67,7 @@ export async function updateOrganizationAction(formData: FormData) {
 }
 
 export async function deleteOrganizationAction(formData: FormData) {
-  const token = tokenOrRedirect();
+  const token = await tokenOrRedirect();
   const id = String(formData.get('id') ?? '');
   try {
     await apiDelete(`/api/v1/admin/organizations/${id}`, token);
@@ -78,7 +79,7 @@ export async function deleteOrganizationAction(formData: FormData) {
 }
 
 export async function upsertMembershipAction(formData: FormData) {
-  const token = tokenOrRedirect();
+  const token = await tokenOrRedirect();
   const organizationId = String(formData.get('organizationId') ?? '');
   try {
     await apiPost(`/api/v1/admin/organizations/${organizationId}/members`, {
@@ -93,7 +94,7 @@ export async function upsertMembershipAction(formData: FormData) {
 }
 
 export async function updateMembershipAction(formData: FormData) {
-  const token = tokenOrRedirect();
+  const token = await tokenOrRedirect();
   const organizationId = String(formData.get('organizationId') ?? '');
   const userId = String(formData.get('userId') ?? '');
   try {
@@ -108,7 +109,7 @@ export async function updateMembershipAction(formData: FormData) {
 }
 
 export async function removeMembershipAction(formData: FormData) {
-  const token = tokenOrRedirect();
+  const token = await tokenOrRedirect();
   const organizationId = String(formData.get('organizationId') ?? '');
   const userId = String(formData.get('userId') ?? '');
   try {

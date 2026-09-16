@@ -51,22 +51,22 @@ export async function loginAction(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent('Access denied: Moderator or Admin role required')}`);
   }
 
-  setSessionCookies(tokens.accessToken, tokens.refreshToken);
+  await setSessionCookies(tokens.accessToken, tokens.refreshToken);
   redirect('/reports');
 }
 
 export async function logoutAction() {
-  const refreshToken = getRefreshToken();
-  const accessToken = getAccessToken();
+  const refreshToken = await getRefreshToken();
+  const accessToken = await getAccessToken();
   if (refreshToken) {
     await apiPost('/api/v1/auth/logout', { refreshToken }, accessToken).catch(() => null);
   }
-  clearSessionCookies();
+  await clearSessionCookies();
   redirect('/login');
 }
 
 export async function getCurrentAdminUser(): Promise<ProfileResponse | null> {
-  const accessToken = getAccessToken();
+  const accessToken = await getAccessToken();
   if (!accessToken) return null;
   try {
     return await apiGet<ProfileResponse>('/api/v1/auth/profile', accessToken);

@@ -60,12 +60,13 @@ function titleCase(str: string) {
   return str.charAt(0) + str.slice(1).toLowerCase();
 }
 
-export default async function IngestionPage({
-  searchParams,
-}: {
-  searchParams: { tab?: string; page?: string };
-}) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function IngestionPage(
+  props: {
+    searchParams: Promise<{ tab?: string; page?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const activeTab = (STATUS_TABS.find((t) => t.value === searchParams.tab)?.value ?? 'ALL') as JobStatus | 'ALL';
   const page = Math.max(1, Number(searchParams.page ?? 1));
 

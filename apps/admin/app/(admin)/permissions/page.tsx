@@ -20,12 +20,13 @@ const ROLES = [
   { value: 'MODERATOR',          label: 'Moderator' },
 ] as const;
 
-export default async function PermissionsPage({
-  searchParams,
-}: {
-  searchParams: { success?: string; error?: string };
-}) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function PermissionsPage(
+  props: {
+    searchParams: Promise<{ success?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const permissions = await apiGet<PermissionRow[]>('/api/v1/admin/permissions', accessToken);
 
   return (

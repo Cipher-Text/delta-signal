@@ -12,8 +12,8 @@ import {
 
 const isProd = process.env.NODE_ENV === 'production';
 
-export function setSessionCookies(accessToken: string, refreshToken: string) {
-  const store = cookies();
+export async function setSessionCookies(accessToken: string, refreshToken: string) {
+  const store = await cookies();
   store.set(ADMIN_ACCESS_TOKEN_COOKIE, accessToken, {
     httpOnly: true,
     secure: isProd,
@@ -30,16 +30,18 @@ export function setSessionCookies(accessToken: string, refreshToken: string) {
   });
 }
 
-export function clearSessionCookies() {
-  const store = cookies();
+export async function clearSessionCookies() {
+  const store = await cookies();
   store.delete(ADMIN_ACCESS_TOKEN_COOKIE);
   store.delete(ADMIN_REFRESH_TOKEN_COOKIE);
 }
 
-export function getAccessToken(): string | undefined {
-  return cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+export async function getAccessToken(): Promise<string | undefined> {
+  const store = await cookies();
+  return store.get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
 }
 
-export function getRefreshToken(): string | undefined {
-  return cookies().get(ADMIN_REFRESH_TOKEN_COOKIE)?.value;
+export async function getRefreshToken(): Promise<string | undefined> {
+  const store = await cookies();
+  return store.get(ADMIN_REFRESH_TOKEN_COOKIE)?.value;
 }

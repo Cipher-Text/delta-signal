@@ -60,7 +60,7 @@ const CRON_JOBS = [
 ];
 
 export default async function SystemHealthPage() {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
 
   const [health, recentJobs, failedJobs] = await Promise.all([
     apiGet<HealthResponse>('/api/v1/health').catch(() => null),

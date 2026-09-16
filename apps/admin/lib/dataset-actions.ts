@@ -10,7 +10,7 @@ export async function togglePublishAction(formData: FormData) {
   const id = String(formData.get('id') ?? '');
   const isPublished = formData.get('isPublished') === 'true';
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {
@@ -28,7 +28,7 @@ export async function updateAccessPolicyAction(formData: FormData) {
   const id = String(formData.get('id') ?? '');
   const accessPolicy = String(formData.get('accessPolicy') ?? '');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {

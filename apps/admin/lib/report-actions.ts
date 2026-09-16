@@ -12,7 +12,7 @@ export async function updateReportStatusAction(formData: FormData) {
   const note = formData.get('note') ? String(formData.get('note')) : undefined;
   const returnTab = String(formData.get('returnTab') ?? 'SUBMITTED');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {

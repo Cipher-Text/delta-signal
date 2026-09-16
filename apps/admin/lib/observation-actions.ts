@@ -13,7 +13,7 @@ export async function updateTrustAction(formData: FormData) {
   const category = String(formData.get('category') ?? '');
   const page = String(formData.get('page') ?? '1');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {
@@ -33,7 +33,7 @@ export async function deleteObservationAction(formData: FormData) {
   const category = String(formData.get('category') ?? '');
   const page = String(formData.get('page') ?? '1');
 
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {

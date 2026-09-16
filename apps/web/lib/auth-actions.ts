@@ -17,7 +17,7 @@ export async function loginAction(formData: FormData) {
     redirect(`/login?error=${encodeURIComponent(message)}`);
   }
 
-  setSessionCookies(tokens.accessToken, tokens.refreshToken);
+  await setSessionCookies(tokens.accessToken, tokens.refreshToken);
   redirect('/reports');
 }
 
@@ -34,12 +34,12 @@ export async function registerAction(formData: FormData) {
     redirect(`/register?error=${encodeURIComponent(message)}`);
   }
 
-  setSessionCookies(tokens.accessToken, tokens.refreshToken);
+  await setSessionCookies(tokens.accessToken, tokens.refreshToken);
   redirect('/reports');
 }
 
 export async function logoutAction() {
-  const refreshToken = getRefreshToken();
+  const refreshToken = await getRefreshToken();
   if (refreshToken) {
     try {
       await apiPost(routes.auth.logout, { refreshToken });
@@ -47,7 +47,7 @@ export async function logoutAction() {
       // Best-effort — clear cookies regardless so the user is logged out client-side.
     }
   }
-  clearSessionCookies();
+  await clearSessionCookies();
   redirect('/');
 }
 

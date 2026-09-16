@@ -14,7 +14,7 @@ interface AdminUser {
 }
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const accessToken = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   let user: AdminUser;

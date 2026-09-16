@@ -41,12 +41,13 @@ function titleCase(value: string) {
   return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default async function OrganizationsPage({
-  searchParams,
-}: {
-  searchParams: { success?: string; error?: string };
-}) {
-  const token = cookies().get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+export default async function OrganizationsPage(
+  props: {
+    searchParams: Promise<{ success?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const token = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const [organizations, users] = await Promise.all([
     apiGet<Organization[]>('/api/v1/admin/organizations', token),
     apiGet<User[]>('/api/v1/admin/organizations/users', token),
