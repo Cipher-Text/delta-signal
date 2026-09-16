@@ -3,7 +3,7 @@
  * since Next.js forbids setting cookies during Server Component rendering.
  * Middleware keeps these cookies fresh on every request; see middleware.ts.
  */
-import { cookies } from 'next/headers';
+import { cookies, type UnsafeUnwrappedCookies } from 'next/headers';
 import {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
@@ -14,7 +14,7 @@ import {
 const isProd = process.env.NODE_ENV === 'production';
 
 export function setSessionCookies(accessToken: string, refreshToken: string) {
-  const store = cookies();
+  const store = (cookies() as unknown as UnsafeUnwrappedCookies);
   store.set(ACCESS_TOKEN_COOKIE, accessToken, {
     httpOnly: true,
     secure: isProd,
@@ -32,11 +32,11 @@ export function setSessionCookies(accessToken: string, refreshToken: string) {
 }
 
 export function clearSessionCookies() {
-  const store = cookies();
+  const store = (cookies() as unknown as UnsafeUnwrappedCookies);
   store.delete(ACCESS_TOKEN_COOKIE);
   store.delete(REFRESH_TOKEN_COOKIE);
 }
 
 export function getRefreshToken(): string | undefined {
-  return cookies().get(REFRESH_TOKEN_COOKIE)?.value;
+  return (cookies() as unknown as UnsafeUnwrappedCookies).get(REFRESH_TOKEN_COOKIE)?.value;
 }

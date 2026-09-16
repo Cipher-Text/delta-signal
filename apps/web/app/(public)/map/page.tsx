@@ -6,9 +6,10 @@ import type { MapAlert, MapDistrict, MapReport, MapLayer } from '../../../compon
 
 const MapExplorerClient = dynamic(() => import('../../../components/map-explorer-client'), { ssr: false, loading: () => <div className="map-explorer-loading">Loading Bangladesh environmental map…</div> });
 interface DistrictRow { id: string; name: string; lat: number | null; lng: number | null; division?: { name: string }; }
-interface PageProps { searchParams: { layer?: string; district?: string }; }
+interface PageProps { searchParams: Promise<{ layer?: string; district?: string }>; }
 
-export default async function MapPage({ searchParams }: PageProps) {
+export default async function MapPage(props: PageProps) {
+  const searchParams = await props.searchParams;
   const [districtsResult, alertsResult, reportsResult, weatherResult, airResult, waterResult, stationResult, floodResult] = await Promise.allSettled([
     apiGet<DistrictRow[]>(routes.locations.districts),
     apiGet<{ data: Alert[] }>(`${routes.alerts.list}?status=ACTIVE&pageSize=100`),

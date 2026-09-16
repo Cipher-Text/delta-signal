@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { forgotPasswordAction } from '../../../lib/auth-actions';
 
-export default function ForgotPasswordPage({
-  searchParams,
-}: {
-  searchParams: { sent?: string };
-}) {
+export default async function ForgotPasswordPage(
+  props: {
+    searchParams: Promise<{ sent?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   if (searchParams.sent) {
     return (
       <main className="auth-page">

@@ -35,11 +35,12 @@ interface OrganizationOption {
   name: string;
 }
 
-export default async function RestorationPage({
-  searchParams,
-}: {
-  searchParams: { category?: string; status?: string; districtId?: string; page?: string; created?: string; joined?: string; error?: string };
-}) {
+export default async function RestorationPage(
+  props: {
+    searchParams: Promise<{ category?: string; status?: string; districtId?: string; page?: string; created?: string; joined?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const category = searchParams.category;
   const { status, districtId } = searchParams;
   const page = Math.max(1, Number(searchParams.page ?? 1) || 1);
@@ -57,7 +58,7 @@ export default async function RestorationPage({
   ]);
 
   const canCreate = user !== null && CREATOR_ROLES.has(user.role);
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value ?? '';
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
 
   const [districts, organizations] = await Promise.all([
         apiGet<DistrictOption[]>(routes.locations.districts).catch(() => []),

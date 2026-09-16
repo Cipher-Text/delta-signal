@@ -10,11 +10,12 @@ function formatDate(iso: string) {
   });
 }
 
-export default async function RadiationPage({
-  searchParams,
-}: {
-  searchParams: { districtId?: string; from?: string; to?: string };
-}) {
+export default async function RadiationPage(
+  props: {
+    searchParams: Promise<{ districtId?: string; from?: string; to?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const { districtId, from, to } = searchParams;
 
   let radiationUrl: string;

@@ -44,7 +44,7 @@ export interface CurrentUser {
  * middleware.ts is what keeps the access token from going stale.
  */
 export async function getCurrentUser(): Promise<CurrentUser | null> {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) return null;
 
   try {

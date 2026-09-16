@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { registerAction } from '../../../lib/auth-actions';
 
-export default function RegisterPage({
-  searchParams,
-}: {
-  searchParams: { error?: string };
-}) {
+export default async function RegisterPage(
+  props: {
+    searchParams: Promise<{ error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   return (
     <main className="auth-page">
       <div className="auth-panel">

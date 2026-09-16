@@ -8,7 +8,7 @@ import { clearSessionCookies } from './session';
 import { revalidatePath } from 'next/cache';
 
 export async function updateProfileAction(formData: FormData) {
-  const token = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!token) redirect('/login');
 
   // Preserve active tab so the user lands back on the right section
@@ -50,7 +50,7 @@ export async function updateProfileAction(formData: FormData) {
  * redirect to /login rather than back to the profile page.
  */
 export async function changePasswordAction(formData: FormData) {
-  const token = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!token) redirect('/login');
 
   const currentPassword = String(formData.get('currentPassword') ?? '');

@@ -8,11 +8,12 @@ const INDICATOR_LABEL: Record<string, string> = {
   'EN.GHG.N2O.MT.CE.AR5': 'N₂O',
 };
 
-export default async function EmissionsPage({
-  searchParams,
-}: {
-  searchParams: { indicator?: string; from?: string; to?: string };
-}) {
+export default async function EmissionsPage(
+  props: {
+    searchParams: Promise<{ indicator?: string; from?: string; to?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const { indicator, from, to } = searchParams;
 
   const params = new URLSearchParams();

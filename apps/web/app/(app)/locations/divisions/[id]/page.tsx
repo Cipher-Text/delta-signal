@@ -12,7 +12,8 @@ function aqiClass(pm25: number | null): { label: string; css: string } {
   return               { label: 'Hazardous',        css: 'aqi-hazardous' };
 }
 
-export default async function DivisionPage({ params }: { params: { id: string } }) {
+export default async function DivisionPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const [divisions, districts] = await Promise.all([
     apiGet<DivisionWithClimate[]>(routes.locations.divisions, 900),
     apiGet<DistrictWithClimate[]>(`${routes.locations.districts}?divisionId=${params.id}`, 900),

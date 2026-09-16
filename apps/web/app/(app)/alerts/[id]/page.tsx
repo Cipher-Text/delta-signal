@@ -33,11 +33,12 @@ function formatDate(iso: string) {
   });
 }
 
-export default async function AlertDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function AlertDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = await props.params;
   const alertOrNull = await apiGet<Alert>(routes.alerts.detail(params.id), 60).catch(() => null);
 
   if (!alertOrNull) notFound();

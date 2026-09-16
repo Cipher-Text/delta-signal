@@ -64,7 +64,8 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-export default async function CompanyDetailPage({ params }: { params: { id: string } }) {
+export default async function CompanyDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const company = await apiGet<CompanyDetail>(
     routes.companies.detail(params.id),
     300,

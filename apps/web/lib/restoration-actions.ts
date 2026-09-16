@@ -7,7 +7,7 @@ import { apiPostAuthed, ApiError } from './api';
 import { ACCESS_TOKEN_COOKIE } from './session-constants';
 
 export async function createRestorationProjectAction(formData: FormData) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) {
     redirect('/login');
   }
@@ -34,7 +34,7 @@ export async function createRestorationProjectAction(formData: FormData) {
 }
 
 export async function joinRestorationProjectAction(formData: FormData) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) {
     redirect('/login');
   }
@@ -53,7 +53,7 @@ export async function joinRestorationProjectAction(formData: FormData) {
 
 /** Join action called from the project detail page — redirects back to the detail view. */
 export async function joinFromDetailAction(projectId: string) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) {
     redirect('/login');
   }

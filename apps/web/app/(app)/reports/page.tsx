@@ -26,11 +26,12 @@ const STATUS_VARIANT: Record<string, string> = {
 
 type DistrictOption = DistrictWithDivision;
 
-export default async function ReportsPage({
-  searchParams,
-}: {
-  searchParams: { category?: string; status?: string; districtId?: string; page?: string; submitted?: string; error?: string };
-}) {
+export default async function ReportsPage(
+  props: {
+    searchParams: Promise<{ category?: string; status?: string; districtId?: string; page?: string; submitted?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const category = searchParams.category;
   const { status, districtId } = searchParams;
   const page = Math.max(1, Number(searchParams.page ?? 1) || 1);

@@ -13,20 +13,21 @@ import { routes, type CommunityPostDetail } from '@delta-signal/contracts';
 import { relativeTime } from '../../../../lib/format';
 import { ACCESS_TOKEN_COOKIE } from '../../../../lib/session-constants';
 
-export default async function CommunityPostDetailPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: {
-    created?: string;
-    commented?: string;
-    voted?: string;
-    commentDeleted?: string;
-    error?: string;
-  };
-}) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+export default async function CommunityPostDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{
+      created?: string;
+      commented?: string;
+      voted?: string;
+      commentDeleted?: string;
+      error?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   const [post, user] = await Promise.all([
     accessToken
       ? apiGetAuthed<CommunityPostDetail>(routes.community.post(params.id), accessToken).catch(

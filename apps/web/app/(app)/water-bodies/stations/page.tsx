@@ -2,11 +2,12 @@ import Link from 'next/link';
 import { apiGet } from '../../../../lib/api';
 import { routes, type WaterLevelStationPagedResponse, type DistrictSummary, type WaterBodyPagedResponse } from '@delta-signal/contracts';
 
-export default async function WaterLevelStationsPage({
-  searchParams,
-}: {
-  searchParams: { districtId?: string; upazilaId?: string; waterBodyId?: string; tidalStatus?: string; page?: string };
-}) {
+export default async function WaterLevelStationsPage(
+  props: {
+    searchParams: Promise<{ districtId?: string; upazilaId?: string; waterBodyId?: string; tidalStatus?: string; page?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const { districtId, upazilaId, waterBodyId, tidalStatus } = searchParams;
   const page = searchParams.page ? parseInt(searchParams.page, 10) : 1;
 

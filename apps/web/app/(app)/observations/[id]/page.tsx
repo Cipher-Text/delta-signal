@@ -26,11 +26,12 @@ function formatDate(iso: string) {
   });
 }
 
-export default async function ObservationDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function ObservationDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = await props.params;
   const observation = await apiGet<Observation>(
     routes.observations.detail(params.id),
     60,

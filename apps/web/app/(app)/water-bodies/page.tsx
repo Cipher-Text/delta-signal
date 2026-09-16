@@ -11,11 +11,12 @@ const TYPE_TAG: Record<string, string> = {
 
 const WATER_BODY_TYPES: WaterBodyType[] = ['RIVER', 'WETLAND', 'LAKE'];
 
-export default async function WaterBodiesPage({
-  searchParams,
-}: {
-  searchParams: { waterBodyType?: string; hydrologicalClass?: string; districtId?: string; upazilaId?: string; page?: string };
-}) {
+export default async function WaterBodiesPage(
+  props: {
+    searchParams: Promise<{ waterBodyType?: string; hydrologicalClass?: string; districtId?: string; upazilaId?: string; page?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const waterBodyType = searchParams.waterBodyType as WaterBodyType | undefined;
   const hydrologicalClass = searchParams.hydrologicalClass as HydrologicalClass | undefined;
   const districtId = searchParams.districtId;

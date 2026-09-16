@@ -33,11 +33,12 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-export default async function IndustrialSiteDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function IndustrialSiteDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = await props.params;
   const facility = await apiGet<FacilityDetail>(
     routes.industrialSites.detail(params.id),
     300,

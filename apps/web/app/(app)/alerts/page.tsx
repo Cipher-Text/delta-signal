@@ -24,11 +24,12 @@ const SEVERITY_BADGE_CLASS: Record<string, string> = {
 
 const ISSUER_ROLES = new Set(['GOVERNMENT', 'MODERATOR', 'ADMIN']);
 
-export default async function AlertsPage({
-  searchParams,
-}: {
-  searchParams: { severity?: string; alertType?: string; districtId?: string; page?: string };
-}) {
+export default async function AlertsPage(
+  props: {
+    searchParams: Promise<{ severity?: string; alertType?: string; districtId?: string; page?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const severity = searchParams.severity;
   const { alertType, districtId } = searchParams;
   const page = Math.max(1, Number(searchParams.page ?? 1) || 1);

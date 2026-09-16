@@ -7,7 +7,7 @@ import { apiPostAuthed, ApiError } from './api';
 import { ACCESS_TOKEN_COOKIE } from './session-constants';
 
 export async function submitReportAction(formData: FormData) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) {
     redirect('/login');
   }
@@ -32,7 +32,7 @@ export async function submitReportAction(formData: FormData) {
 }
 
 export async function addCommentAction(reportId: string, formData: FormData) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) {
     redirect('/login');
   }

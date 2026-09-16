@@ -263,26 +263,27 @@ function BadgeGrid({ game }: { game: GamificationSummary | null }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function ProfilePage({
-  searchParams,
-}: {
-  searchParams: {
-    tab?: string;
-    subscribed?: string;
-    unsubscribed?: string;
-    sub_error?: string;
-    profileSaved?: string;
-    profileError?: string;
-    pwError?: string;
-  };
-}) {
+export default async function ProfilePage(
+  props: {
+    searchParams: Promise<{
+      tab?: string;
+      subscribed?: string;
+      unsubscribed?: string;
+      sub_error?: string;
+      profileSaved?: string;
+      profileError?: string;
+      pwError?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const activeTab: ProfileTab =
     searchParams.tab && TABS.some((t) => t.id === searchParams.tab)
       ? (searchParams.tab as ProfileTab)
       : 'personal';
 
   const user        = await getCurrentUser();
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value ?? '';
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
 
   const [myReports, myObservations, subscriptions, districts, gameData] = await Promise.all([
     apiGetAuthed<PaginatedEnvelope<CitizenReport>>(routes.reports.mine, accessToken).catch(

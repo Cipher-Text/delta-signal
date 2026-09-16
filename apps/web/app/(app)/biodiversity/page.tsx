@@ -5,11 +5,12 @@ import { relativeTime } from '../../../lib/format';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
 
-export default async function BiodiversityPage({
-  searchParams,
-}: {
-  searchParams: { search?: string; districtId?: string; speciesPage?: string; occurrencePage?: string };
-}) {
+export default async function BiodiversityPage(
+  props: {
+    searchParams: Promise<{ search?: string; districtId?: string; speciesPage?: string; occurrencePage?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const search = searchParams.search;
   const districtId = searchParams.districtId;
   const speciesPage = Math.max(1, Number(searchParams.speciesPage ?? 1) || 1);

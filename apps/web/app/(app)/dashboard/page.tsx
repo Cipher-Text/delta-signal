@@ -42,7 +42,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value ?? '';
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
 
   if (user.role === 'ADMIN') {
     const data = await apiGetAuthed<AdminDashboard>(routes.analytics.admin, accessToken);

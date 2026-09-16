@@ -25,13 +25,14 @@ const STATUS_VARIANT: Record<string, string> = {
   UNDER_REVIEW: 'info',
 };
 
-export default async function ReportDetailPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { commented?: string; error?: string };
-}) {
+export default async function ReportDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ commented?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const [reportOrNull, commentsRaw, mediaRaw] = await Promise.all([
     apiGet<ReportDetail>(routes.reports.detail(params.id), 60).catch(() => null),
     apiGet<ReportComment[]>(routes.reports.comments(params.id), 60).catch((): ReportComment[] => []),

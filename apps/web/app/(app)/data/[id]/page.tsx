@@ -48,7 +48,8 @@ function DataTable({ children }: { children: React.ReactNode }) {
   return <div className="table dataset-detail-table">{children}</div>;
 }
 
-export default async function DatasetDetailPage({ params }: { params: { id: string } }) {
+export default async function DatasetDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const dataset = await apiGet<Dataset>(routes.datasets.detail(params.id), 60).catch(() => null);
   if (!dataset) notFound();
 

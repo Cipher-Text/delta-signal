@@ -39,14 +39,15 @@ const ORG_TYPES = [
   { label: 'Corporate', value: 'PRIVATE_COMPANY' },
 ];
 
-export default async function OrganizationsPage({
-  searchParams,
-}: {
-  searchParams: { type?: string; page?: string };
-}) {
+export default async function OrganizationsPage(
+  props: {
+    searchParams: Promise<{ type?: string; page?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const user = await getCurrentUser();
 
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value ?? '';
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
   const activeType = searchParams.type ?? '';
   const typeFilter = activeType ? `&type=${encodeURIComponent(activeType)}` : '';
   const page = searchParams.page ?? '1';

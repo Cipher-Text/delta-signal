@@ -39,7 +39,8 @@ function aqiClass(pm25: number | null): { label: string; css: string } {
   return               { label: 'Hazardous',        css: 'aqi-hazardous' };
 }
 
-export default async function UnionPage({ params }: { params: { id: string } }) {
+export default async function UnionPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const union = await apiGet<UnionDetail>(routes.locations.union(params.id), 900);
   const { upazila } = union;
   const { district } = upazila;

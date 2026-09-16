@@ -98,13 +98,14 @@ async function tryGet<T>(url: string, revalidate = 900): Promise<T | null> {
   }
 }
 
-export default async function DistrictPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { tab?: string };
-}) {
+export default async function DistrictPage(
+  props: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ tab?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const { id } = params;
   const tab = (searchParams.tab as DistrictTab) ?? 'overview';
 

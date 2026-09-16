@@ -31,11 +31,12 @@ function titleCase(value: string) {
   return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export default async function OrganizationDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function OrganizationDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = await props.params;
   let org: Organization;
   try {
     org = await apiGet<Organization>(`/api/v1/organizations/${params.id}`, 300);

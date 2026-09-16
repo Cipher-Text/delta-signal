@@ -1,11 +1,12 @@
 import Link from 'next/link';
 import { resetPasswordAction } from '../../../lib/auth-actions';
 
-export default function ResetPasswordPage({
-  searchParams,
-}: {
-  searchParams: { token?: string; error?: string };
-}) {
+export default async function ResetPasswordPage(
+  props: {
+    searchParams: Promise<{ token?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const { token, error } = searchParams;
 
   if (!token) {

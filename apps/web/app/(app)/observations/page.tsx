@@ -25,11 +25,12 @@ const TRUST_VARIANT: Record<string, string> = {
 
 type DistrictOption = DistrictWithDivision;
 
-export default async function ObservationsPage({
-  searchParams,
-}: {
-  searchParams: { category?: string; trustLevel?: string; districtId?: string; page?: string; submitted?: string; error?: string };
-}) {
+export default async function ObservationsPage(
+  props: {
+    searchParams: Promise<{ category?: string; trustLevel?: string; districtId?: string; page?: string; submitted?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const category = searchParams.category;
   const { trustLevel, districtId } = searchParams;
   const page = Math.max(1, Number(searchParams.page ?? 1) || 1);

@@ -7,7 +7,7 @@ import { apiPostAuthed, apiDeleteAuthed, ApiError } from './api';
 import { ACCESS_TOKEN_COOKIE } from './session-constants';
 
 export async function createPostAction(formData: FormData) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   const rawTitle = String(formData.get('title') ?? '').trim();
@@ -54,7 +54,7 @@ export async function createPostAction(formData: FormData) {
 }
 
 export async function addPostCommentAction(postId: string, formData: FormData) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   const body = String(formData.get('body') ?? '').trim();
@@ -70,7 +70,7 @@ export async function addPostCommentAction(postId: string, formData: FormData) {
 }
 
 export async function deletePostAction(postId: string, hasPoll: boolean) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {
@@ -84,7 +84,7 @@ export async function deletePostAction(postId: string, hasPoll: boolean) {
 }
 
 export async function deleteCommentAction(postId: string, commentId: string) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {
@@ -98,7 +98,7 @@ export async function deleteCommentAction(postId: string, commentId: string) {
 }
 
 export async function castVoteAction(postId: string, formData: FormData) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   const optionId = String(formData.get('optionId') ?? '');

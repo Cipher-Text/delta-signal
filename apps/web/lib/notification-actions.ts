@@ -7,7 +7,7 @@ import { apiPostAuthed, apiDeleteAuthed, ApiError } from './api';
 import { ACCESS_TOKEN_COOKIE } from './session-constants';
 
 export async function subscribeAction(formData: FormData) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   const rawDistrictId = formData.get('districtId');
@@ -29,7 +29,7 @@ export async function subscribeAction(formData: FormData) {
 }
 
 export async function unsubscribeAction(subscriptionId: string) {
-  const accessToken = cookies().get(ACCESS_TOKEN_COOKIE)?.value;
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) redirect('/login');
 
   try {

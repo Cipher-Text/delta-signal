@@ -20,11 +20,12 @@ function compassDir(deg: number | null | undefined): string {
   return dirs[Math.round(deg / 45) % 8] ?? '—';
 }
 
-export default async function MarinePage({
-  searchParams,
-}: {
-  searchParams: { districtId?: string; from?: string; to?: string };
-}) {
+export default async function MarinePage(
+  props: {
+    searchParams: Promise<{ districtId?: string; from?: string; to?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const { districtId, from, to } = searchParams;
 
   let marineUrl: string;

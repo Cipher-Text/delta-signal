@@ -10,18 +10,19 @@ import ListResultToolbar from '../../../components/list-result-toolbar';
 
 type CommunityTab = 'posts' | 'polls';
 
-export default async function CommunityPage({
-  searchParams,
-}: {
-  searchParams: {
-    tab?: string;
-    districtId?: string;
-    page?: string;
-    created?: string;
-    deleted?: string;
-    error?: string;
-  };
-}) {
+export default async function CommunityPage(
+  props: {
+    searchParams: Promise<{
+      tab?: string;
+      districtId?: string;
+      page?: string;
+      created?: string;
+      deleted?: string;
+      error?: string;
+    }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const tab: CommunityTab =
     searchParams.tab === 'polls' ? 'polls' : 'posts';
   const districtId = searchParams.districtId;

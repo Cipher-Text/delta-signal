@@ -10,11 +10,12 @@
 import Link from 'next/link';
 import { apiPost, ApiError } from '../../lib/api';
 
-export default async function VerifyEmailPage({
-  searchParams,
-}: {
-  searchParams: { token?: string };
-}) {
+export default async function VerifyEmailPage(
+  props: {
+    searchParams: Promise<{ token?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const { token } = searchParams;
 
   if (!token) {

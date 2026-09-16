@@ -15,7 +15,8 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-export default async function WaterBodyDetailPage({ params }: { params: { id: string } }) {
+export default async function WaterBodyDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const waterBody = await apiGet<WaterBody>(routes.waterBodies.detail(params.id), 300).catch(
     () => null,
   );

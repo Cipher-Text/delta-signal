@@ -37,7 +37,8 @@ function aqiClass(pm25: number | null): { label: string; css: string } {
   return               { label: 'Hazardous',        css: 'aqi-hazardous' };
 }
 
-export default async function UpazilaPage({ params }: { params: { id: string } }) {
+export default async function UpazilaPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const upazila = await apiGet<UpazilaDetail>(routes.locations.upazila(params.id), 900);
   const aqi = aqiClass(upazila.avgPm25_30d);
 

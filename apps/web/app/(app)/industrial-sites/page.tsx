@@ -84,7 +84,8 @@ type SearchParams = {
   page?: string;
 };
 
-export default async function IndustryPage({ searchParams }: { searchParams: SearchParams }) {
+export default async function IndustryPage(props: { searchParams: Promise<SearchParams> }) {
+  const searchParams = await props.searchParams;
   const tab = searchParams.tab === 'companies' ? 'companies' : 'sites';
   const currentPage = searchParams.page ? parseInt(searchParams.page, 10) : 1;
 

@@ -23,11 +23,12 @@ const ACCESS_LABEL: Record<string, { label: string; variant: string }> = {
   GOVERNMENT: { label: 'Government access', variant: 'danger' },
 };
 
-export default async function DataPage({
-  searchParams,
-}: {
-  searchParams: { category?: string; accessPolicy?: string; page?: string };
-}) {
+export default async function DataPage(
+  props: {
+    searchParams: Promise<{ category?: string; accessPolicy?: string; page?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const category = searchParams.category;
   const accessPolicy = searchParams.accessPolicy;
   const page = Math.max(1, Number(searchParams.page ?? 1) || 1);

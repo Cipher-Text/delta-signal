@@ -22,13 +22,14 @@ function formatDate(iso: string | null) {
   });
 }
 
-export default async function RestorationDetailPage({
-  params,
-  searchParams,
-}: {
-  params: { id: string };
-  searchParams: { joined?: string; error?: string };
-}) {
+export default async function RestorationDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ joined?: string; error?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const [project, user] = await Promise.all([
     apiGet<RestorationProject>(routes.restoration.project(params.id), 60).catch(() => null),
     getCurrentUser(),

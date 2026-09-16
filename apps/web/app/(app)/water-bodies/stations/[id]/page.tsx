@@ -34,7 +34,8 @@ function fmtDate(iso: string): string {
   });
 }
 
-export default async function StationDetailPage({ params }: { params: { id: string } }) {
+export default async function StationDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const [latestRes, forecasts] = await Promise.all([
     apiGet<StationLatestReadingResponse>(routes.flood.stationLatest(params.id), 300).catch(
       () => null,

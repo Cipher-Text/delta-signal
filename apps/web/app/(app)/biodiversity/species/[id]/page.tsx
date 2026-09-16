@@ -4,11 +4,12 @@ import { apiGet } from '../../../../../lib/api';
 import { routes, type Species, type Occurrence, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { relativeTime } from '../../../../../lib/format';
 
-export default async function SpeciesDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default async function SpeciesDetailPage(
+  props: {
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = await props.params;
   const [species, occurrencesRes] = await Promise.all([
     apiGet<Species>(routes.biodiversity.speciesDetail(params.id), 3600).catch(() => null),
     apiGet<PaginatedEnvelope<Occurrence>>(
