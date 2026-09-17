@@ -149,7 +149,7 @@ OpenMeteo forecast docs allow weather forecasts up to 16 days. OpenMeteo air-qua
 - No OpenMeteo AQI fields are requested or stored yet.
 - No OpenMeteo Climate integration yet; see [OpenMeteo Climate](openmeteo-climate.md).
 - OpenMeteo Flood is implemented in a separate `flood` module; see [OpenMeteo Flood](openmeteo-flood.md).
-- No OpenMeteo Marine Weather integration yet; see [OpenMeteo Marine Weather](openmeteo-marine.md).
-- No OpenMeteo Satellite Radiation integration yet; see [OpenMeteo Satellite Radiation](openmeteo-satellite-radiation.md).
+- OpenMeteo Marine Weather is implemented in `apps/api/src/marine/`; see [OpenMeteo Marine Weather](openmeteo-marine.md).
+- OpenMeteo Satellite Radiation is implemented in `apps/api/src/radiation/`; see [OpenMeteo Satellite Radiation](openmeteo-satellite-radiation.md).
 - No soil temperature, soil moisture, or multi-height wind fields are stored.
 - `HourlyAirQuality` has no provider/source column yet, so adding another AQ provider will need a schema decision.

@@ -56,7 +56,7 @@ All data is anchored to Bangladesh's administrative geography:
 |---|---|---|
 | Division | 8 | Dhaka, Chittagong, Sylhet |
 | District | 64 | Gazipur, Cox's Bazar, Sunamganj |
-| Upazila | 495 | Kapasia, Teknaf, Dowarabazar |
+| Upazila | 494 | Kapasia, Teknaf, Dowarabazar |
 | Union | 4,540 | Mawna, Shah Porir Dwip |
 
 Climate data (temperature, humidity, precipitation, wind, air quality) is fetched nightly at union level and aggregated bottom-up to each higher level.
@@ -69,8 +69,8 @@ Nx monorepo with pnpm workspaces. Three independently deployable TypeScript apps
 
 ```
 apps/api        NestJS modular monolith    :3001
-apps/web        Next.js 14 public site     :3000
-apps/admin      Next.js 14 admin console   :3002
+apps/web        Next.js 15 public site     :3000
+apps/admin      Next.js 15 admin console   :3002
 apps/data-worker  Python GIS skeleton      (no active jobs yet)
 
 packages/database  Prisma schema + migrations + client

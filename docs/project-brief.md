@@ -104,7 +104,7 @@ Bangladesh's 4-level administrative hierarchy — Division → District → Upaz
 |---|---|---|
 | Division | 8 | Highest-level climate aggregation; alert zones |
 | District | 64 | Alert targeting; climate summaries; restoration project scope |
-| Upazila | 495 | Mid-level aggregation; report clustering |
+| Upazila | 494 | Mid-level aggregation; report clustering |
 | Union | 4,540 | Base unit for climate data; the leaf node for all geographic anchoring |
 
 Every citizen report, observation, restoration project, and climate reading is anchored to a specific union or district. This is what makes local search meaningful — a citizen in Sunamganj District can see reports, alerts, and climate conditions relevant to their area without filtering through national-level noise.

@@ -1,15 +1,4 @@
 services:
-  mailpit:
-    image: axllent/mailpit:latest
-    ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI — http://localhost:8025
-    environment:
-      MP_MAX_MESSAGES: 500
-      MP_SMTP_AUTH_ACCEPT_ANY: 1
-      MP_SMTP_AUTH_ALLOW_INSECURE: 1
-    restart: unless-stopped
-
   redis:
     image: redis:7-alpine
     ports:
@@ -40,11 +29,10 @@ services:
       BOOTSTRAP_ADMIN_PASSWORD: "${BOOTSTRAP_ADMIN_PASSWORD:-}"
       # ── Mail ───────────────────────────────────────────────────────────────
       # MAIL_PROVIDER picks the active transport (smtp | mailgun | ses).
-      # In Docker, SMTP defaults to the mailpit service by name — override
-      # SMTP_HOST/PORT for an external SMTP provider.
+      # SMTP transport is a no-op until SMTP_HOST is set to a real server.
       MAIL_PROVIDER: "${MAIL_PROVIDER:-smtp}"
-      SMTP_HOST: "${SMTP_HOST:-mailpit}"
-      SMTP_PORT: "${SMTP_PORT:-1025}"
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
       SMTP_USER: "${SMTP_USER:-}"
       SMTP_PASS: "${SMTP_PASS:-}"
       SMTP_FROM: "${SMTP_FROM:-Delta Signal <alerts@deltasignal.org>}"
@@ -63,8 +51,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      mailpit:
-        condition: service_started
     healthcheck:
       test:
         ["CMD-SHELL", "wget -qO- http://localhost:3001/api/v1/health || exit 1"]

@@ -2,7 +2,7 @@
 
 Delta Signal uses PostgreSQL as the primary database. The Prisma schema lives at `packages/database/prisma/schema.prisma`. The Prisma client is regenerated via `pnpm run db:generate` from the `packages/database` directory.
 
-Current state: **61 models, 32 enums, 12 migrations applied.**
+Current state: **61 models, 32 enums, 13 migrations applied.**
 
 ## Enums
 
@@ -300,7 +300,7 @@ pnpm run db:generate          # Regenerate Prisma client after schema changes
 pnpm run db:studio            # Open Prisma Studio at localhost:5555
 ```
 
-**Migrations applied (11):**
+**Migrations applied (13):**
 
 | Migration | Adds |
 | --- | --- |
@@ -315,7 +315,9 @@ pnpm run db:studio            # Open Prisma Studio at localhost:5555
 | `20260902000000_schema_drift_catch_up` | Schema drift catch-up |
 | `20260902010000_world_bank_emissions` | Drops `PollutionSource`, `EmissionEntry`, and 3 related enums; removes `emissions.manage`/`emissions.report` permission rows; creates `NationalEmissionReading` |
 | `20260902181219_add_company_model` | Creates `Company` table + `CompanyType` enum; creates `IndustrialFacility` table (with `companyId FK`, `establishedYear`, `productionCapacity`, `landArea`, `etpInstalled`, `etpCapacity`); adds `COMPANY_CREATE`, `COMPANY_UPDATE`, `FACILITY_CREATE`, `FACILITY_UPDATE`, `FACILITY_DELETE` to `AuditAction`; adds `companiesHQ` back-relation on `District` |
+| `20260903000000_add_google_oauth` | Adds Google OAuth support: `AuthProvider`, `User.googleId`, nullable password hash, and `OAuthExchangeCode` |
+| `20260906000000_add_restoration_project_indexes` | Adds indexes on `RestorationProject.organizationId` and `RestorationProject.createdById` |
 
-60 tables live.
+61 tables live.
 
-The `LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `CompaniesService`, and `SeedService` auto-seed data on first boot via `OnModuleInit`. `LocationsService` seeds 8 divisions, 64 districts (all with GeoJSON boundary), 494 upazilas, and 4,540 unions — all with lat/lng. All coordinates are hardcoded in `apps/api/src/locations/seed/bangladesh.ts`; no runtime file reads are required. This file is the source of truth — edit it directly if location data needs updating. `DatasetsService` seeds 9 catalog records (OpenMeteo Weather, OpenMeteo Flood, District Air Quality Index, Water Body Registry, Biodiversity Occurrences, Sundarbans Monitoring, Emissions Inventory, OpenMeteo Marine Weather, OpenMeteo Satellite Radiation). `ProvidersService` seeds the OpenMeteo, GBIF, and World Bank provider records. `PermissionsService` seeds 11 named permissions and default role grants. `CompaniesService` seeds 42 company records (two-pass: parents first, then subsidiaries) and 44 industrial facility records (looks up company by name via `@unique` constraint) on first boot — see `apps/api/src/companies/companies.seed.ts` and `apps/api/src/facilities/facilities.seed.ts`. `SeedService` seeds 6 dev user accounts (one per role) and a seed organization for local development. No separate seed script is required for those tables.
+The `LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `CompaniesService`, and `SeedService` auto-seed data on first boot via `OnModuleInit`. `LocationsService` seeds 8 divisions, 64 districts (all with GeoJSON boundary), 494 upazilas, and 4,540 unions — all with lat/lng. All coordinates are hardcoded in `apps/api/src/locations/seed/bangladesh.ts`; no runtime file reads are required. This file is the source of truth — edit it directly if location data needs updating. `DatasetsService` seeds 9 catalog records (OpenMeteo Weather, OpenMeteo Flood, District Air Quality Index, Water Body Registry, Biodiversity Occurrences, Sundarbans Monitoring, Emissions Inventory, OpenMeteo Marine Weather, OpenMeteo Satellite Radiation). `ProvidersService` seeds the OpenMeteo, GBIF, and World Bank provider records. `PermissionsService` seeds 11 named permissions and default role grants. `CompaniesService` seeds 801 company records (two-pass: parents first, then subsidiaries) and 1,451 industrial facility records using pre-loaded company lookup maps — see `apps/api/src/companies/companies.seed.ts`, `apps/api/src/companies/mib-companies.seed.ts`, `apps/api/src/facilities/facilities.seed.ts`, and `apps/api/src/facilities/mib-facilities.seed.ts`. `SeedService` seeds 6 dev user accounts (one per role) and a seed organization for local development. No separate seed script is required for those tables.

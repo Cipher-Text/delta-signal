@@ -25,7 +25,7 @@ Last updated: 2026-09-06 (Production hardening — deploy pipeline wired: `deplo
 | Shared types and contracts — M2 | Done | Full enums, DTOs, paginated envelopes, request/response types, route contract map |
 | Backend foundation — M3 | Done | Auth (JWT/bcrypt), users, orgs, locations (8 div/64 district auto-seed), providers, datasets (catalog seed), reports (status workflow + audit), alerts (severity + audit), global validation, guard infrastructure. **Caveat:** role-gated endpoints shipped with a casing bug that rejected every user until 2026-08-17 — see "Critical RBAC Fix" below. |
 | Prisma schema | Done | 32 enums, 61 models — includes water bodies, observation measurements, restoration sub-resources, AlertType/AlertArea, DatasetVersion, StationFloodForecast, WaterLevelReading, PostGIS geom on District, Company, IndustrialFacility, AuthProvider/OAuthExchangeCode (Google OAuth) |
-| Database migration | Done | 12 migrations applied (latest `20260903000000_add_google_oauth`); 61 tables live; Postgres on port 5432 |
+| Database migration | Done | 13 migrations applied (latest `20260906000000_add_restoration_project_indexes`); 61 tables live; Postgres on port 5432 |
 | District coordinates | Done | Migration `add_district_coordinates`; all 64 districts backfilled with real lat/lng sourced from `open-nature`'s district registry (`LocationsService.onModuleInit` backfills on boot if missing) |
 | Seed data | Done | LocationsService auto-seeds 8 divisions + 64 districts (all with GeoJSON boundary) on boot; DatasetsService auto-seeds 9 catalog records; ProvidersService auto-seeds `OpenMeteo` and `GBIF` providers on boot idempotently; no separate seed script needed |
 | Auth — refresh / logout | Done | Postgres-backed `RefreshToken` model (not Redis — see "Auth Refresh/Logout" below), opaque tokens with rotation, daily cleanup cron |
@@ -430,7 +430,7 @@ The profile page "Recent activity" placeholder replaced with two live panels:
 
 ### M12: Admin Console Frontend
 
-Full internal console at `apps/admin` (port 3002), built entirely with Next.js 14 App Router Server Components and Server Actions — no client-side state management.
+Full internal console at `apps/admin` (port 3002), built entirely with Next.js 15 App Router Server Components and Server Actions — no client-side state management.
 
 **Auth and session design:**
 - Separate cookie names (`nga_access` / `nga_refresh`) from the public web app (`ng_access_token` / `ng_refresh_token`) to prevent cross-app interference — both run on different ports but share a domain in production.

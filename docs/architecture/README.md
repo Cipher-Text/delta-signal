@@ -47,9 +47,14 @@ apps/api/src/
 ├── analytics/             # ✓ role-scoped dashboard queries (admin/moderator/government/researcher/orgadmin)
 ├── media/                 # ✓ StorageService (S3/MinIO), MediaService, presign + upload endpoints
 ├── weather/               # ✓ OpenMeteo client, service, scheduler, current/hourly/daily/AQ
-├── flood/                 # ✓ OpenMeteo Flood/GloFAS client, daily discharge, scheduler
+├── flood/                 # ✓ OpenMeteo Flood/GloFAS client, station forecasts/readings, scheduler
+├── radiation/             # ✓ OpenMeteo satellite radiation client, daily readings, scheduler
+├── marine/                # ✓ OpenMeteo marine forecast client, daily forecasts, scheduler
+├── emissions/             # ✓ World Bank national GHG client, readings, scheduler
+├── companies/             # ✓ Company and industrial facility registry + seed data
+├── water-bodies/          # ✓ Water body registry and monitoring stations
 ├── locations/climate/     # ✓ union-level climate pipeline, daily cron, 30d rolling averages
-├── ingestion/             # ✓ provider job tracking for scheduled weather + GBIF + flood syncs
+├── ingestion/             # ✓ provider job tracking for scheduled external-data syncs
 └── notifications/         # ✓ AlertSubscription, email delivery via BullMQ email queue
 ```
 

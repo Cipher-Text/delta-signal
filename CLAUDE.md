@@ -38,8 +38,8 @@ pnpm exec jest --coverage                       # Coverage report
 
 ```
 apps/api          NestJS modular monolith    :3001
-apps/web          Next.js 14 public site     :3000
-apps/admin        Next.js 14 admin shell     :3002
+apps/web          Next.js 15 public site     :3000
+apps/admin        Next.js 15 admin shell     :3002
 apps/data-worker  Python GIS skeleton        (no active jobs)
 
 packages/database  Prisma schema + client + migrations
@@ -79,7 +79,7 @@ Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.
 
 ### Database (Prisma)
 
-Schema: `packages/database/prisma/schema.prisma` — 60 models, 31 enums. 11 migrations applied (latest: `20260902181219_add_company_model`).
+Schema: `packages/database/prisma/schema.prisma` — 61 models, 32 enums. 13 migrations applied (latest: `20260906000000_add_restoration_project_indexes`).
 
 **All IDs are Prisma CUIDs** (e.g. `cmstewlrj0012usw17sqz1d3n`). Use `@IsString()` in DTO validators, never `@IsUUID()`.
 
@@ -117,7 +117,7 @@ Notable schema decisions:
 
 ### Frontend (apps/web)
 
-Next.js 14 App Router, Server Components throughout — no `useState`, no Redux, no Zustand. All form mutations use Server Actions. State lives in the URL or httpOnly cookies.
+Next.js 15 App Router, Server Components throughout — no `useState`, no Redux, no Zustand. All form mutations use Server Actions. State lives in the URL or httpOnly cookies.
 
 Route groups:
 - `(public)` — `/`, `/login`, `/register`
@@ -133,11 +133,11 @@ Fetch helpers: `apiGet` (cached), `apiGetAuthed`, `apiPost`, `apiPostAuthed` (ne
 
 `apps/web` depends on `@delta-signal/contracts` for route constants and DTOs. `apps/api` has `@delta-signal/contracts` as a **devDependency only** — it is never imported in production code, but `apps/api/src/common/contract-types.typecheck.ts` uses it for compile-time contract enforcement: every service return type is asserted against its contract type via `tsc --noEmit` in CI. A service dropping a required field or changing a field type will produce a `TS2322` error and fail the build.
 
-**Contracts gap:** `packages/contracts/src/index.ts` does not yet list routes for `radiation` or `marine` — these API endpoints exist but the web app does not consume them yet. Add contract entries before building frontend pages for those features.
+The web app includes public `/radiation` and `/marine` pages, with their API routes represented in `packages/contracts/src/index.ts`.
 
 ### Admin Console (apps/admin)
 
-Next.js 14 App Router at port 3002. Same Server Components + Server Actions pattern as `apps/web` — no client-side state.
+Next.js 15 App Router at port 3002. Same Server Components + Server Actions pattern as `apps/web` — no client-side state.
 
 Route groups: `(auth)` — `/login`; `(admin)` — all other pages behind a dark sidebar shell. Edge middleware (`middleware.ts`) guards all routes, decodes JWT expiry via `atob` (Edge runtime — no `Buffer`), auto-refreshes tokens before page render.
 

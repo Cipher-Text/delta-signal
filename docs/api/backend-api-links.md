@@ -143,7 +143,7 @@ Source: OpenMeteo Flood API, persisted as `StationFloodForecast` (station-based,
 | PATCH | `/facilities/:id` | Government / Admin | ✓ | Update facility (audited `FACILITY_UPDATE`) |
 | DELETE | `/facilities/:id` | Admin | ✓ | Delete facility (audited `FACILITY_DELETE`) |
 
-42 companies (including conglomerate/subsidiary tree) and 44 facilities are seeded on boot by `CompaniesService.onModuleInit` (two-pass: parents before subsidiaries). `Company.name` is unique — facility seeds look up companies by name.
+**801 companies** (including conglomerate/subsidiary relationships) and **1,451 facilities** are seeded on boot by `CompaniesService.onModuleInit` (two-pass: parents before subsidiaries). `Company.name` is unique — facility seeds use pre-loaded company lookup maps.
 
 ## Emissions
 
