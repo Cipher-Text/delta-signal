@@ -520,6 +520,16 @@ a {
 }
 .profile-form input:read-only { background: var(--surface-2); color: var(--muted); }
 .profile-form h3 { margin-top: 12px; font-size: 0.95rem; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+.profile-form h3 .section-optional {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.section-help { margin: -8px 0 0; color: var(--muted); font-size: 0.82rem; }
+.section-help strong { color: var(--text); font-weight: 700; }
 .tag-input-field { align-content: start; }
 .tag-input-box { border: 1px solid var(--border); border-radius: 6px; background: var(--surface); padding: 7px; }
 .tag-list { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -2794,12 +2804,32 @@ a {
 
 /* Bottom action row inside a form panel */
 .profile-save-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-top: 16px;
+  padding: 16px 0 4px;
   margin-top: 4px;
   border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.inline-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.achievement-next-step { margin-bottom: 24px; }
+.achievement-next-step p { margin: 4px 0 0; color: var(--muted); font-size: 0.84rem; }
+
+.empty-state strong, .empty-state span { display: block; }
+.empty-state strong { color: var(--text); margin-bottom: 5px; }
+
+.profile-form input:focus-visible,
+.profile-form textarea:focus-visible,
+.profile-form select:focus-visible,
+.tab-nav a:focus-visible {
+  outline: 3px solid rgba(47, 125, 92, 0.28);
+  outline-offset: 2px;
 }
 
 /* Security tab detail rows */

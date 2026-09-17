@@ -22,12 +22,13 @@ import DistrictSelect, { type DistrictWithDivision } from '../../../components/d
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-type ProfileTab = 'personal' | 'location' | 'alerts' | 'security' | 'achievements';
+type ProfileTab = 'personal' | 'location' | 'alerts' | 'contributions' | 'security' | 'achievements';
 
 const TABS: { id: ProfileTab; label: string }[] = [
   { id: 'personal',     label: 'Personal Info' },
   { id: 'location',     label: 'Location & Scope' },
-  { id: 'alerts',       label: 'Alert Subscriptions' },
+  { id: 'alerts',       label: 'Notifications' },
+  { id: 'contributions', label: 'Contributions' },
   { id: 'achievements', label: 'Achievements' },
   { id: 'security',     label: 'Security' },
 ];
@@ -390,6 +391,11 @@ export default async function ProfilePage(
                 ? <span className="tab-badge tab-badge-gold" aria-label={`${earned} badges earned`}>{earned}</span>
                 : null;
             })()}
+            {tab.id === 'contributions' && (myReports.total + myObservations.total > 0) && (
+              <span className="tab-badge" aria-label={`${myReports.total + myObservations.total} contributions`}>
+                {myReports.total + myObservations.total}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
@@ -400,7 +406,7 @@ export default async function ProfilePage(
           <div className="panel-header">
             <div>
               <h2>Personal information</h2>
-              <p>Update your public identity and professional profile details.</p>
+              <p>Manage the information shown on your public profile. Fields are optional unless marked required.</p>
             </div>
           </div>
 
@@ -408,7 +414,7 @@ export default async function ProfilePage(
             <input type="hidden" name="_tab" value="personal" />
 
             {/* Identity */}
-            <h3>Identity</h3>
+            <h3>About you</h3>
             <div className="profile-form-grid">
               <label>
                 Display name
@@ -417,7 +423,7 @@ export default async function ProfilePage(
               <label>
                 Email address
                 <input value={user?.email ?? ''} readOnly aria-describedby="email-hint" />
-                <small id="email-hint" className="field-hint">Contact an admin to change your email.</small>
+                <small id="email-hint" className="field-hint">Managed by your administrator. Change it from Security if supported.</small>
               </label>
               <label>
                 Phone number
@@ -430,7 +436,7 @@ export default async function ProfilePage(
             </div>
 
             {/* Professional */}
-            <h3>Professional details</h3>
+            <h3>Professional details <span className="section-optional">Optional</span></h3>
             <div className="profile-form-grid">
               <label>
                 Occupation
@@ -451,7 +457,7 @@ export default async function ProfilePage(
             </label>
 
             {/* Expertise */}
-            <h3>Expertise &amp; research interests</h3>
+            <h3>Expertise &amp; research interests <span className="section-optional">Optional</span></h3>
             <div className="profile-form-grid">
               <TagInput
                 name="expertise"
@@ -470,7 +476,7 @@ export default async function ProfilePage(
             </div>
 
             {/* Social links */}
-            <h3>Professional &amp; social links</h3>
+            <h3>Professional &amp; social links <span className="section-optional">Optional</span></h3>
             <div className="profile-form-3col">
               <label>Google Scholar<input name="googleScholar" defaultValue={social.googleScholar ?? ''} placeholder="https://scholar.google.com/..." /></label>
               <label>ResearchGate<input name="researchGate"   defaultValue={social.researchGate   ?? ''} placeholder="https://researchgate.net/..." /></label>
@@ -483,6 +489,7 @@ export default async function ProfilePage(
 
             {/* Visibility */}
             <h3>Privacy &amp; visibility</h3>
+            <p className="section-help">Choose who can see your profile, contact details, and professional links.</p>
             <div className="profile-form-3col">
               <label>
                 Profile visibility
@@ -550,23 +557,17 @@ export default async function ProfilePage(
             <h3>Primary district</h3>
 
             <div className="access-note">
-              <p>Your selected district sets the default geo-scope for weather summaries, environmental data views, and alert suggestions. You can still report from any district.</p>
+              <p>Your district personalizes weather summaries, environmental data, and notification suggestions. You can still report from any district.</p>
             </div>
 
             <div className="profile-form-grid">
               <div>
-                <label
-                  htmlFor="locationDistrict-select"
-                  style={{ display: 'block', marginBottom: '6px', fontSize: '0.8rem', fontWeight: 700, color: 'var(--muted)' }}
-                >
-                  District
-                </label>
+                <label htmlFor="locationDistrict-select">District</label>
                 <select
                   id="locationDistrict-select"
                   name="locationDistrict"
                   className="select-field"
                   defaultValue={profile?.locationDistrict ?? ''}
-                  style={{ width: '100%' }}
                 >
                   <option value="">Not specified</option>
                   {[...districtsByDivision.entries()].map(([divName, divDistricts]) => (
@@ -616,7 +617,7 @@ export default async function ProfilePage(
           <div className="panel-header">
             <div>
               <h2>Alert subscriptions</h2>
-              <p>Receive email notifications when environmental alerts are issued for selected locations.</p>
+              <p>Choose where alerts matter to you and the minimum severity that should reach your inbox.</p>
             </div>
           </div>
 
@@ -631,7 +632,7 @@ export default async function ProfilePage(
           )}
 
           {subscriptions.length === 0 ? (
-            <p className="muted-text">No active subscriptions. Add one below.</p>
+            <div className="empty-state"><strong>No alert subscriptions yet.</strong><span>Subscribe to stay informed about environmental changes in a district or across Bangladesh.</span></div>
           ) : (
             <div className="subscription-list">
               {subscriptions.map((sub) => (
@@ -649,7 +650,7 @@ export default async function ProfilePage(
                       type="submit"
                       aria-label={`Remove subscription for ${sub.district?.name ?? 'nationwide'}`}
                     >
-                      Remove
+                      Unsubscribe
                     </button>
                   </form>
                 </div>
@@ -659,6 +660,7 @@ export default async function ProfilePage(
 
           <div className="subscription-form-section">
             <h3>Add subscription</h3>
+            <p className="section-help">Alerts will be sent to <strong>{user?.email}</strong>.</p>
             <form action={subscribeAction} className="subscription-form">
               <div className="subscription-form-fields">
                 <div className="field">
@@ -691,6 +693,11 @@ export default async function ProfilePage(
               <h2>Achievements &amp; badges</h2>
               <p>Earn badges by contributing reports, observations, and participating in restoration projects.</p>
             </div>
+          </div>
+          <div className="access-note achievement-next-step">
+            <strong>Keep contributing to unlock more badges.</strong>
+            <p>Reports, observations, and restoration activity earn points and move you toward the next tier.</p>
+            <div className="inline-actions"><Link className="button ghost" href="/reports">Submit a report</Link><Link className="button ghost" href="/observations">Add an observation</Link></div>
           </div>
           <BadgeGrid game={gameData} />
         </article>
@@ -774,7 +781,7 @@ export default async function ProfilePage(
                       minLength={8}
                       maxLength={128}
                     />
-                    <small className="field-hint">At least 8 characters</small>
+                    <small className="field-hint">Use 8–128 characters. Avoid passwords you use elsewhere.</small>
                   </label>
                   <label>
                     Confirm new password
@@ -797,7 +804,8 @@ export default async function ProfilePage(
         </article>
       )}
 
-      {/* ── My Reports (always visible) ─────────────────────────────────────── */}
+      {/* ── Contributions ───────────────────────────────────────────────────── */}
+      {activeTab === 'contributions' && <>
       <article className="panel">
         <div className="panel-header">
           <div>
@@ -833,7 +841,7 @@ export default async function ProfilePage(
         )}
       </article>
 
-      {/* ── My Observations (always visible) ────────────────────────────────── */}
+      {/* ── My Observations ─────────────────────────────────────────────────── */}
       <article className="panel">
         <div className="panel-header">
           <div>
@@ -869,5 +877,7 @@ export default async function ProfilePage(
         )}
       </article>
     </>
+      }
+      </>
   );
 }
