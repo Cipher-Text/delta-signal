@@ -565,6 +565,7 @@ export interface Organization {
 }
 
 export interface UserProfile {
+  avatarUrl: string | null;
   phone: string | null;
   preferredLanguage: string;
   occupation: string | null;

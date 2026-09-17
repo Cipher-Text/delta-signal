@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { apiPatchAuthed, ApiError } from './api';
+import { apiDeleteAuthed, apiPatchAuthed, apiUploadAuthed, ApiError } from './api';
 import { ACCESS_TOKEN_COOKIE } from './session-constants';
 import { clearSessionCookies } from './session';
 import { revalidatePath } from 'next/cache';
@@ -42,6 +42,43 @@ export async function updateProfileAction(formData: FormData) {
 
   revalidatePath('/profile');
   redirect(`/profile?tab=${tab}&profileSaved=1`);
+}
+
+export async function uploadProfilePictureAction(formData: FormData) {
+  const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  if (!token) redirect('/login');
+
+  const picture = formData.get('picture');
+  if (!(picture instanceof File) || picture.size === 0) {
+    redirect('/profile?tab=personal&profilePictureError=Choose an image to upload');
+  }
+
+  const upload = new FormData();
+  upload.append('picture', picture);
+  try {
+    await apiUploadAuthed('/api/v1/auth/profile/picture', upload, token);
+  } catch (error) {
+    const message = error instanceof ApiError ? error.message : 'Profile picture upload failed';
+    redirect(`/profile?tab=personal&profilePictureError=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath('/profile');
+  redirect('/profile?tab=personal&profilePictureSaved=1');
+}
+
+export async function removeProfilePictureAction() {
+  const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  if (!token) redirect('/login');
+
+  try {
+    await apiDeleteAuthed('/api/v1/auth/profile/picture', token);
+  } catch (error) {
+    const message = error instanceof ApiError ? error.message : 'Profile picture removal failed';
+    redirect(`/profile?tab=personal&profilePictureError=${encodeURIComponent(message)}`);
+  }
+
+  revalidatePath('/profile');
+  redirect('/profile?tab=personal&profilePictureSaved=1');
 }
 
 /**

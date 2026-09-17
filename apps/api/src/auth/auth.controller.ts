@@ -1,6 +1,8 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { ConfigService } from '@nestjs/config';
 import { AuthService, DeviceMeta } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -16,6 +18,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import type { User } from '@prisma/client';
+import { PROFILE_PICTURE_MAX_SIZE_BYTES, PROFILE_PICTURE_MIME_TYPES } from '../media/media.constants';
 
 function deviceMetaFrom(req: Request): DeviceMeta {
   return {
@@ -73,6 +76,35 @@ export class AuthController {
   @Patch('profile')
   updateProfile(@CurrentUser() user: JwtPayload, @Body() dto: UpdateProfileDto) {
     return this.authService.updateProfile(user.sub, dto);
+  }
+
+  @Post('profile/picture')
+  @HttpCode(HttpStatus.OK)
+  @UseInterceptors(
+    FileInterceptor('picture', {
+      storage: memoryStorage(),
+      limits: { fileSize: PROFILE_PICTURE_MAX_SIZE_BYTES },
+      fileFilter(_req, file, cb) {
+        if ((PROFILE_PICTURE_MIME_TYPES as readonly string[]).includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new BadRequestException('Profile pictures must be JPG, PNG, or WebP images.'), false);
+        }
+      },
+    }),
+  )
+  uploadProfilePicture(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    if (!file) throw new BadRequestException('Choose a JPG, PNG, or WebP image to upload.');
+    return this.authService.updateProfilePicture(user.sub, file);
+  }
+
+  @Delete('profile/picture')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeProfilePicture(@CurrentUser() user: JwtPayload) {
+    return this.authService.removeProfilePicture(user.sub);
   }
 
   @Patch('password')

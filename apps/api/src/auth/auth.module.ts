@@ -9,6 +9,7 @@ import { GoogleStrategy } from './google.strategy';
 import { RefreshTokenCleanupScheduler } from './refresh-token-cleanup.scheduler';
 import { GamificationModule } from '../gamification/gamification.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { MediaModule } from '../media/media.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     }),
     GamificationModule,
     NotificationsModule,
+    MediaModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, GoogleStrategy, RefreshTokenCleanupScheduler],

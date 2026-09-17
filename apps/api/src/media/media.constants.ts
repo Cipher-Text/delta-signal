@@ -1,6 +1,10 @@
 /** Maximum file size accepted by the upload endpoint (100 MB). */
 export const MAX_UPLOAD_SIZE_BYTES = 100 * 1024 * 1024;
 
+/** Profile pictures are deliberately smaller and image-only. */
+export const PROFILE_PICTURE_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+export const PROFILE_PICTURE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+
 /**
  * MIME types accepted for upload.
  * Shared by MediaService validation and AddMediaDto's @IsIn guard.

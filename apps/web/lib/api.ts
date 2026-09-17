@@ -65,17 +65,6 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
 }
 
 /** Authenticated DELETE — never cached. */
-export async function apiDeleteAuthed(path: string, accessToken: string): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    const errorBody = await res.json().catch(() => null);
-    throw new ApiError(res.status, extractErrorMessage(errorBody, `API request failed: ${res.status} ${path}`));
-  }
-}
 
 /** Authenticated POST for mutations that require a logged-in user. */
 export async function apiPostAuthed<T>(path: string, body: unknown, accessToken: string): Promise<T> {
@@ -107,4 +96,31 @@ export async function apiPatchAuthed<T>(path: string, body: unknown, accessToken
     throw new ApiError(res.status, extractErrorMessage(errorBody, `API request failed: ${res.status} ${path}`));
   }
   return res.json() as Promise<T>;
+}
+
+/** Authenticated multipart upload. The browser/server runtime sets the boundary. */
+export async function apiUploadAuthed<T>(path: string, body: FormData, accessToken: string): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body,
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new ApiError(res.status, extractErrorMessage(errorBody, `API request failed: ${res.status} ${path}`));
+  }
+  return res.json() as Promise<T>;
+}
+
+export async function apiDeleteAuthed(path: string, accessToken: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new ApiError(res.status, extractErrorMessage(errorBody, `API request failed: ${res.status} ${path}`));
+  }
 }

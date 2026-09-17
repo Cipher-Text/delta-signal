@@ -519,6 +519,16 @@ a {
   font-weight: 400;
 }
 .profile-form input:read-only { background: var(--surface-2); color: var(--muted); }
+.profile-avatar-editor { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+.profile-avatar-xl { overflow: hidden; }
+.profile-avatar-xl img, .sidebar-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.profile-avatar-actions { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.profile-picture-button { cursor: pointer; white-space: nowrap; }
+.profile-picture-button input { display: none; }
+.profile-avatar-actions small, .profile-picture-remove { color: var(--muted); font-size: 0.7rem; text-align: center; }
+.profile-picture-remove-form { margin: 0; }
+.profile-picture-remove { border: 0; background: transparent; cursor: pointer; padding: 2px 4px; }
+.profile-picture-remove:hover { color: var(--danger, #b42318); text-decoration: underline; }
 .profile-form h3 { margin-top: 12px; font-size: 0.95rem; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
 .profile-form h3 .section-optional {
   color: var(--muted);

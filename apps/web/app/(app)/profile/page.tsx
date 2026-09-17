@@ -15,7 +15,7 @@ import {
 } from '@delta-signal/contracts';
 import { titleCase, relativeTime } from '../../../lib/format';
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
-import { updateProfileAction, changePasswordAction } from '../../../lib/profile-actions';
+import { updateProfileAction, changePasswordAction, uploadProfilePictureAction, removeProfilePictureAction } from '../../../lib/profile-actions';
 import { ENVIRONMENTAL_EXPERTISE, ENVIRONMENTAL_RESEARCH_INTERESTS } from '@delta-signal/shared';
 import TagInput from '../../../components/tag-input';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
@@ -273,6 +273,8 @@ export default async function ProfilePage(
       sub_error?: string;
       profileSaved?: string;
       profileError?: string;
+      profilePictureSaved?: string;
+      profilePictureError?: string;
       pwError?: string;
     }>;
   }
@@ -312,8 +314,28 @@ export default async function ProfilePage(
       <div className="profile-banner" aria-label="Your profile">
         <div className="profile-banner-top" aria-hidden="true" />
         <div className="profile-banner-body">
-          <div className="profile-avatar-xl" aria-hidden="true">
-            {user ? initials(user.displayName) : '?'}
+          <div className="profile-avatar-editor">
+            <div className="profile-avatar-xl">
+              {profile?.avatarUrl ? (
+                <img src={profile.avatarUrl} alt="" />
+              ) : (
+                <span aria-hidden="true">{user ? initials(user.displayName) : '?'}</span>
+              )}
+            </div>
+            {user && <>
+              <form action={uploadProfilePictureAction} className="profile-avatar-actions">
+                <label className="button ghost profile-picture-button">
+                  Change photo
+                  <input name="picture" type="file" accept="image/jpeg,image/png,image/webp" required />
+                </label>
+                <small>JPG, PNG or WebP · max 5 MB</small>
+              </form>
+              {profile?.avatarUrl && (
+                <form action={removeProfilePictureAction} className="profile-picture-remove-form">
+                  <button className="profile-picture-remove" type="submit">Remove photo</button>
+                </form>
+              )}
+            </>}
           </div>
 
           <div className="profile-banner-info">
@@ -369,6 +391,12 @@ export default async function ProfilePage(
       {searchParams.profileError && (
         <div className="flash flash-error" role="alert">{searchParams.profileError}</div>
       )}
+      {searchParams.profilePictureSaved && (
+        <div className="flash flash-success" role="status">Profile picture updated successfully.</div>
+      )}
+      {searchParams.profilePictureError && (
+        <div className="flash flash-error" role="alert">{searchParams.profilePictureError}</div>
+      )}
 
       {/* ── Tab navigation ──────────────────────────────────────────────────── */}
       <nav className="tab-nav" aria-label="Profile sections">
@@ -412,6 +440,7 @@ export default async function ProfilePage(
 
           <form action={updateProfileAction} className="profile-form">
             <input type="hidden" name="_tab" value="personal" />
+
 
             {/* Identity */}
             <h3>About you</h3>

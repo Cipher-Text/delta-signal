@@ -22,6 +22,10 @@ import type { ForgotPasswordDto } from './dto/forgot-password.dto';
 import type { ResetPasswordDto } from './dto/reset-password.dto';
 import type { VerifyEmailDto } from './dto/verify-email.dto';
 import { EmailService } from '../notifications/email.service';
+import { StorageService } from '../media/storage.service';
+import { PROFILE_PICTURE_MAX_SIZE_BYTES, PROFILE_PICTURE_MIME_TYPES } from '../media/media.constants';
+import { extname } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 const SALT_ROUNDS = 12;
 const REFRESH_TOKEN_TTL_DAYS = 7;
@@ -46,6 +50,7 @@ export class AuthService {
     private readonly gamification: GamificationService,
     private readonly email: EmailService,
     private readonly config: ConfigService,
+    private readonly storage: StorageService,
   ) {}
 
   async register(dto: RegisterDto, deviceMeta: DeviceMeta = {}) {
@@ -134,7 +139,24 @@ export class AuthService {
           },
           orderBy: { organization: { name: 'asc' } },
         },
-        profile: true,
+        profile: {
+          select: {
+            phone: true,
+            preferredLanguage: true,
+            occupation: true,
+            bio: true,
+            expertise: true,
+            researchInterests: true,
+            education: true,
+            institution: true,
+            locationDistrict: true,
+            locationCountry: true,
+            profileVisibility: true,
+            contactVisibility: true,
+            linksVisibility: true,
+            avatarUrl: true,
+          },
+        },
         socialLinks: { select: { platform: true, url: true }, orderBy: { platform: 'asc' } },
       },
     }).then(async (user) => {
@@ -177,6 +199,56 @@ export class AuthService {
       .catch((err: unknown) => this.logger.warn(`Badge evaluation failed: ${String(err)}`));
 
     return this.getProfile(userId);
+  }
+
+  async updateProfilePicture(userId: string, file: Express.Multer.File) {
+    if (!PROFILE_PICTURE_MIME_TYPES.includes(file.mimetype as (typeof PROFILE_PICTURE_MIME_TYPES)[number])) {
+      throw new BadRequestException('Profile pictures must be JPG, PNG, or WebP images.');
+    }
+    if (file.size > PROFILE_PICTURE_MAX_SIZE_BYTES) {
+      throw new BadRequestException('Profile pictures must be 5 MB or smaller.');
+    }
+
+    const oldProfile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: { avatarKey: true },
+    });
+    const extension = extname(file.originalname).toLowerCase().replace(/[^.a-z0-9]/g, '') || '.jpg';
+    const avatarKey = `profile/${userId}/avatar-${randomUUID()}${extension}`;
+    const avatarUrl = await this.storage.upload(avatarKey, file.buffer, file.mimetype);
+
+    try {
+      await this.prisma.userProfile.upsert({
+        where: { userId },
+        create: { userId, avatarUrl, avatarKey },
+        update: { avatarUrl, avatarKey },
+      });
+    } catch (error) {
+      await this.storage.delete(avatarKey).catch(() => undefined);
+      throw error;
+    }
+
+    if (oldProfile?.avatarKey && oldProfile.avatarKey !== avatarKey) {
+      await this.storage.delete(oldProfile.avatarKey).catch((error: unknown) => {
+        this.logger.warn(`Failed to remove previous profile picture: ${String(error)}`);
+      });
+    }
+
+    return this.getProfile(userId);
+  }
+
+  async removeProfilePicture(userId: string) {
+    const profile = await this.prisma.userProfile.findUnique({
+      where: { userId },
+      select: { avatarKey: true },
+    });
+    if (!profile) return;
+
+    await this.prisma.userProfile.update({
+      where: { userId },
+      data: { avatarUrl: null, avatarKey: null },
+    });
+    if (profile.avatarKey) await this.storage.delete(profile.avatarKey).catch(() => undefined);
   }
 
   /** Changes password for an authenticated user after verifying their current password. */

@@ -144,7 +144,7 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
         <div className="sidebar-footer">
           {user ? <Link className="sidebar-user sidebar-profile-link" href="/profile" onClick={close}>
             <div className="sidebar-avatar" aria-hidden="true">
-              {initials(user.displayName)}
+              {user.profile?.avatarUrl ? <img src={user.profile.avatarUrl} alt="" /> : initials(user.displayName)}
             </div>
             <div className="sidebar-user-info">
               <strong>{user.displayName}</strong>

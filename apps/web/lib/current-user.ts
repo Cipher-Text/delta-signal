@@ -20,6 +20,7 @@ export interface CurrentUser {
     membershipRole: 'ADMIN' | 'MEMBER';
   }>;
   profile: {
+    avatarUrl: string | null;
     phone: string | null;
     preferredLanguage: string;
     occupation: string | null;

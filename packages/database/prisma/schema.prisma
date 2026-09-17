@@ -417,6 +417,8 @@ model UserProfile {
   profileVisibility  ProfileVisibility @default(PUBLIC)
   contactVisibility  ProfileVisibility @default(PRIVATE)
   linksVisibility    ProfileVisibility @default(PUBLIC)
+  avatarUrl          String?
+  avatarKey          String?
   // ── Gamification ────────────────────────────────────────────────────────
   earnedBadges       String[]          @default([])
   contributionPoints Int               @default(0)
