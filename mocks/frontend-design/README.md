@@ -60,4 +60,4 @@ Extended in this revision:
 
 Mocks are complete and ready to use as implementation reference for Phase 1 (public web page) and Phase 2 (backend foundation).
 
-Next step: implement `apps/web` public page from `index.html`.
+The public board and app-shell designs have been implemented in `apps/web`. The role-scoped analytics workspace is documented in `docs/dashboard.md`; use these mocks as visual reference when extending the design system or completing the remaining accessibility pass.

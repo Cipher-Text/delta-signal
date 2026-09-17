@@ -147,7 +147,7 @@ Exit criteria met:
 
 ## Phase 6: Production Hardening
 
-Status: Done — 6a security (2026-08-21), 6b test suite + CI + API contract enforcement (2026-08-21/22), 6c notification delivery (2026-08-22), 6d Dockerfiles (2026-08-22), e2e tests (2026-09-02). Remaining: accessibility pass.
+Status: Done — 6a security (2026-08-21), 6b test suite + CI + API contract enforcement (2026-08-21/22), 6c notification delivery (2026-08-22), 6d Dockerfiles (2026-08-22), e2e tests (2026-09-02), dashboard presentation refresh (2026-09-17). Remaining: accessibility pass.
 
 Goal: Prepare the system for real users and operational trust.
 

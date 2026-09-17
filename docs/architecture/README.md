@@ -76,7 +76,7 @@ Legend: ✓ Implemented
 | Alerts and notifications | `alerts`, `notifications` | Severity-tiered alerts, email delivery, subscription by district/nationwide |
 | Platform metrics | `metrics` | Live counters for the public homepage |
 | Permissions | `permissions` | DB-backed permission model; fine-grained role grants managed by `PermissionsGuard` |
-| Analytics dashboards | `analytics` | Role-scoped aggregated stats for admin, moderator, government, researcher, org admin |
+| Analytics dashboards | `analytics`, `apps/web` | Role-scoped aggregated stats for admin, moderator, government, researcher, org admin; rendered at `/dashboard` with shared responsive dashboard primitives |
 | Admin console | `apps/admin` | Moderation, user management, alert creation, dataset publishing, organization membership management, ingestion monitoring |
 
 Advanced domains (climate forecasting, carbon accounting, research publications, structured surveys, satellite remote sensing) are planned for Phase 7 — see `docs/roadmap.md` and `docs/architecture/feature-map.md`.

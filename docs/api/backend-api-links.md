@@ -259,8 +259,8 @@ Provider job-tracking API for scheduled external syncs. Weather, GBIF, and Flood
 
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
-| GET | `/analytics/admin` | Admin | ✓ | Admin dashboard: users by role, report queue, alert severity, org count, species count |
-| GET | `/analytics/moderator` | Moderator | ✓ | Moderator dashboard: report queue breakdown, category counts, submission trend |
-| GET | `/analytics/government` | Government | ✓ | Government dashboard: active alerts by division, verified reports by district/category, 30d climate averages |
-| GET | `/analytics/researcher` | Researcher | ✓ | Researcher dashboard: biodiversity totals, top species, observation trust breakdown |
-| GET | `/analytics/orgadmin` | Organization Admin | ✓ | Org admin dashboard: restoration project counts, engagement metrics, top projects by participants |
+| GET | `/analytics/admin` | Admin | ✓ | Admin dashboard data: users by role, report queue, alert severity, org count, species count |
+| GET | `/analytics/moderator` | Moderator | ✓ | Moderator dashboard data: report queue breakdown, category counts, submission trend |
+| GET | `/analytics/government` | Government | ✓ | Government dashboard data: active alerts by division, verified reports by district/category, 30d climate averages |
+| GET | `/analytics/researcher` | Researcher | ✓ | Researcher dashboard data: biodiversity totals, top species, observation trust breakdown |
+| GET | `/analytics/orgadmin` | Organization Admin | ✓ | Org admin dashboard data: restoration project counts, engagement metrics, top projects by participants |

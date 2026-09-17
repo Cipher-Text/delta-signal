@@ -5,9 +5,13 @@ export function DashboardHeader({ title, subtitle, eyebrow = 'Workspace' }: { ti
   return (
     <header className="dashboard-header">
       <div>
-        <p className="dashboard-eyebrow">{eyebrow}</p>
+        <p className="dashboard-eyebrow"><span className="dashboard-eyebrow-dot" aria-hidden="true" />{eyebrow}</p>
         <h1>{title}</h1>
         <p className="dashboard-subtitle">{subtitle}</p>
+      </div>
+      <div className="dashboard-live-status" aria-label="Dashboard status">
+        <span className="dashboard-live-dot" aria-hidden="true" />
+        <span><strong>Bangladesh</strong><small>Live platform snapshot</small></span>
       </div>
     </header>
   );

@@ -75,7 +75,7 @@ Current implemented capabilities per domain. `✓` = permitted, `—` = not perm
 | List all users / change roles / deactivate | — | — | — | — | — | — | ✓ |
 | **Analytics** | | | | | | | |
 | Platform metrics (public) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Analytics dashboard | — | empty state | researcher view | org view | government view | moderator view | admin view |
+| Analytics dashboard (`/dashboard`) | — | empty state | researcher view | org view | government view | moderator view | admin view |
 | **Ingestion / Admin** | | | | | | | |
 | View ingestion job history | — | — | — | — | — | ✓ | ✓ |
 | View audit log | — | — | — | — | — | — | ✓ |
@@ -162,7 +162,7 @@ Add a new role only when a user genuinely cannot be described by any current rol
 Trust-level promotion (`UNVERIFIED` → `RESEARCH_GRADE`) requires domain expertise to assess scientific validity — species identification, measurement methodology, ecological context. A moderator's role is content review (spam, harassment, accuracy of the report as a report), not scientific validation. Separating the two prevents moderators from inadvertently promoting low-quality data to research grade.
 
 **Why does `/analytics/moderator` reject ADMIN?**
-Analytics endpoints use exact role checks (`@Roles('MODERATOR')`) rather than hierarchical privilege. This is intentional: each analytics view is scoped to a specific operational context. An admin who needs moderation queue data should use the admin analytics endpoint, which aggregates across all contexts. Exact-role enforcement also prevents privilege escalation from making role-specific dashboards meaningless.
+Analytics endpoints use exact role checks (`@Roles('MODERATOR')`) rather than hierarchical privilege. This is intentional: each analytics view is scoped to a specific operational context. An admin who needs moderation queue data should use the admin analytics endpoint, which aggregates across all contexts. Exact-role enforcement also prevents privilege escalation from making role-specific dashboards meaningless. The `/dashboard` visual refresh is presentation-only; it does not broaden access to analytics data.
 
 **Government alert authority**
 Government users hold `alerts.manage` by default, allowing them to issue public alerts directly without moderator approval. This matches Bangladesh's regulatory structure where government agencies (DoE, BWDB, Bangladesh Meteorological Department) are the authoritative sources for environmental alerts. Per-agency or per-district scoping of this permission is a future configurable option before production use.

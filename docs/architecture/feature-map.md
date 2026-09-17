@@ -134,7 +134,7 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | Organization management and memberships | `apps/admin` | **Done** — RBAC permission `organizations.manage`; users can belong to multiple organizations |
 | Ingestion monitoring dashboard | `apps/admin` | **Done** — status tabs, per-job detail, provider name, error messages |
 | Permission management (grant/revoke per role) | `permissions` | **Done** — `GET/POST/DELETE /admin/permissions/roles`; admin matrix view |
-| Role-scoped analytics dashboards | `analytics` | **Done** — admin/moderator/government/researcher/orgadmin endpoints with tailored aggregations |
+| Role-scoped analytics dashboards | `analytics`, `apps/web` | **Done** — admin/moderator/government/researcher/orgadmin endpoints with tailored aggregations; `/dashboard` has a responsive live-status/KPI/panel presentation |
 | Seed data for local development | `seed` | **Done** — 6 user accounts (one per role) + 1 organization seeded on boot |
 
 ---

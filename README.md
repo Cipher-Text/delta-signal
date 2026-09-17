@@ -4,6 +4,8 @@ Delta Signal is a civic environmental intelligence platform for Bangladesh. It c
 
 The homepage at `/` is a complete public environmental board. No login required to see what is happening. Login is needed only to contribute, download data, or access advanced workflows.
 
+The authenticated `/dashboard` route is a separate role-scoped analytics workspace for researchers, organizations, government users, moderators, and admins. See [docs/dashboard.md](docs/dashboard.md) for the distinction between the two surfaces.
+
 Full product brief: [docs/project-brief.md](docs/project-brief.md)
 
 ---
@@ -147,6 +149,7 @@ pnpm exec jest --coverage                       # Coverage report
 | [docs/project-brief.md](docs/project-brief.md) | Mission, vision, user personas, product areas |
 | [docs/business-logic.md](docs/business-logic.md) | Domain rules and the reasoning behind them |
 | [docs/access-model.md](docs/access-model.md) | What is public, login-gated, and role-gated |
+| [docs/dashboard.md](docs/dashboard.md) | Public board, role-scoped dashboard, UI conventions, and verification |
 | [docs/roles-and-permissions.md](docs/roles-and-permissions.md) | Role matrix and permission gates |
 | [docs/flows.md](docs/flows.md) | Key user and system flows |
 | [docs/roadmap.md](docs/roadmap.md) | Phase-by-phase delivery history and plan |

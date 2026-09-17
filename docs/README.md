@@ -6,6 +6,7 @@
 - [Tech stack](tech-stack.md)
 - [Roles and permissions](roles-and-permissions.md)
 - [Access model](access-model.md)
+- [Dashboard guide](dashboard.md)
 - [Business logic](business-logic.md)
 - [User and system flows](flows.md)
 - [Roadmap](roadmap.md)

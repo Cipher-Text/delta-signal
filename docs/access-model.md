@@ -1,6 +1,6 @@
 # Access Model
 
-Delta Signal should be useful before login. The public site is not only a marketing page; it is a single-page public environmental board with summaries, maps, alerts, verified reports, biodiversity highlights, restoration work, and community activity.
+Delta Signal should be useful before login. The root public site is not only a marketing page; it is a single-page public environmental board with summaries, maps, alerts, verified reports, biodiversity highlights, restoration work, and community activity. The authenticated `/dashboard` route is a separate role-scoped analytics workspace.
 
 ## Public Without Login
 
@@ -62,6 +62,7 @@ Moderator or admin access is required for:
 | Route | Access | Purpose |
 | --- | --- | --- |
 | `/` | Public | Single-page public environmental board |
+| `/dashboard` | Role-gated | Analytics workspace tailored to the authenticated platform role |
 | `/data` | Public preview, login for advanced/download | Dataset catalog and summaries |
 | `/alerts` | Public | Active alerts and warning map |
 | `/reports` | Public verified list, login to submit | Citizen reports |
@@ -73,4 +74,3 @@ Moderator or admin access is required for:
 | `/contribute` | Login required | Reports, observations, datasets, media |
 | `/downloads` | Login/role gated | Dataset downloads and exports |
 | `apps/admin` | Moderator/admin only | Operations console |
-
