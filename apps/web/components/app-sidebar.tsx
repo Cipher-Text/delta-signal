@@ -115,7 +115,6 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
         <nav aria-label="App navigation">
           {user && DASHBOARD_ROLES.has(user.role) && (
             <div>
-              <span className="nav-label">Analytics</span>
               <Link
                 href="/dashboard"
                 className={isActive('/dashboard') ? 'active' : undefined}
@@ -127,7 +126,6 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
           )}
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
-              <span className="nav-label">{section.label}</span>
               {section.links.map((link) => (
                 <Link
                   key={link.href}
