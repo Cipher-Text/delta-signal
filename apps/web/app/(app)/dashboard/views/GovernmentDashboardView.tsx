@@ -32,7 +32,7 @@ export default function GovernmentDashboardView({
 
   return (
     <>
-      <DashboardHeader title="Environmental Intelligence" subtitle="Bangladesh-wide alerts, reports, and climate indicators" />
+      <DashboardHeader title="Environmental Intelligence" subtitle="Bangladesh-wide alerts, reports, and climate indicators" meta={data.meta} />
 
       {/* KPI strip */}
       <div className="stat-grid">
@@ -55,7 +55,26 @@ export default function GovernmentDashboardView({
           value={totalVerified.toLocaleString()}
           href="/reports?status=VERIFIED"
         />
+        <StatCard label="High flood signals" value={data.flood.highRiskStations.toLocaleString()} variant={data.flood.highRiskStations > 0 ? 'danger' : 'default'} href="/flood" />
+        <StatCard label="Elevated flood signals" value={data.flood.elevatedRiskStations.toLocaleString()} variant={data.flood.elevatedRiskStations > 0 ? 'warning' : 'default'} href="/flood" />
+        <StatCard label="Rising gauges" value={data.flood.risingStations.toLocaleString()} variant={data.flood.risingStations > 0 ? 'info' : 'default'} href="/flood" />
       </div>
+
+      <article className="panel">
+        <SectionHeader title="Flood and water-level signals" subtitle={`${data.flood.totalStations} gauges · ${data.flood.stationsWithForecast} with current forecast · GloFAS discharge and BWDB readings`} />
+        {data.flood.highestRisk.length > 0 ? (
+          <div className="table" role="table">
+            <div className="table-row table-head" role="row"><span>Station / river</span><span>Discharge vs mean</span><span>Gauge status</span></div>
+            {data.flood.highestRisk.map((row) => (
+              <div className="table-row" role="row" key={row.stationId}>
+                <div><strong>{row.stationName}</strong><small className="muted-copy">{row.riverName ?? 'River not recorded'}{row.district ? ` · ${row.district}` : ''}</small></div>
+                <span className={`tag ${row.risk === 'HIGH' ? 'danger' : 'warning'}`}>{row.ratio != null ? `${row.ratio.toFixed(1)}× mean` : row.risk}</span>
+                <span className={`tag ${row.thresholdStatus === 'DANGER' ? 'danger' : row.thresholdStatus === 'WARNING' ? 'warning' : 'muted'}`}>{titleCase(row.thresholdStatus)}{row.trend ? ` · ${titleCase(row.trend)}` : ''}</span>
+              </div>
+            ))}
+          </div>
+        ) : <p className="empty-state" style={{ padding: '20px 0' }}>No elevated discharge signals in the latest station forecasts.</p>}
+      </article>
 
       <div className="dashboard-two-col">
         {/* Alert severity breakdown */}

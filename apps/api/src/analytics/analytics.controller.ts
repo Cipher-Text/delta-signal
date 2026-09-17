@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { AnalyticsService } from './analytics.service';
+import { CurrentUser, JwtPayload } from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('analytics')
@@ -32,7 +33,7 @@ export class AnalyticsController {
 
   @Roles('ORGANIZATION_ADMIN')
   @Get('orgadmin')
-  getOrgAdminDashboard() {
-    return this.analyticsService.getOrgAdminDashboard();
+  getOrgAdminDashboard(@CurrentUser() user: JwtPayload) {
+    return this.analyticsService.getOrgAdminDashboard(user.sub);
   }
 }

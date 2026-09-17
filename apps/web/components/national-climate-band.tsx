@@ -19,6 +19,16 @@ export default async function NationalClimateBand() {
   }
 
   const hasClimateData = divisions.some((d) => d.avgTemp30d !== null || d.totalPrecip30d !== null);
+  const latestClimateUpdate = divisions
+    .map((division) => division.climateUpdatedAt)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(-1);
+  const climateNote = !isLive
+    ? 'The division climate service is temporarily unavailable.'
+    : latestClimateUpdate
+      ? `Updated ${new Date(latestClimateUpdate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} from OpenMeteo. Rolling summaries, not live conditions.`
+      : 'Rolling summaries from OpenMeteo; update time unavailable.';
 
   return (
     <section className="climate-band public-section" aria-label="National climate overview by division">
@@ -27,7 +37,7 @@ export default async function NationalClimateBand() {
           <p className="eyebrow">30-Day Rolling Average · All 8 Divisions</p>
           <h2>National Environmental Conditions</h2>
         </div>
-        <p className="climate-band-note">{isLive ? 'Updated nightly from OpenMeteo. Rolling summaries, not live conditions.' : 'The division climate service is temporarily unavailable.'}</p>
+        <p className="climate-band-note">{climateNote}</p>
       </div>
 
       {!isLive || !hasClimateData ? (

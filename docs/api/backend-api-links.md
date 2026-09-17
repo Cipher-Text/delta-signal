@@ -113,7 +113,7 @@ Source: OpenMeteo, via a `@nestjs/schedule` cron scheduler (current every 15min,
 
 | Method | Path | Access | Status | Notes |
 |---|---|---|---|---|
-| GET | `/flood/forecast` | Public | ✓ | Latest stored discharge forecast day for all stations |
+| GET | `/flood/forecast` | Public | ✓ | Latest stored discharge forecast row per station, ordered by station and newest forecast date |
 | GET | `/flood/forecast/station/:stationId` | Public | ✓ | Full forecast window for one station (`?from`, `?to`) |
 | GET | `/flood/forecast/district/:districtId` | Public | ✓ | Forecasts for all stations in a district |
 | GET | `/flood/stations/:stationId/readings` | Public | ✓ | Historical water level readings (`?from`, `?to`) |
@@ -259,8 +259,8 @@ Provider job-tracking API for scheduled external syncs. Weather, GBIF, and Flood
 
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
-| GET | `/analytics/admin` | Admin | ✓ | Admin dashboard data: users by role, report queue, alert severity, org count, species count |
-| GET | `/analytics/moderator` | Moderator | ✓ | Moderator dashboard data: report queue breakdown, category counts, submission trend |
-| GET | `/analytics/government` | Government | ✓ | Government dashboard data: active alerts by division, verified reports by district/category, 30d climate averages |
-| GET | `/analytics/researcher` | Researcher | ✓ | Researcher dashboard data: biodiversity totals, top species, observation trust breakdown |
-| GET | `/analytics/orgadmin` | Organization Admin | ✓ | Org admin dashboard data: restoration project counts, engagement metrics, top projects by participants |
+| GET | `/analytics/admin` | Admin | ✓ | Admin dashboard data plus OpenMeteo/GBIF/World Bank freshness metadata: users by role, report queue, alert severity, org count, species count |
+| GET | `/analytics/moderator` | Moderator | ✓ | Moderator dashboard data plus generated-at metadata: report queue breakdown, category counts, submission trend |
+| GET | `/analytics/government` | Government | ✓ | Government dashboard data plus OpenMeteo freshness metadata: active alerts by canonical affected division, verified reports by district/category, 30d climate averages, and latest station-based flood/water-level signals |
+| GET | `/analytics/researcher` | Researcher | ✓ | Researcher dashboard data plus GBIF freshness metadata: biodiversity totals, top species, observation trust breakdown |
+| GET | `/analytics/orgadmin` | Organization Admin | ✓ | Organization-scoped restoration project counts, engagement metrics, and top projects by participants plus generated-at metadata; limited to organizations the caller administers |

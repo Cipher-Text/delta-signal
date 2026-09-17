@@ -250,6 +250,24 @@ export type WaterLevelTrend = 'RISING' | 'FALLING' | 'STEADY';
 /** Computed threshold status for a station at a given water level. */
 export type WaterLevelThresholdStatus = 'NORMAL' | 'WARNING' | 'DANGER';
 
+export type FloodRiskLevel = 'HIGH' | 'ELEVATED';
+
+/**
+ * Compares simulated river discharge with the station's historical reference.
+ * Null means there is not enough comparison data to classify the signal.
+ */
+export function classifyFloodRisk(
+  discharge: number | null,
+  historicalMean: number | null,
+  p75: number | null,
+): FloodRiskLevel | null {
+  if (discharge == null || historicalMean == null || historicalMean === 0) return null;
+  const ratio = discharge / historicalMean;
+  if (ratio >= 2 || (p75 != null && discharge > p75 * 1.5)) return 'HIGH';
+  if (ratio >= 1.5 || (p75 != null && discharge > p75)) return 'ELEVATED';
+  return null;
+}
+
 // ─── Ingestion Enum ───────────────────────────────────────────────────────────
 
 export type IngestionStatus =

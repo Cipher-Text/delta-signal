@@ -22,7 +22,7 @@ export default function OrgAdminDashboardView({
 
   return (
     <>
-      <DashboardHeader title="Restoration Portfolio" subtitle="Project status, community engagement, and impact overview" eyebrow="Organization workspace" />
+      <DashboardHeader title="Restoration Portfolio" subtitle="Project status, community engagement, and impact overview" eyebrow="Organization workspace" meta={data.meta} />
 
       {/* KPI strip */}
       <div className="stat-grid">

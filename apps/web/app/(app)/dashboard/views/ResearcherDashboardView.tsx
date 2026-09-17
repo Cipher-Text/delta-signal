@@ -21,7 +21,7 @@ export default function ResearcherDashboardView({
 
   return (
     <>
-      <DashboardHeader title="Biodiversity Intelligence" subtitle="Species occurrences, observation quality, and field data trends" eyebrow="Research workspace" />
+      <DashboardHeader title="Biodiversity Intelligence" subtitle="Species occurrences, observation quality, and field data trends" eyebrow="Research workspace" meta={data.meta} />
 
       {/* KPI strip */}
       <div className="stat-grid">

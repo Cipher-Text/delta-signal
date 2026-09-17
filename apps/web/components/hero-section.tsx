@@ -18,7 +18,7 @@ export default async function HeroSection() {
       <h1>Understand Bangladesh’s environment, place by place.</h1>
 
       {metrics && (
-        <div className="hero-live-bar" role="status" aria-label="Live platform statistics">
+        <div className="hero-live-bar" role="status" aria-label="Current platform statistics">
           {hasEmergency && (
             <span className="hero-live-stat hero-live-stat--emergency">
               <span className="hero-live-dot hero-live-dot--danger" aria-hidden="true" />

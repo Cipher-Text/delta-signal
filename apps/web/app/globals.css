@@ -2636,6 +2636,8 @@ a {
 .dashboard-live-status strong,
 .dashboard-live-status small { display: block; }
 .dashboard-live-status small { margin-top: 2px; color: var(--muted); font-size: 0.69rem; }
+.dashboard-live-status.is-stale .dashboard-live-dot { background: var(--warning); box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.12); }
+.dashboard-live-status.is-unknown .dashboard-live-dot { background: var(--muted); box-shadow: 0 0 0 4px rgba(101, 115, 107, 0.12); }
 
 /* Two-column panel layout (stacks on narrow viewports) */
 .dashboard-two-col {

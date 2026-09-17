@@ -795,7 +795,21 @@ export interface CreateSubscriptionRequest {
 
 // ─── Analytics Dashboards ─────────────────────────────────────────────────────
 
+export type DashboardFreshnessStatus = 'FRESH' | 'STALE' | 'UNKNOWN';
+
+export interface DashboardDataSource {
+  name: string;
+  status: DashboardFreshnessStatus;
+  lastSuccessfulSync: string | null;
+}
+
+export interface DashboardMeta {
+  generatedAt: string;
+  sources: DashboardDataSource[];
+}
+
 export interface AdminDashboard {
+  meta: DashboardMeta;
   users: {
     total: number;
     byRole: Array<{ role: string; count: number }>;
@@ -817,6 +831,7 @@ export interface AdminDashboard {
 }
 
 export interface ModeratorDashboard {
+  meta: DashboardMeta;
   queue: {
     pending: number;
     underReview: number;
@@ -829,6 +844,7 @@ export interface ModeratorDashboard {
 }
 
 export interface GovernmentDashboard {
+  meta: DashboardMeta;
   alerts: {
     total: number;
     bySeverity: Array<{ severity: string; count: number }>;
@@ -848,9 +864,32 @@ export interface GovernmentDashboard {
       avgHumidity: number | null;
     }>;
   };
+  flood: {
+    totalStations: number;
+    stationsWithForecast: number;
+    highRiskStations: number;
+    elevatedRiskStations: number;
+    risingStations: number;
+    latestReadingAt: string | null;
+    highestRisk: Array<{
+      stationId: string;
+      stationName: string;
+      riverName: string | null;
+      district: string | null;
+      discharge: number | null;
+      historicalMean: number | null;
+      ratio: number | null;
+      risk: 'HIGH' | 'ELEVATED';
+      waterLevel: number | null;
+      thresholdStatus: 'DANGER' | 'WARNING' | 'NORMAL' | 'UNKNOWN';
+      trend: 'RISING' | 'FALLING' | 'STEADY' | null;
+      forecastDate: string;
+    }>;
+  };
 }
 
 export interface ResearcherDashboard {
+  meta: DashboardMeta;
   biodiversity: {
     totalSpecies: number;
     totalOccurrences: number;
@@ -867,6 +906,7 @@ export interface ResearcherDashboard {
 }
 
 export interface OrgAdminDashboard {
+  meta: DashboardMeta;
   projects: {
     total: number;
     active: number;

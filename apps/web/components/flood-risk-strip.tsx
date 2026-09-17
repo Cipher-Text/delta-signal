@@ -1,26 +1,18 @@
 import { routes, type StationFloodForecast } from '@delta-signal/contracts';
+import { classifyFloodRisk } from '@delta-signal/shared';
 import { apiGet } from '../lib/api';
 
 type RiskLevel = 'HIGH' | 'ELEVATED';
 
-interface FloodRiskDistrict {
-  districtId: string;
+interface FloodRiskStation {
+  stationId: string;
+  stationName: string;
+  riverName: string;
   districtName: string;
   ratio: number;
   discharge: number;
   risk: RiskLevel;
-}
-
-function computeRisk(
-  discharge: number | null,
-  mean: number | null,
-  p75: number | null,
-): RiskLevel | null {
-  if (discharge == null || mean == null || mean === 0) return null;
-  const ratio = discharge / mean;
-  if (ratio >= 2.0 || (p75 != null && discharge > p75 * 1.5)) return 'HIGH';
-  if (ratio >= 1.5 || (p75 != null && discharge > p75)) return 'ELEVATED';
-  return null;
+  forecastDate: string;
 }
 
 export default async function FloodRiskStrip() {
@@ -31,32 +23,32 @@ export default async function FloodRiskStrip() {
     return null;
   }
 
-  // Take the highest-risk station per district, then filter to elevated/high risk
-  const latestByDistrict = new Map<string, StationFloodForecast>();
+  // The API returns one current forecast row per station. Keep station-level
+  // context so a district with multiple rivers is not flattened incorrectly.
+  const latestByStation = new Map<string, StationFloodForecast>();
   for (const f of forecasts) {
-    const districtId = f.station?.districtId ?? '';
-    if (!districtId) continue;
-    const existing = latestByDistrict.get(districtId);
+    const existing = latestByStation.get(f.stationId);
     if (!existing || new Date(f.forecastDate) > new Date(existing.forecastDate)) {
-      latestByDistrict.set(districtId, f);
+      latestByStation.set(f.stationId, f);
     }
   }
 
-  const atRisk: FloodRiskDistrict[] = [];
-  for (const [districtId, f] of latestByDistrict.entries()) {
-    const risk = computeRisk(f.riverDischarge, f.riverDischargeMean, f.riverDischargeP75);
+  const atRisk: FloodRiskStation[] = [];
+  for (const [stationId, f] of latestByStation.entries()) {
+    const risk = classifyFloodRisk(f.riverDischarge, f.riverDischargeMean, f.riverDischargeP75);
     if (risk && f.riverDischarge != null && f.riverDischargeMean != null && f.riverDischargeMean > 0) {
       atRisk.push({
-        districtId,
-        districtName: f.station?.district?.name ?? districtId,
+        stationId,
+        stationName: f.station?.name ?? 'Water-level station',
+        riverName: f.station?.riverName ?? 'River not recorded',
+        districtName: f.station?.district?.name ?? 'District not recorded',
         ratio: f.riverDischarge / f.riverDischargeMean,
         discharge: f.riverDischarge,
         risk,
+        forecastDate: f.forecastDate,
       });
     }
   }
-
-  if (atRisk.length === 0) return null;
 
   // Sort: HIGH first, then by ratio descending
   atRisk.sort((a, b) => {
@@ -65,6 +57,10 @@ export default async function FloodRiskStrip() {
   });
 
   const highCount = atRisk.filter((d) => d.risk === 'HIGH').length;
+  const currentForecastDate = forecasts
+    .map((forecast) => forecast.forecastDate)
+    .sort()
+    .at(-1);
 
   return (
     <section className="flood-strip public-section" aria-label="Flood risk alert strip">
@@ -73,27 +69,31 @@ export default async function FloodRiskStrip() {
         <div>
           <strong className="flood-strip-title">
             {highCount > 0
-              ? `${highCount} district${highCount > 1 ? 's' : ''} showing a high river-discharge signal`
-              : `${atRisk.length} district${atRisk.length > 1 ? 's' : ''} showing elevated river discharge`}
+              ? `${highCount} station${highCount > 1 ? 's' : ''} showing a high river-discharge signal`
+              : atRisk.length > 0
+                ? `${atRisk.length} station${atRisk.length > 1 ? 's' : ''} showing elevated river discharge`
+                : forecasts.length > 0
+                  ? 'No elevated river-discharge signal in current station forecasts'
+                  : 'Flood forecast data is currently unavailable'}
           </strong>
           <span className="flood-strip-note">
-            {' '}— Station forecast compared with historical discharge. This is not a flood-impact assessment. Source: OpenMeteo GloFAS.
+            {' '}— Simulated station discharge compared with historical values; this is not an official flood warning or flood-impact assessment. Source: OpenMeteo GloFAS{currentForecastDate ? ` · Forecast date ${currentForecastDate}` : ''}.
           </span>
         </div>
       </div>
 
-      <div className="flood-chip-row">
-        {atRisk.map((d) => (
+      {atRisk.length > 0 && <div className="flood-chip-row">
+        {atRisk.slice(0, 8).map((d) => (
           <span
-            key={d.districtId}
+            key={d.stationId}
             className={`flood-chip flood-chip-${d.risk.toLowerCase()}`}
-            title={`River discharge ${d.ratio.toFixed(1)}× historical mean`}
+            title={`${d.stationName}, ${d.riverName}, ${d.districtName} · River discharge ${d.ratio.toFixed(1)}× historical mean`}
           >
-            {d.districtName}
+            {d.stationName}
             <span className="flood-chip-ratio">{d.ratio.toFixed(1)}×</span>
           </span>
         ))}
-      </div>
+      </div>}
     </section>
   );
 }

@@ -8,6 +8,7 @@ import {
   type WaterLevelThresholdStatus,
   type WaterLevelTrend,
 } from '@delta-signal/contracts';
+import { classifyFloodRisk } from '@delta-signal/shared';
 import { relativeTime } from '../../../../../lib/format';
 
 const STATUS_TAG: Record<NonNullable<WaterLevelThresholdStatus>, string> = {
@@ -21,6 +22,8 @@ const TREND_LABEL: Record<NonNullable<WaterLevelTrend>, string> = {
   FALLING: '↓ Falling',
   STEADY: '→ Steady',
 };
+
+const RISK_TAG = { HIGH: 'danger', ELEVATED: 'warning' } as const;
 
 function fmt(n: number | null, decimals = 2): string {
   return n !== null ? n.toFixed(decimals) : '—';
@@ -48,6 +51,13 @@ export default async function StationDetailPage(props: { params: Promise<{ id: s
   if (!latestRes) notFound();
 
   const { station, latestReading, thresholdStatus } = latestRes;
+  const currentForecast = [...forecasts].sort((a, b) => a.forecastDate.localeCompare(b.forecastDate))[0] ?? null;
+  const forecastRisk = currentForecast
+    ? classifyFloodRisk(currentForecast.riverDischarge, currentForecast.riverDischargeMean, currentForecast.riverDischargeP75)
+    : null;
+  const forecastRatio = currentForecast?.riverDischarge != null && currentForecast.riverDischargeMean
+    ? currentForecast.riverDischarge / currentForecast.riverDischargeMean
+    : null;
   const hasThresholds =
     station.dangerLevel !== null ||
     station.warningLevel !== null ||
@@ -97,6 +107,15 @@ export default async function StationDetailPage(props: { params: Promise<{ id: s
               <div className="obs-detail-row">
                 <span>Trend</span>
                 <strong>{TREND_LABEL[latestReading.trend] ?? latestReading.trend}</strong>
+              </div>
+            )}
+            {currentForecast && (
+              <div className="obs-detail-row">
+                <span>Forecast signal</span>
+                <strong>
+                  {forecastRisk ? <span className={`tag ${RISK_TAG[forecastRisk]}`}>{forecastRisk}</span> : <span className="tag muted">Within historical range</span>}
+                  {forecastRatio != null && <small style={{ marginLeft: 8 }}>{forecastRatio.toFixed(1)}× mean</small>}
+                </strong>
               </div>
             )}
             <div className="obs-detail-row">
@@ -172,7 +191,7 @@ export default async function StationDetailPage(props: { params: Promise<{ id: s
           <p className="text-muted">No forecast data available for this station.</p>
         )}
         <p className="text-muted" style={{ marginTop: '0.75rem', fontSize: '0.85em' }}>
-          Source: OpenMeteo GloFAS · Updated every 6 hours
+          Source: OpenMeteo GloFAS · Simulated discharge signal, not an official flood warning · Updated every 6 hours
         </p>
       </article>
     </>

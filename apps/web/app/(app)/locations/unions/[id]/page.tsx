@@ -164,7 +164,7 @@ export default async function UnionPage(props: { params: Promise<{ id: string }>
 
       {/* District-level detail prompt */}
       <div className="access-note">
-        <strong>Live weather and flood data available at district level</strong>
+        <strong>Weather and flood data available at district level</strong>
         <span>
           For current weather, air quality, flood forecasts, biodiversity, and community reports, visit the{' '}
           <Link href={`/locations/districts/${district.id}`}>{district.name} district page</Link>.

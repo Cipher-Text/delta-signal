@@ -23,7 +23,7 @@ export default function ModeratorDashboardView({
 
   return (
     <>
-      <DashboardHeader title="Moderation Queue" subtitle="Report review status and submission trends" eyebrow="Operations" />
+      <DashboardHeader title="Moderation Queue" subtitle="Report review status and submission trends" eyebrow="Operations" meta={data.meta} />
 
       {/* Queue KPIs */}
       <div className="stat-grid">

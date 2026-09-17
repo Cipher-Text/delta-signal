@@ -104,7 +104,7 @@ export class FloodService {
   getLatestForAllStations() {
     return this.prisma.stationFloodForecast.findMany({
       distinct: ['stationId'],
-      orderBy: [{ stationId: 'asc' }, { forecastDate: 'asc' }],
+      orderBy: [{ stationId: 'asc' }, { forecastDate: 'desc' }],
       include: {
         station: {
           select: {

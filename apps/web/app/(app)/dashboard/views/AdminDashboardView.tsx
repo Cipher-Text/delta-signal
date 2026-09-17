@@ -29,7 +29,7 @@ export default function AdminDashboardView({
 
   return (
     <>
-      <DashboardHeader title="Platform Overview" subtitle="Real-time snapshot of the Delta Signal platform" />
+      <DashboardHeader title="Platform Overview" subtitle="Real-time snapshot of the Delta Signal platform" meta={data.meta} />
 
       {/* KPI strip */}
       <div className="stat-grid">

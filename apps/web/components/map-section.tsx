@@ -107,7 +107,7 @@ export default async function MapSection() {
             <p className="eyebrow">Environmental map</p>
             <h2>See what’s happening across Bangladesh</h2>
             <p>
-              A live snapshot of active alerts, verified reports, and district coverage. Select a marker for a quick look.
+              A current available snapshot of active alerts, verified reports, and district coverage. Select a marker for a quick look.
             </p>
           </div>
         </div>

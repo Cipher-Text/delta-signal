@@ -83,7 +83,6 @@ export const CONDITIONS: Condition[] = [
   { label: 'Sylhet rainfall (24h)', value: '42 mm', variant: 'info' },
   { label: 'Khulna humidity', value: '77%' },
   { label: "Cox's Bazar wind", value: '22 km/h' },
-  { label: 'OpenMeteo sync', value: 'Healthy', variant: 'success' },
 ];
 
 // ── Dataset catalog preview ───────────────────────────────────────────────────
@@ -168,4 +167,3 @@ export const RESTORATION_PROJECTS: ReportPreview[] = [
     meta: 'Open for public participation',
   },
 ];
-

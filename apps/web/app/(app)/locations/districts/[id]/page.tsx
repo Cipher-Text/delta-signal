@@ -144,7 +144,19 @@ export default async function DistrictPage(
   const activeAlerts = alertsRes?.data ?? [];
   const emergency = activeAlerts.find((a) => a.severity === 'EMERGENCY');
   const forecast = forecastData?.slice(0, 7) ?? [];
-  const floodToday = floodData?.[0] ?? null;
+  // District forecasts are grouped by station, then date. Do not assume the
+  // first API row represents today's signal; choose the earliest forecast date
+  // and rank stations on that date by discharge relative to historical mean.
+  const floodTodayDate = floodData?.reduce<string | null>(
+    (earliest, row) => !earliest || row.forecastDate < earliest ? row.forecastDate : earliest,
+    null,
+  );
+  const floodTodayRows = floodData?.filter((row) => row.forecastDate === floodTodayDate) ?? [];
+  const floodToday = [...floodTodayRows].sort((a, b) => {
+    const aRatio = a.riverDischarge != null && a.riverDischargeMean ? a.riverDischarge / a.riverDischargeMean : 0;
+    const bRatio = b.riverDischarge != null && b.riverDischargeMean ? b.riverDischarge / b.riverDischargeMean : 0;
+    return bRatio - aRatio;
+  })[0] ?? null;
   const floodPeak = floodData && floodData.length > 0
     ? Math.max(...floodData.map((f) => f.riverDischargeMax ?? 0))
     : null;
@@ -306,7 +318,7 @@ export default async function DistrictPage(
                 <div className="panel-header">
                   <div>
                     <h2>Flood Forecast</h2>
-                    <p>30-day river discharge outlook</p>
+                    <p>{floodToday.station?.name ?? 'Station'} · {floodToday.station?.riverName ?? 'River not recorded'} · {floodTodayDate}</p>
                   </div>
                 </div>
                 <div className="metric-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>

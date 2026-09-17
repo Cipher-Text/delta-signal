@@ -1,7 +1,16 @@
 import Link from 'next/link';
-import { titleCase } from '../../../../lib/format';
+import type { DashboardMeta } from '@delta-signal/contracts';
+import { relativeTime, titleCase } from '../../../../lib/format';
 
-export function DashboardHeader({ title, subtitle, eyebrow = 'Workspace' }: { title: string; subtitle: string; eyebrow?: string }) {
+export function DashboardHeader({ title, subtitle, eyebrow = 'Workspace', meta }: { title: string; subtitle: string; eyebrow?: string; meta?: DashboardMeta }) {
+  const knownSources = meta?.sources.filter((source) => source.status !== 'UNKNOWN') ?? [];
+  const latestSync = knownSources
+    .map((source) => source.lastSuccessfulSync)
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
+  const hasStaleSource = meta?.sources.some((source) => source.status === 'STALE');
+  const statusClass = hasStaleSource ? 'is-stale' : knownSources.length > 0 ? 'is-fresh' : 'is-unknown';
+
   return (
     <header className="dashboard-header">
       <div>
@@ -9,9 +18,13 @@ export function DashboardHeader({ title, subtitle, eyebrow = 'Workspace' }: { ti
         <h1>{title}</h1>
         <p className="dashboard-subtitle">{subtitle}</p>
       </div>
-      <div className="dashboard-live-status" aria-label="Dashboard status">
+      <div className={`dashboard-live-status ${statusClass}`} aria-label="Dashboard data status">
         <span className="dashboard-live-dot" aria-hidden="true" />
-        <span><strong>Bangladesh</strong><small>Live platform snapshot</small></span>
+        <span>
+          <strong>Bangladesh</strong>
+          <small>{latestSync ? `Updated ${relativeTime(latestSync)}` : 'Source status unavailable'}</small>
+          {knownSources.length > 0 && <small>{knownSources.map((source) => source.name).join(' · ')}</small>}
+        </span>
       </div>
     </header>
   );

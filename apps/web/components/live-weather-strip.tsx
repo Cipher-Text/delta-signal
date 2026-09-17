@@ -22,10 +22,14 @@ export default async function LiveWeatherStrip() {
     (a.temperature2m as number) < (b.temperature2m as number) ? a : b,
   );
   const rainingCount = readings.filter((r) => (r.precipitation ?? 0) > 0).length;
+  const latestReadingTime = readings
+    .map((reading) => reading.readingTime)
+    .sort()
+    .at(-1);
 
   return (
-    <div className="live-weather-strip" aria-label="Live conditions across Bangladesh">
-      <span className="live-weather-label">Live now</span>
+    <div className="live-weather-strip" aria-label="Latest available weather conditions across Bangladesh">
+      <span className="live-weather-label">Latest available</span>
       <span className="live-weather-stat">
         Hottest: <strong>{hottest.district?.name}</strong>{' '}
         {(hottest.temperature2m as number).toFixed(1)}°C
@@ -42,6 +46,11 @@ export default async function LiveWeatherStrip() {
             Rain in <strong>{rainingCount}</strong> district{rainingCount !== 1 ? 's' : ''}
           </span>
         </>
+      )}
+      {latestReadingTime && (
+        <span className="live-weather-meta">
+          Observed {new Date(latestReadingTime).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+        </span>
       )}
     </div>
   );

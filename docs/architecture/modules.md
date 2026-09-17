@@ -392,7 +392,7 @@ Owns role-scoped dashboard queries returning aggregated platform statistics.
 | GET | `/analytics/researcher` | Researcher |
 | GET | `/analytics/orgadmin` | Organization Admin |
 
-Each endpoint returns a tailored summary: admin sees user counts by role, report queue, alert severity counts, organizations, and species count; moderator sees queue breakdown and report submission trend; government sees active alerts by division, verified reports by category/district, and 30-day climate averages per division; researcher sees biodiversity totals, top species, and observation trust breakdown; org admin sees restoration project counts and engagement metrics.
+Each endpoint returns a tailored summary: admin sees user counts by role, report queue, alert severity counts, organizations, and species count; moderator sees queue breakdown and report submission trend; government sees active alerts by canonical affected division (resolved from `AlertArea` district/upazila/union records), verified reports by category/district, 30-day climate averages per division, and latest station-based flood/water-level signals; researcher sees biodiversity totals, top species, and observation trust breakdown; org admin sees organization-scoped restoration project counts and engagement metrics.
 
 ## water-bodies ✓
 
