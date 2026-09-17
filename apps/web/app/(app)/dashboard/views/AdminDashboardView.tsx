@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { AdminDashboard } from '@delta-signal/contracts';
 import type { CurrentUser } from '../../../../lib/current-user';
 import { DashboardHeader, StatCard, BarChart, SectionHeader } from '../components/DashboardPrimitives';
@@ -37,7 +36,6 @@ export default function AdminDashboardView({
         <StatCard
           label="Total users"
           value={data.users.total.toLocaleString()}
-          href="/users"
         />
         <StatCard
           label="Pending review"
@@ -125,11 +123,6 @@ export default function AdminDashboardView({
           valueKey="count"
           total={data.users.total}
         />
-        <div style={{ marginTop: 12 }}>
-          <Link className="button ghost" href="/users">
-            Manage users
-          </Link>
-        </div>
       </article>
     </>
   );

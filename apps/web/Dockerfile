@@ -47,7 +47,9 @@ COPY --from=builder --chown=web:nature \
 COPY --from=builder --chown=web:nature \
   /repo/apps/web/.next/static ./apps/web/.next/static
 
-# public/ does not exist in this app — omitted intentionally
+# Public assets such as the logo are served from the application root.
+COPY --from=builder --chown=web:nature \
+  /repo/apps/web/public ./apps/web/public
 
 USER web
 

@@ -39,7 +39,9 @@ COPY --from=builder --chown=admin:nature \
 COPY --from=builder --chown=admin:nature \
   /repo/apps/admin/.next/static ./apps/admin/.next/static
 
-# public/ does not exist in this app — omitted intentionally
+# Public assets such as the logo are served from the application root.
+COPY --from=builder --chown=admin:nature \
+  /repo/apps/admin/public ./apps/admin/public
 
 USER admin
 
