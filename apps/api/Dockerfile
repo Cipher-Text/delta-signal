@@ -32,7 +32,8 @@ COPY tsconfig.base.json ./
 # Generate Prisma client for the builder's platform (linux/amd64 or arm64)
 RUN pnpm --filter @delta-signal/database run db:generate
 
-RUN pnpm --filter @delta-signal/api build
+RUN pnpm --filter @delta-signal/shared build && \
+    pnpm --filter @delta-signal/api build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 FROM base AS runner
@@ -67,6 +68,7 @@ RUN npm install -g prisma@6 && \
 
 # Copy compiled application from builder
 COPY --from=builder /repo/apps/api/dist ./apps/api/dist
+COPY --from=builder /repo/packages/shared/dist ./packages/shared/dist
 
 # Entrypoint runs `prisma migrate deploy` before starting the process
 COPY apps/api/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
