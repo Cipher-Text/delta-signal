@@ -118,11 +118,23 @@ export default function ProfilePictureForm({ uploadAction }: { uploadAction: Upl
 
     const formData = new FormData();
     formData.append('picture', croppedFile);
-    await uploadAction(formData);
+    try {
+      await Promise.race([
+        uploadAction(formData),
+        new Promise<never>((_, reject) => {
+          window.setTimeout(() => reject(new Error('Upload timed out')), 45_000);
+        }),
+      ]);
+    } catch (uploadError) {
+      setUploading(false);
+      setError(uploadError instanceof Error && uploadError.message === 'Upload timed out'
+        ? 'Upload is taking too long. Please check the API and storage connection, then try again.'
+        : 'Upload failed. Please try again.');
+    }
   }
 
   return (
-    <form action={uploadAction} onSubmit={submit} className="profile-avatar-actions">
+    <form onSubmit={submit} className="profile-avatar-actions">
       <label className="button ghost profile-picture-button">
         {file ? 'Choose another photo' : 'Change photo'}
         <input
