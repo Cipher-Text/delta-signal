@@ -8,6 +8,7 @@ import type { PrismaService } from '../database/prisma.service';
 import type { PermissionsService } from '../permissions/permissions.service';
 import type { GamificationService } from '../gamification/gamification.service';
 import type { EmailService } from '../notifications/email.service';
+import type { StorageService } from '../media/storage.service';
 
 /** In-memory Prisma double — only the calls AuthService makes. */
 function mockPrisma() {
@@ -53,6 +54,7 @@ function build() {
     queuePasswordReset: jest.fn().mockResolvedValue(undefined),
     queueVerification: jest.fn().mockResolvedValue(undefined),
   } as unknown as EmailService;
+  const storage = {} as StorageService;
   const config = { get: jest.fn().mockReturnValue(undefined) } as unknown as ConfigService;
   const service = new AuthService(
     prisma as unknown as PrismaService,
@@ -61,6 +63,7 @@ function build() {
     gamification,
     email,
     config,
+    storage,
   );
   return { service, prisma, jwt };
 }

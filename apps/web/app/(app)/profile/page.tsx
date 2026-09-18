@@ -328,6 +328,7 @@ export default async function ProfilePage(
                   Change photo
                   <input name="picture" type="file" accept="image/jpeg,image/png,image/webp" required />
                 </label>
+                <button className="button profile-picture-submit" type="submit">Upload photo</button>
                 <small>JPG, PNG or WebP · max 5 MB</small>
               </form>
               {profile?.avatarUrl && (

@@ -49,6 +49,14 @@ services:
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
       GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
       GOOGLE_CALLBACK_URL: "${GOOGLE_CALLBACK_URL:-}"
+      # ── Object storage ────────────────────────────────────────────────────
+      STORAGE_ENDPOINT: "${STORAGE_ENDPOINT:-}"
+      STORAGE_ACCESS_KEY: "${STORAGE_ACCESS_KEY:-}"
+      STORAGE_SECRET_KEY: "${STORAGE_SECRET_KEY:-}"
+      STORAGE_BUCKET: "${STORAGE_BUCKET:-}"
+      STORAGE_REGION: "${STORAGE_REGION:-us-east-1}"
+      STORAGE_USE_PATH_STYLE: "${STORAGE_USE_PATH_STYLE:-false}"
+      STORAGE_PUBLIC_URL: "${STORAGE_PUBLIC_URL:-}"
     depends_on:
       redis:
         condition: service_healthy
