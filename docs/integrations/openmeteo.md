@@ -148,6 +148,7 @@ OpenMeteo forecast docs allow weather forecasts up to 16 days. OpenMeteo air-qua
 - No WAQI station-level AQI integration yet.
 - No OpenMeteo AQI fields are requested or stored yet.
 - No OpenMeteo Climate integration yet; see [OpenMeteo Climate](openmeteo-climate.md).
+- No OpenMeteo Seasonal Forecast integration yet; see [OpenMeteo Seasonal Forecast](openmeteo-seasonal.md).
 - OpenMeteo Flood is implemented in a separate `flood` module; see [OpenMeteo Flood](openmeteo-flood.md).
 - OpenMeteo Marine Weather is implemented in `apps/api/src/marine/`; see [OpenMeteo Marine Weather](openmeteo-marine.md).
 - OpenMeteo Satellite Radiation is implemented in `apps/api/src/radiation/`; see [OpenMeteo Satellite Radiation](openmeteo-satellite-radiation.md).

@@ -203,7 +203,7 @@ Exit criteria:
 
 ## Phase 7: Advanced Platform Domains
 
-Status: In Progress — 3 of 11 domains complete. Emissions tracking (World Bank API), satellite radiation, and marine weather done. Frontend: `/emissions` page live (2026-09-02 rewrite). Remaining frontend gap: radiation and marine data have no public web page yet — data is collected by cron jobs but not visible to users. Priority before adding new domains: surface radiation and marine data in `apps/web`. Remaining 8 domains (Industrial Facility Registry, ApiCallLog, structured surveys, climate forecasting, carbon accounting, research platform, Python data-worker, satellite/remote sensing) still planned.
+Status: In Progress — 3 of 12 domains complete. Emissions tracking (World Bank API), satellite radiation, and marine weather done. Frontend: `/emissions` page live (2026-09-02 rewrite). Remaining frontend gap: radiation and marine data have no public web page yet — data is collected by cron jobs but not visible to users. Priority before adding new domains: surface radiation and marine data in `apps/web`. Remaining 9 domains (Industrial Facility Registry, ApiCallLog, structured surveys, climate forecasting, seasonal forecasting, carbon accounting, research platform, Python data-worker, satellite/remote sensing) still planned.
 
 Goal: Extend Delta Signal into the richer environmental science domains that the core platform was designed to support but that require deeper infrastructure, specialist data sources, or a larger user base before they pay off. Each domain here either has a clear data dependency on Phase 3–6 work, or requires specialist review before scoping.
 
@@ -216,12 +216,32 @@ Order is not fixed. Satellite ingestion is the most infrastructure-heavy and dep
 | **Marine weather data** | Bay of Bengal wave/swell/wind-wave forecasts for coastal Bangladesh districts via OpenMeteo Marine API. `MarineForecast` model, `MarineScheduler`. | **Done (2026-08-28)** |
 | **Industrial Facility Registry** | Searchable directory of factories, garment units, brick fields, tanneries, power plants, shipbreaking yards, and other industrial sites that have measurable environmental impact. Each facility carries type, compliance status, operator, and full geographic anchor (district → upazila → union → lat/lng/PostGIS). Links to `CitizenReport` (incidents at that facility) and exposes a `GET /facilities/nearby` spatial search. Government/admin registers facilities; researchers and moderators can update compliance status; the public can browse and filter. Inspection records (date, outcome, inspector) are a v2 addition. | *Planned* |
 | **Climate forecasting** | Platform-generated predictions (flood risk, drought early warning, heat index). Adds a model registry, prediction storage, and accuracy tracking — separate from the provider forecasts already in `HourlyWeatherForecast`/`DailyWeatherForecast`. | *Planned* — requires Python data-worker + ML pipeline |
+| **Seasonal forecasting** | Planning-oriented integration of OpenMeteo EC46/SEAS5 weekly and monthly ensemble forecasts, anomalies, and uncertainty indicators. Starts at district/division or river-basin scale; does not replace official BMD/FFWC warnings or local observations. | *Deferred* — implement after core response workflows and official Bangladesh data integrations are stronger |
 | **Carbon accounting** | Per-user and per-organisation footprint entries with calculation methodology and offset tracking. `HourlyAirQuality.carbonMonoxide` is a pollutant measurement and unrelated to this feature. | *Planned* |
 | **Research platform** | Publication records, authorship, citations, and institution linkage. Gives the `RESEARCHER` role a meaningful place to publish and cite findings from the platform's own data. | *Planned* |
 | **Structured surveys** | Solicited, structured data collection campaigns. Distinct from `CitizenReport` (unsolicited incident reporting) and `Observation` (point-in-time measurements) — surveys target specific questions with a defined form schema and response lifecycle. | *Planned* |
 | **Satellite / remote sensing** | Satellite imagery ingestion (NASA MODIS, Sentinel-2), change-detection analysis, and automated deforestation/flooding alerts. Fills the gap where `DEFORESTATION` and `FLOODING` report categories currently only have citizen-reported evidence. | *Planned* — requires PostGIS geometry fields, object storage, Python data-worker |
 | **Python data-worker** | GIS and scientific processing jobs — initially: spatial joins, land-cover analysis, change-detection, and ML pipeline scaffolding. `apps/data-worker/` is a placeholder skeleton today (pyproject.toml + empty main.py). Must be operational before satellite/remote sensing or climate forecasting can land. Deferred from Phase 4. | *Planned* — prerequisite for satellite ingestion and climate forecasting |
 | **Provider response logging (`ApiCallLog`)** | Per-HTTP-call log of every external API request — URL, provider, status code, latency, response size, error. Enables data lineage tracking for imported datasets and supports debugging of ingestion failures beyond what `IngestionJob` run-level tracking provides. No `ApiCallLog` model currently exists in the schema. Deferred from Phase 4. | *Planned* |
+
+### Seasonal Forecast Decision
+
+The OpenMeteo Seasonal Forecast API is strategically relevant because it adds
+forward-looking planning context to Delta Signal's current-condition,
+historical, and short-range forecast data. It is intentionally deferred as a
+full ingestion module until the platform has stronger official Bangladesh
+source integrations and a complete report-to-agency response loop.
+
+When implemented, the first version should:
+
+- use weekly/monthly ensemble mean, anomaly, and spread data;
+- target districts, divisions, or river basins rather than imply union-level
+  precision from the approximately 36 km model grid;
+- store forecast issue time, target period, model, and provenance;
+- display uncertainty and clearly distinguish model outlooks from observations
+  and official warnings; and
+- support government preparedness, agriculture, restoration, research, and
+  drought/flood context rather than automatically creating emergency alerts.
 
 Exit criteria:
 
