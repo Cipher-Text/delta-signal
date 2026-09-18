@@ -229,12 +229,14 @@ export class AuthService {
     }
 
     if (oldProfile?.avatarKey && oldProfile.avatarKey !== avatarKey) {
-      await this.storage.delete(oldProfile.avatarKey).catch((error: unknown) => {
+      // The new avatar is already persisted. Clean up the old object in the
+      // background so a slow object-store delete does not hold the response.
+      void this.storage.delete(oldProfile.avatarKey).catch((error: unknown) => {
         this.logger.warn(`Failed to remove previous profile picture: ${String(error)}`);
       });
     }
 
-    return this.getProfile(userId);
+    return { success: true };
   }
 
   async removeProfilePicture(userId: string) {

@@ -526,6 +526,21 @@ a {
 .profile-picture-button { cursor: pointer; white-space: nowrap; }
 .profile-picture-button input { display: none; }
 .profile-avatar-actions small, .profile-picture-remove { color: var(--muted); font-size: 0.7rem; text-align: center; }
+.profile-picture-crop { width: 240px; height: 240px; border-radius: 20px; overflow: hidden; position: relative; background: var(--surface-2); cursor: grab; touch-action: none; }
+.profile-picture-crop:active { cursor: grabbing; }
+.profile-picture-crop img { position: absolute; top: 50%; left: 50%; max-width: none; user-select: none; pointer-events: none; }
+.profile-picture-crop-guide { position: absolute; inset: 0; border: 2px solid rgba(255,255,255,.9); border-radius: 20px; box-shadow: 0 0 0 999px rgba(0,0,0,.08); pointer-events: none; }
+.profile-picture-zoom { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.7rem; }
+.profile-picture-zoom input { width: 90px; accent-color: var(--primary); }
+.profile-picture-submit:disabled { opacity: .6; cursor: wait; }
+.profile-picture-error { color: var(--danger, #b42318) !important; }
+.profile-picture-modal-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(10, 29, 22, .58); }
+.profile-picture-modal { width: min(100%, 420px); display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 22px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface); box-shadow: 0 24px 70px rgba(0, 0, 0, .28); }
+.profile-picture-modal-header { width: 100%; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.profile-picture-modal-kicker { color: var(--primary); font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.profile-picture-modal h2 { margin: 3px 0 0; font-size: 1.2rem; }
+.profile-picture-modal-close { border: 0; background: transparent; color: var(--muted); font-size: 1.6rem; line-height: 1; cursor: pointer; }
+.profile-picture-modal-actions { display: flex; justify-content: flex-end; gap: 8px; width: 100%; }
 .profile-picture-remove-form { margin: 0; }
 .profile-picture-remove { border: 0; background: transparent; cursor: pointer; padding: 2px 4px; }
 .profile-picture-remove:hover { color: var(--danger, #b42318); text-decoration: underline; }

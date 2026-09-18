@@ -19,6 +19,7 @@ import { updateProfileAction, changePasswordAction, uploadProfilePictureAction, 
 import { ENVIRONMENTAL_EXPERTISE, ENVIRONMENTAL_RESEARCH_INTERESTS } from '@delta-signal/shared';
 import TagInput from '../../../components/tag-input';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
+import ProfilePictureForm from '../../../components/profile-picture-form';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
@@ -323,14 +324,7 @@ export default async function ProfilePage(
               )}
             </div>
             {user && <>
-              <form action={uploadProfilePictureAction} className="profile-avatar-actions">
-                <label className="button ghost profile-picture-button">
-                  Change photo
-                  <input name="picture" type="file" accept="image/jpeg,image/png,image/webp" required />
-                </label>
-                <button className="button profile-picture-submit" type="submit">Upload photo</button>
-                <small>JPG, PNG or WebP · max 5 MB</small>
-              </form>
+              <ProfilePictureForm uploadAction={uploadProfilePictureAction} />
               {profile?.avatarUrl && (
                 <form action={removeProfilePictureAction} className="profile-picture-remove-form">
                   <button className="profile-picture-remove" type="submit">Remove photo</button>
