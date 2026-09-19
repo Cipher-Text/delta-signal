@@ -319,6 +319,7 @@ describe('AuthService', () => {
 
     it('rejects a token belonging to a deactivated user', async () => {
       const { service, prisma } = build();
+      prisma.refreshToken.updateMany.mockResolvedValue({ count: 1 });
       prisma.refreshToken.findUnique.mockResolvedValue({
         id: 't1',
         userId: 'u1',
@@ -330,10 +331,21 @@ describe('AuthService', () => {
       await expect(service.refresh('valid')).rejects.toThrow(UnauthorizedException);
     });
 
+    // A second, concurrent replay of the same token must lose the race: the
+    // conditional updateMany only ever flips revokedAt for one caller.
+    it('rejects a concurrent replay of the same token (count 0)', async () => {
+      const { service, prisma } = build();
+      prisma.refreshToken.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(service.refresh('raced-token')).rejects.toThrow(UnauthorizedException);
+      expect(prisma.refreshToken.findUnique).not.toHaveBeenCalled();
+    });
+
     // Rotation is what limits the damage from a stolen refresh token: the old
     // row is revoked the moment the legitimate client refreshes.
     it('revokes the old token and issues a different one', async () => {
       const { service, prisma } = build();
+      prisma.refreshToken.updateMany.mockResolvedValue({ count: 1 });
       prisma.refreshToken.findUnique.mockResolvedValue({
         id: 't1',
         userId: 'u1',
@@ -344,8 +356,12 @@ describe('AuthService', () => {
 
       const result = await service.refresh('old-token');
 
-      expect(prisma.refreshToken.update).toHaveBeenCalledWith({
-        where: { id: 't1' },
+      expect(prisma.refreshToken.updateMany).toHaveBeenCalledWith({
+        where: {
+          tokenHash: hashRefreshToken('old-token'),
+          revokedAt: null,
+          expiresAt: { gt: expect.any(Date) },
+        },
         data: { revokedAt: expect.any(Date) },
       });
       expect(result.refreshToken).not.toBe('old-token');

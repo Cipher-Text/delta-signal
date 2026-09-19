@@ -393,15 +393,22 @@ export class AuthService {
 
   /** Validates a refresh token, revokes it, and issues a brand new access+refresh pair. */
   async refresh(refreshToken: string, deviceMeta: DeviceMeta = {}) {
-    const tokenRecord = await this.findValidRefreshToken(refreshToken);
+    const tokenHash = hashRefreshToken(refreshToken);
+
+    // Atomically flip revokedAt from null so only one of two concurrent
+    // requests replaying the same token can win the race; the other sees
+    // count === 0 and is rejected instead of both minting new tokens.
+    const { count } = await this.prisma.refreshToken.updateMany({
+      where: { tokenHash, revokedAt: null, expiresAt: { gt: new Date() } },
+      data: { revokedAt: new Date() },
+    });
+    if (count !== 1) throw new UnauthorizedException('Invalid refresh token');
+
+    const tokenRecord = await this.prisma.refreshToken.findUnique({ where: { tokenHash } });
+    if (!tokenRecord) throw new UnauthorizedException('Invalid refresh token');
 
     const user = await this.prisma.user.findUnique({ where: { id: tokenRecord.userId } });
     if (!user || !user.isActive) throw new UnauthorizedException('Invalid refresh token');
-
-    await this.prisma.refreshToken.update({
-      where: { id: tokenRecord.id },
-      data: { revokedAt: new Date() },
-    });
 
     const tokens = await this.issueTokens(
       { sub: user.id, email: user.email, role: user.role },
@@ -574,15 +581,6 @@ export class AuthService {
         ipAddress: deviceMeta.ipAddress,
       },
     });
-  }
-
-  private async findValidRefreshToken(refreshToken: string) {
-    const tokenHash = hashRefreshToken(refreshToken);
-    const record = await this.prisma.refreshToken.findUnique({ where: { tokenHash } });
-    if (!record || record.revokedAt || record.expiresAt < new Date()) {
-      throw new UnauthorizedException('Invalid refresh token');
-    }
-    return record;
   }
 
   private async issueTokens(payload: JwtPayload, deviceMeta: DeviceMeta) {

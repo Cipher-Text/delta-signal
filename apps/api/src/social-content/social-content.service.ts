@@ -151,7 +151,9 @@ export class SocialContentService {
 
   async render(id: string, actor: JwtPayload) {
     const draft = await this.getById(id);
-    if (draft.status === SocialDraftStatus.ARCHIVED) throw new ConflictException('Archived drafts cannot be rendered');
+    if (draft.status === SocialDraftStatus.APPROVED || draft.status === SocialDraftStatus.ARCHIVED) {
+      throw new ConflictException('Approved or archived drafts cannot be rendered; edit the draft first to return it to DRAFT status');
+    }
     const dimensions = draft.format === SocialCardFormat.SQUARE_1_1
       ? { width: 1080, height: 1080 }
       : { width: 1080, height: 1350 };

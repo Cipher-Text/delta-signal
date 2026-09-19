@@ -170,7 +170,7 @@ export class CommunityService {
       select: { authorId: true },
     });
     if (!post) throw new NotFoundException('Post not found');
-    if (actor.role !== 'ADMIN' && post.authorId !== actor.sub) {
+    if (actor.role !== 'ADMIN' && actor.role !== 'MODERATOR' && post.authorId !== actor.sub) {
       throw new ForbiddenException('You can only delete your own posts');
     }
 
@@ -224,7 +224,7 @@ export class CommunityService {
       select: { authorId: true, postId: true },
     });
     if (!comment || comment.postId !== postId) throw new NotFoundException('Comment not found');
-    if (actor.role !== 'ADMIN' && comment.authorId !== actor.sub) {
+    if (actor.role !== 'ADMIN' && actor.role !== 'MODERATOR' && comment.authorId !== actor.sub) {
       throw new ForbiddenException('You can only delete your own comments');
     }
 

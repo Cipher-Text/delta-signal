@@ -33,6 +33,8 @@ const endOfDay = (date: Date) => {
 
 const percent = (available: number, expected: number) => expected === 0 ? 0 : Math.round((available / expected) * 100);
 
+const QUALITY_RANK: Record<NationalSuggestion['quality'], number> = { HIGH: 0, REVIEW: 1, UNAVAILABLE: 2 };
+
 @Injectable()
 export class NationalRankingService {
   constructor(private readonly prisma: PrismaService) {}
@@ -62,7 +64,7 @@ export class NationalRankingService {
 
     return [rain, air, heat, rivers, alerts, reports, species]
       .filter((suggestion): suggestion is NationalSuggestion => suggestion !== null)
-      .sort((a, b) => b.quality.localeCompare(a.quality));
+      .sort((a, b) => QUALITY_RANK[a.quality] - QUALITY_RANK[b.quality]);
   }
 
   private async climateSummarySuggestion(now: Date, expected: number, cadence: NationalCadence) {
