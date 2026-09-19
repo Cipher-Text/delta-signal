@@ -65,6 +65,22 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
         'http://localhost:3000. Set it to your production frontend URL, e.g. "https://deltasignal.org"',
     );
   }
+  const appUrl = typeof config.APP_URL === 'string' ? config.APP_URL.trim() : '';
+  if (appUrl) {
+    try {
+      const parsed = new URL(appUrl);
+      if (parsed.hostname === '0.0.0.0' || parsed.hostname === '::' || parsed.hostname === '::1') {
+        errors.push(
+          'APP_URL must be a browser-reachable public URL; 0.0.0.0/:: are bind addresses, not hostnames',
+        );
+      }
+      if (nodeEnv === 'production' && parsed.protocol !== 'https:') {
+        errors.push('APP_URL must use https:// in production');
+      }
+    } catch {
+      errors.push('APP_URL is not a valid absolute URL, e.g. "https://deltasignal.org"');
+    }
+  }
 
   // ── Google OAuth (optional) ──────────────────────────────────────────────────
   // Both vars are required together — one without the other is a misconfiguration.

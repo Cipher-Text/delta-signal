@@ -117,4 +117,23 @@ describe('validateEnv', () => {
       ).not.toThrow();
     });
   });
+
+  describe('APP_URL', () => {
+    it('rejects a container bind address', () => {
+      expect(() => validateEnv({ ...VALID, APP_URL: 'https://0.0.0.0:3000' })).toThrow(
+        /browser-reachable public URL/,
+      );
+    });
+
+    it('requires HTTPS in production', () => {
+      expect(() =>
+        validateEnv({
+          ...VALID,
+          NODE_ENV: 'production',
+          CORS_ORIGIN: 'https://deltasignal.org',
+          APP_URL: 'http://deltasignal.org',
+        }),
+      ).toThrow(/APP_URL must use https/);
+    });
+  });
 });
