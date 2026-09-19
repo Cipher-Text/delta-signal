@@ -69,11 +69,24 @@ export default async function UpazilaPage(props: { params: Promise<{ id: string 
             {upazila.areaSqKm != null && ` · ${upazila.areaSqKm.toLocaleString()} km²`}
           </p>
         </div>
-        <span className={`aqi-badge ${aqi.css}`}>{aqi.label}</span>
+        <div style={{ display: 'grid', justifyItems: 'end', gap: 8 }}>
+          <span className={`aqi-badge ${aqi.css}`}>{aqi.label} · 30-day PM2.5</span>
+          <small className="muted">
+            {upazila.climateUpdatedAt ? `Climate updated ${relativeTime(upazila.climateUpdatedAt)}` : 'Climate update time unavailable'}
+          </small>
+        </div>
       </div>
 
-      {/* Primary climate metrics */}
-      <div className="metric-grid">
+      <nav className="location-section-nav" aria-label="Upazila sections">
+        <a href="#overview">Overview</a>
+        <a href="#climate">Climate</a>
+        <a href="#geography">Geography</a>
+      </nav>
+
+      <div className="location-section-stack">
+        <section id="overview" className="location-section" aria-labelledby="overview-heading">
+          <h2 id="overview-heading" className="sr-only">Upazila environmental overview</h2>
+          <div className="metric-grid">
         {upazila.avgTemp30d != null && (
           <div className="metric">
             <span>Avg temperature</span>
@@ -120,11 +133,24 @@ export default async function UpazilaPage(props: { params: Promise<{ id: string 
             </small>
           </div>
         )}
-      </div>
+          </div>
+        </section>
 
-      {/* Secondary climate metrics */}
-      {(upazila.avgWindSpeed30d != null || upazila.avgUvIndex30d != null || upazila.avgPm10_30d != null || upazila.avgCloudCover30d != null) && (
-        <div className="metric-grid">
+        <section id="climate" className="location-section" aria-labelledby="climate-heading">
+          <h2 id="climate-heading" className="sr-only">Climate detail</h2>
+          <article className="panel">
+            <div className="panel-header">
+              <div>
+                <h2>Climate detail</h2>
+                <p>
+                  {upazila.climateUpdatedAt
+                    ? `30-day rolling averages · Updated ${relativeTime(upazila.climateUpdatedAt)}`
+                    : '30-day rolling averages from OpenMeteo'}
+                </p>
+              </div>
+            </div>
+            {(upazila.avgWindSpeed30d != null || upazila.avgUvIndex30d != null || upazila.avgPm10_30d != null || upazila.avgCloudCover30d != null) ? (
+              <div className="metric-grid">
           {upazila.avgWindSpeed30d != null && (
             <div className="metric">
               <span>Avg wind speed</span>
@@ -159,11 +185,16 @@ export default async function UpazilaPage(props: { params: Promise<{ id: string 
               <small>30-day average</small>
             </div>
           )}
-        </div>
-      )}
+              </div>
+            ) : (
+              <p className="empty-state">Additional climate indicators are not available for this upazila yet.</p>
+            )}
+          </article>
+        </section>
 
-      {/* Unions grid */}
-      <article className="panel">
+        <section id="geography" className="location-section" aria-labelledby="geography-heading">
+          <h2 id="geography-heading" className="sr-only">Upazila geography</h2>
+          <article className="panel">
         <div className="panel-header">
           <div>
             <h2>Unions</h2>
@@ -181,13 +212,13 @@ export default async function UpazilaPage(props: { params: Promise<{ id: string 
             <div className="empty-state">No unions listed for this upazila.</div>
           )}
         </div>
-      </article>
+          </article>
+        </section>
+      </div>
 
-      {upazila.climateUpdatedAt && (
-        <p className="muted" style={{ fontSize: '0.8rem', marginTop: 8 }}>
-          Climate data updated {relativeTime(upazila.climateUpdatedAt)} · 30-day rolling average from OpenMeteo
-        </p>
-      )}
+      <p className="muted" style={{ fontSize: '0.8rem', marginTop: 12 }}>
+        Source: OpenMeteo forecast and air-quality data · Values are derived 30-day averages, not local station observations.
+      </p>
     </>
   );
 }

@@ -53,8 +53,6 @@ interface DailyForecast {
   uvIndexMax: number | null;
 }
 
-type DistrictTab = 'overview' | 'climate' | 'emissions' | 'activity';
-
 function aqiClass(pm25: number | null): { label: string; css: string } {
   if (pm25 === null) return { label: 'No data', css: 'aqi-none' };
   if (pm25 <= 12)    return { label: 'Good',       css: 'aqi-good' };
@@ -101,13 +99,10 @@ async function tryGet<T>(url: string, revalidate = 900): Promise<T | null> {
 export default async function DistrictPage(
   props: {
     params: Promise<{ id: string }>;
-    searchParams: Promise<{ tab?: string }>;
   }
 ) {
-  const searchParams = await props.searchParams;
   const params = await props.params;
   const { id } = params;
-  const tab = (searchParams.tab as DistrictTab) ?? 'overview';
 
   const district = await apiGet<DistrictDetail>(routes.locations.district(id), 900);
 
@@ -203,16 +198,17 @@ export default async function DistrictPage(
         <span className={`aqi-badge ${aqi.css}`}>{aqi.label}</span>
       </div>
 
-      {/* Tab navigation */}
-      <nav className="tab-nav" aria-label="District sections">
-        <Link href="?tab=overview" className={tab === 'overview' ? 'active' : ''}>Overview</Link>
-        <Link href="?tab=climate" className={tab === 'climate' ? 'active' : ''}>Climate</Link>
-        <Link href="?tab=activity" className={tab === 'activity' ? 'active' : ''}>Activity</Link>
+      <nav className="location-section-nav" aria-label="District sections">
+        <a href="#overview">Overview</a>
+        <a href="#hazards">Hazards</a>
+        <a href="#climate">Climate</a>
+        <a href="#activity">Activity</a>
+        <a href="#geography">Geography</a>
       </nav>
 
-      {/* ── Overview tab ─────────────────────────────────────────────────────── */}
-      {tab === 'overview' && (
-        <>
+      <div className="location-section-stack">
+        <section id="overview" className="location-section" aria-labelledby="overview-heading">
+          <h2 id="overview-heading" className="sr-only">Current conditions</h2>
           {/* Current weather */}
           {weather && (
             <div className="metric-grid">
@@ -245,7 +241,7 @@ export default async function DistrictPage(
             </div>
           )}
 
-          <div className="content-grid">
+          <div id="hazards" className="content-grid">
             {/* Air quality */}
             {airQuality && (
               <article className="panel">
@@ -312,9 +308,9 @@ export default async function DistrictPage(
               </article>
             )}
 
-            {/* Flood forecast */}
-            {floodToday && (
-              <article className="panel">
+          {/* Flood forecast */}
+          {floodToday && (
+            <article className="panel">
                 <div className="panel-header">
                   <div>
                     <h2>Flood Forecast</h2>
@@ -437,12 +433,10 @@ export default async function DistrictPage(
               </div>
             </article>
           )}
-        </>
-      )}
+        </section>
 
-      {/* ── Climate tab ──────────────────────────────────────────────────────── */}
-      {tab === 'climate' && (
-        <>
+        <section id="climate" className="location-section" aria-labelledby="climate-heading">
+          <h2 id="climate-heading" className="sr-only">Climate</h2>
           {/* 7-day forecast */}
           {forecast.length > 0 && (
             <article className="panel">
@@ -597,12 +591,10 @@ export default async function DistrictPage(
               </div>
             </article>
           )}
-        </>
-      )}
+        </section>
 
-      {/* ── Activity tab ─────────────────────────────────────────────────────── */}
-      {tab === 'activity' && (
-        <>
+        <section id="activity" className="location-section" aria-labelledby="activity-heading">
+          <h2 id="activity-heading" className="sr-only">Environmental activity</h2>
           {/* Biodiversity */}
           {occurrencesRes && occurrencesRes.data.length > 0 && (
             <article className="panel">
@@ -731,7 +723,7 @@ export default async function DistrictPage(
           )}
 
           {/* Upazilas */}
-          <article className="panel">
+          <article id="geography" className="panel">
             <div className="panel-header">
               <div>
                 <h2>Upazilas</h2>
@@ -747,8 +739,8 @@ export default async function DistrictPage(
               ))}
             </div>
           </article>
-        </>
-      )}
+        </section>
+      </div>
     </>
   );
 }

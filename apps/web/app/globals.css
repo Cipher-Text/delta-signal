@@ -1774,6 +1774,67 @@ a {
   color: var(--foreground);
 }
 
+.location-section-nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  margin: 20px 0;
+  padding: 8px 0;
+  background: color-mix(in srgb, var(--background) 92%, transparent);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: thin;
+}
+
+.location-section-nav a {
+  flex: 0 0 auto;
+  padding: 8px 12px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.location-section-nav a:hover,
+.location-section-nav a:focus-visible {
+  color: var(--primary);
+  background: var(--surface-2);
+}
+
+.location-section-stack {
+  display: grid;
+  gap: 18px;
+}
+
+.location-section {
+  display: grid;
+  gap: 18px;
+  scroll-margin-top: 72px;
+}
+
+.location-section > .panel + .panel {
+  margin-top: 0 !important;
+}
+
+.location-section .content-grid {
+  scroll-margin-top: 72px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .empty-state {
   padding: 32px 16px;
   text-align: center;

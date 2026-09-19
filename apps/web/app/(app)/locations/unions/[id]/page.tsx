@@ -69,13 +69,26 @@ export default async function UnionPage(props: { params: Promise<{ id: string }>
               </span>
             )}
           </h1>
-          <p>Most granular climate data available for this location</p>
+        <p>Most granular climate data available for this location · 30-day derived averages</p>
+      </div>
+        <div style={{ display: 'grid', justifyItems: 'end', gap: 8 }}>
+          <span className={`aqi-badge ${aqi.css}`}>{aqi.label} · 30-day PM2.5</span>
+          <small className="muted">
+            {union.climateUpdatedAt ? `Climate updated ${relativeTime(union.climateUpdatedAt)}` : 'Climate update time unavailable'}
+          </small>
         </div>
-        <span className={`aqi-badge ${aqi.css}`}>{aqi.label}</span>
       </div>
 
-      {/* Primary climate metrics */}
-      <div className="metric-grid">
+      <nav className="location-section-nav" aria-label="Union sections">
+        <a href="#overview">Overview</a>
+        <a href="#climate">Climate</a>
+        <a href="#context">Context</a>
+      </nav>
+
+      <div className="location-section-stack">
+        <section id="overview" className="location-section" aria-labelledby="overview-heading">
+          <h2 id="overview-heading" className="sr-only">Union environmental overview</h2>
+          <div className="metric-grid">
         {union.avgTemp30d != null && (
           <div className="metric">
             <span>Avg temperature</span>
@@ -122,10 +135,23 @@ export default async function UnionPage(props: { params: Promise<{ id: string }>
             </small>
           </div>
         )}
-      </div>
+          </div>
+        </section>
 
-      {/* Secondary climate metrics */}
-      <div className="metric-grid">
+        <section id="climate" className="location-section" aria-labelledby="climate-heading">
+          <h2 id="climate-heading" className="sr-only">Climate detail</h2>
+          <article className="panel">
+            <div className="panel-header">
+              <div>
+                <h2>Climate detail</h2>
+                <p>
+                  {union.climateUpdatedAt
+                    ? `30-day rolling averages · Updated ${relativeTime(union.climateUpdatedAt)}`
+                    : '30-day rolling averages from OpenMeteo'}
+                </p>
+              </div>
+            </div>
+            <div className="metric-grid">
         {union.avgWindSpeed30d != null && (
           <div className="metric">
             <span>Avg wind speed</span>
@@ -160,22 +186,25 @@ export default async function UnionPage(props: { params: Promise<{ id: string }>
             <small>30-day average</small>
           </div>
         )}
-      </div>
+            </div>
+          </article>
+        </section>
 
-      {/* District-level detail prompt */}
-      <div className="access-note">
+        <section id="context" className="location-section" aria-labelledby="context-heading">
+          <h2 id="context-heading" className="sr-only">Available environmental context</h2>
+          <div className="access-note">
         <strong>Weather and flood data available at district level</strong>
         <span>
           For current weather, air quality, flood forecasts, biodiversity, and community reports, visit the{' '}
           <Link href={`/locations/districts/${district.id}`}>{district.name} district page</Link>.
         </span>
+          </div>
+        </section>
       </div>
 
-      {union.climateUpdatedAt && (
-        <p className="muted" style={{ fontSize: '0.8rem', marginTop: 8 }}>
-          Climate data updated {relativeTime(union.climateUpdatedAt)} · 30-day rolling average from OpenMeteo
-        </p>
-      )}
+      <p className="muted" style={{ fontSize: '0.8rem', marginTop: 12 }}>
+        Source: OpenMeteo forecast and air-quality data · Union values are derived aggregates, not local station observations.
+      </p>
     </>
   );
 }

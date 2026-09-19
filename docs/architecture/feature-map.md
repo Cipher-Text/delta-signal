@@ -144,6 +144,11 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | Route | Data Source | Status |
 | --- | --- | --- |
 | `/` | Weather, metrics, datasets, reports, alerts, biodiversity, restoration | **Done** — all sections live or honest empty state |
+| `/locations` | Division climate summaries and administrative geography | **Done** — browsable Bangladesh location hierarchy |
+| `/locations/divisions/:id` | Division climate, alerts, weather/AQ coverage, flood signals, reports, observations, biodiversity, restoration, and district summaries | **Done** — division environmental overview built from existing public data |
+| `/locations/districts/:id` | Current weather, air quality, forecasts, flood/marine signals, alerts, climate, radiation, biodiversity, reports, observations, restoration, and upazilas | **Done** — continuous environmental overview with in-page section navigation |
+| `/locations/upazilas/:id` | Upazila 30-day climate detail and union geography | **Done** — continuous overview with climate provenance and in-page section navigation |
+| `/locations/unions/:id` | Union 30-day climate aggregates and district-level capability context | **Done** — continuous overview with climate provenance and in-page section navigation |
 | `/data` | `GET /datasets`, `GET /providers` | **Done** |
 | `/reports` | `GET /reports` | **Done** — public verified/resolved only; submission form; rows link to detail |
 | `/reports/:id` | `GET /reports/:id`, `/comments`, `/media` | **Done** — description, status history, comments, media |

@@ -1,5 +1,13 @@
 # Progress
 
+Current update (2026-09-19): Union detail pages now use the shared continuous location-page UX with sticky in-page navigation for overview, climate, and context. Climate scope is explicitly labelled as 30-day derived OpenMeteo aggregates, freshness is shown, and district-level environmental capabilities remain clearly linked rather than implied at union precision.
+
+Current update (2026-09-19): Upazila detail pages now use the same continuous location-page UX as district pages: sticky in-page navigation for overview, climate, and geography; explicit 30-day PM2.5 and freshness labels; climate-detail empty states; and clear OpenMeteo derived-data provenance. Existing union navigation remains unchanged.
+
+Current update (2026-09-19): District detail pages now use a continuous environmental overview instead of URL-driven tabs. Existing weather, air quality, flood, marine, alerts, climate, radiation, biodiversity, reports, observations, restoration, and upazila sections remain available in one scrollable page with sticky in-page anchors for Overview, Hazards, Climate, Activity, and Geography. No API or schema changes were required.
+
+Current update (2026-09-19): Division location pages now provide a broader environmental overview using existing public data structures: active alerts, weather and air-quality coverage, station-based flood signals, verified reports, observations, biodiversity occurrence totals, restoration totals, freshness context, and district navigation. No schema or API changes were required; the page filters existing public responses by the division's district IDs. The seasonal forecast integration remains deferred.
+
 Current update (2026-09-18): Public flood-risk strip now uses station-level latest forecasts, preserves river and district context, shows neutral unavailable/no-signal states, and labels OpenMeteo/GloFAS simulated discharge as non-official flood intelligence. The flood API latest-per-station query now orders by newest forecast date.
 
 Public map follow-up (2026-09-18): Flood markers now use the same high/elevated/within-range thresholds and expose station, river, district, forecast date, discharge ratio, and the non-official-warning limitation.
