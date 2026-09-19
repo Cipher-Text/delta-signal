@@ -17,7 +17,10 @@ COPY packages/contracts/package.json      ./packages/contracts/
 COPY packages/config/package.json         ./packages/config/
 COPY packages/ui/package.json             ./packages/ui/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile \
+    --fetch-retries=5 \
+    --fetch-timeout=120000 \
+    --network-concurrency=4
 
 COPY packages/   ./packages/
 COPY apps/web/   ./apps/web/

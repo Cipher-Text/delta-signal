@@ -22,7 +22,10 @@ COPY packages/contracts/package.json      ./packages/contracts/
 COPY packages/config/package.json         ./packages/config/
 COPY packages/ui/package.json             ./packages/ui/
 
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile \
+    --fetch-retries=5 \
+    --fetch-timeout=120000 \
+    --network-concurrency=4
 
 # Copy source after install so code edits don't bust the deps layer
 COPY packages/   ./packages/
@@ -59,7 +62,10 @@ COPY packages/shared/src/     ./packages/shared/src/
 COPY packages/database/src/   ./packages/database/src/
 COPY packages/database/prisma ./packages/database/prisma
 
-RUN pnpm install --frozen-lockfile --prod
+RUN pnpm install --frozen-lockfile --prod \
+    --fetch-retries=5 \
+    --fetch-timeout=120000 \
+    --network-concurrency=4
 
 # prisma CLI is a devDep so it's absent after --prod install. Install it globally
 # just long enough to generate the client for this platform, then remove it.
@@ -84,4 +90,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
 
 WORKDIR /repo/apps/api
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/apps/api/src/main.js"]
