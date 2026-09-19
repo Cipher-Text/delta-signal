@@ -4,7 +4,7 @@
 
 Implemented.
 
-Delta Signal fetches a 30-day daily river-discharge forecast for every seeded Bangladesh district. This is modelled GloFAS discharge context, not an official Bangladesh flood warning.
+Delta Signal fetches daily modelled GloFAS river-discharge forecasts for seeded Bangladesh monitoring stations. This is flood-intelligence context, not an official Bangladesh flood warning.
 
 ## Provider
 
@@ -16,8 +16,8 @@ Delta Signal fetches a 30-day daily river-discharge forecast for every seeded Ba
 | Endpoint | `https://flood-api.open-meteo.com/v1/flood` |
 | Current client | `apps/api/src/flood/flood-openmeteo.client.ts` |
 | Current scheduler | Initial sync on empty table; then every 6 hours at minute 30 |
-| Current storage | `FloodForecast` Prisma model |
-| Public routes | `GET /flood/forecast`, `GET /flood/forecast/:districtId` |
+| Current storage | `StationFloodForecast` Prisma model, linked to `WaterLevelStation` |
+| Public routes | `GET /flood/forecast`, `GET /flood/forecast/station/:stationId`, `GET /flood/forecast/district/:districtId` |
 
 ## Available Data
 
@@ -66,7 +66,7 @@ Candidate use cases:
 ## Implementation Notes
 
 - The `flood` module is separate from `weather`, with its own client, service, scheduler, controller, and DTO.
-- District coordinates are the initial monitoring points. OpenMeteo may select the nearest supported river/grid cell, so river-specific coordinates should be added later for high-value basins.
+- Water-level station coordinates are the monitoring points. OpenMeteo may select the nearest supported river/grid cell, so river-specific coordinates should be added later for high-value basins.
 - Each scheduler run creates an `IngestionJob` for the shared `OpenMeteo` provider.
 - The dataset catalog includes `OpenMeteo Flood Forecasts` under `WATER`.
 - Keep official alert authority separate from model-derived discharge data.

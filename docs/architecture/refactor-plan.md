@@ -1,5 +1,7 @@
 # Refactor Plan
 
+> Historical plan. The refactor and foundation steps described here have been implemented. Use [feature-map.md](feature-map.md), [modules.md](modules.md), and [../progress.md](../progress.md) for the current architecture and status.
+
 Delta Signal should not copy Open Nature file-for-file. The refactor should carry over proven feature logic and discard mock-only coupling.
 
 ## Step 1: Documentation and Boundaries
@@ -40,4 +42,3 @@ Delta Signal should not copy Open Nature file-for-file. The refactor should carr
 - Geospatial validation.
 - Derived metrics.
 - Long-running ingestion transforms.
-

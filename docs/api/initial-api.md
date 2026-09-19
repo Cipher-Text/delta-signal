@@ -1,4 +1,6 @@
-# Initial API
+# Initial API Baseline
+
+> Historical planning document. For the current API surface, use [backend-api-links.md](backend-api-links.md).
 
 The first API should reproduce Open Nature's useful backend surface while preparing for the broader Delta Signal domain model.
 
@@ -65,4 +67,3 @@ PATCH /api/v1/alerts/:id
 ## Contract Rule
 
 Every route must have a schema in `packages/contracts` before frontend integration.
-

@@ -3,6 +3,8 @@
 Audit date: 2026-09-02  
 Scope: `apps/web` public-facing collection routes and collection-like sections. Admin routes, dashboard-only lists, private profile/settings lists, auth screens, and detail-only content are excluded unless a detail page contains a material public collection that affects list UX.
 
+Follow-up note: division, district, upazila, and union pages received a shared continuous non-tabbed UX revision on 2026-09-19. Location-specific findings below should be revalidated before this audit is treated as current.
+
 Evidence reviewed: `apps/web/app`, `apps/web/components`, `apps/web/lib/api.ts`, `apps/web/app/globals.css`, `apps/web/components/app-sidebar.tsx`, `docs/access-model.md`, `docs/architecture/feature-map.md`, and `docs/PUBLIC_LIST_FILTER_AUDIT.md`.
 
 ## 1. Executive Summary

@@ -1,5 +1,7 @@
 # Ingestion Plan
 
+> Historical planning and source-analysis document. Provider-specific current behavior belongs in `docs/integrations/`; current implementation status belongs in `docs/progress.md` and `docs/architecture/modules.md`.
+
 Source analysis: `open-nature/apps/backend` (partial implementation, Spring Boot) and `open-nature-backend2` (entity model only). This document captures what was learned and translates it into a concrete NestJS/Prisma plan for delta-signal. No Java code will be ported — logic and patterns will be re-implemented in TypeScript.
 
 ---
@@ -58,7 +60,7 @@ Added these well-designed entities not yet in delta-signal:
 
 ## What delta-signal already has (do not duplicate)
 
-This table reflects the state at the time of original planning. The schema now has 35 models. See `docs/architecture/data-model.md` for the full current model list.
+This table reflects the state at the time of original planning. The schema now has 61 models and 32 enums. See `docs/architecture/data-model.md` for the full current model list.
 
 | Model | Module | Notes |
 | --- | --- | --- |
@@ -156,7 +158,7 @@ Two further sources are unscheduled:
 
 - **iNaturalist** occurrence ingestion. `apps/api/src/datasets/seed/catalog.ts` already lists iNaturalist as a dataset source, so the catalog advertises a source with no ingestion behind it.
 - **OpenWeatherMap** / **AirNow** as additional weather and AQ coverage.
-- Additional OpenMeteo APIs now documented in `docs/integrations/`: Flood is implemented; Climate, Marine Weather, and Satellite Radiation remain candidates.
+- Additional OpenMeteo APIs now documented in `docs/integrations/`: Flood, operational Climate summaries, Marine Weather, and Satellite Radiation are implemented; Seasonal Forecast remains deferred.
 
 ---
 

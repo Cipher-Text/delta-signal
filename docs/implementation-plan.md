@@ -1,5 +1,7 @@
 # Implementation Plan
 
+> Historical implementation record. Completed milestones and design deviations are retained for traceability. For current state, use [progress.md](progress.md), [roadmap.md](roadmap.md), and [architecture/feature-map.md](architecture/feature-map.md).
+
 This plan defines the recommended build order. It is intentionally more concrete than the roadmap.
 
 ## Principle
@@ -10,7 +12,7 @@ Build persistence and ingestion before features. Real environmental data in the 
 
 ## ~~Milestone 1: Frontend Public Page~~ — Done
 
-`apps/web` — 8 React components, full CSS design system, static seed data, responsive, runs at port 3000.
+`apps/web` — initial public UI foundation; the application now uses live API-backed Server Components with explicit empty/error fallbacks. The original static-seed implementation is retained here as historical context.
 
 ## ~~Milestone 2: Shared Types and Contracts~~ — Done
 
@@ -24,7 +26,7 @@ Build persistence and ingestion before features. Real environmental data in the 
 
 ## ~~Milestone 4: Database Foundation~~ — Done
 
-`packages/database` — Initial schema established and auto-seeding wired. Current state: 1 migration (`20260826150548_init`), 35 models, 20 enums. PostgreSQL on port 5432. Auto-seed on boot via OnModuleInit hooks (`LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `SeedService`).
+`packages/database` — Initial schema established and auto-seeding wired. Current state: 14 migrations, 61 models, 32 enums. PostgreSQL on port 5432. Auto-seed on boot via OnModuleInit hooks (`LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `SeedService`).
 
 ---
 
@@ -85,7 +87,7 @@ Also add to `District` model: `lat Float?` and `lng Float?` for OpenMeteo centro
 
 Implemented 2026-08-16, with a smaller scope than originally planned here. Full rationale for each deviation: `docs/ingestion-plan.md` → "Implementation status".
 
-**Target (actual):** `apps/api/src/weather/` — a self-contained module, not `apps/api/src/ingestion/` as originally scoped. `IngestionModule` remains a stub for future generic job bookkeeping.
+**Target (actual):** `apps/api/src/weather/` — a self-contained module, not `apps/api/src/ingestion/` as originally scoped. The shared `IngestionModule` now tracks provider job lifecycle records for scheduled syncs.
 
 ### Directory structure (actual)
 
@@ -120,7 +122,7 @@ apps/api/src/weather/
 
 - On scheduler tick, weather and air quality data is fetched for all 64 districts and saved to their typed tables. ✓
 - Every HTTP call writes an `ApiCallLog` row. — **Not done**, deliberately skipped (see deviations above).
-- `IngestionJob` records track run lifecycle. — **Not done**, deliberately skipped.
+- `IngestionJob` records track run lifecycle. — **Done later**, via the shared `IngestionService` added on 2026-08-24; the earlier implementation did not yet include it.
 - Latest readings queryable via API. ✓ — verified live against the real OpenMeteo API and local Postgres.
 
 ---
@@ -288,7 +290,7 @@ Basic internal console for the operational views most needed first.
 
 ## ~~Milestone 13: Frontend Data Integration~~ — Done
 
-Replace static seed data in `apps/web` with live API calls.
+Historical objective: replace the initial static seed data in `apps/web` with live API calls. Completed; the implementation details are retained below for traceability.
 
 **Target:** `apps/web`
 
@@ -297,7 +299,7 @@ Replace static seed data in `apps/web` with live API calls.
 ### Tasks
 
 1. ~~Add API client utility (typed fetch wrapper using contracts package).~~ Done — `apps/web/lib/api.ts`. Simpler than "typed fetch wrapper using contracts package" implies: a single `apiGet<T>(path)` helper (server-only `API_URL` env var, no `NEXT_PUBLIC_` prefix needed since nothing runs client-side yet), with route paths and response types imported from `packages/contracts` at the call site rather than baked into the helper itself.
-2. ~~Replace `lib/static-data.ts` calls with `fetch('/api/v1/...')` in Server Components.~~ Done (2026-08-19) — `map-section.tsx` (2026-08-16), `metrics-section.tsx` (2026-08-19), `dataset-preview.tsx`, `reports-alerts-section.tsx`, and `biodiversity-restoration.tsx` (all 2026-08-19) all live, each with a fallback to static content if the API is unreachable. `community-section.tsx` has no backend to wire to at all (no Community API module is planned), so it shows an honest empty state instead, matching the `/community` page's own precedent — confirmed with the user. **Real bug caught and fixed while building this**: an early draft of the fallback logic treated a genuinely empty-but-successful response the same as an unreachable API, silently substituting fake static content for a real empty list. Fixed to only fall back on an actual fetch failure; a real empty list now renders an honest `.empty-state` message. See `docs/progress.md` "Homepage Preview Sections Wired" for full detail.
+2. ~~Replace `lib/static-data.ts` calls with `fetch('/api/v1/...')` in Server Components.~~ Done (2026-08-19) — live homepage sections use API-backed Server Components with fallback only when the API is unreachable. The Community module and `/community` page were implemented later on 2026-09-01. See `docs/progress.md` "Homepage Preview Sections Wired" and "Community module" for detail.
 3. Add `SWR` or React Query for client-side refreshing data (map, live alerts). — Resolved as not needed: every live homepage section is a Server Component using Next.js's built-in `fetch` cache (`revalidate: 900`) rather than client-side polling. Revisit if a component ever needs to refresh without a full page reload.
 4. ~~Wire auth — login/register flow, session persistence, role-aware nav.~~ Done (2026-08-16), with one scope note: "role-aware nav" only distinguishes guest vs. any logged-in user, not per-role nav (moderator/admin nav is a Phase 3+ concern). Session persistence is httpOnly cookies rather than a client-side store — the natural fit given every existing component was already a Server Component. See `docs/progress.md` "Public Auth Flow Wiring" for the full design (middleware-based token refresh, Server Actions for login/register/logout, new `/login`/`/register`/`/profile` routes). `/profile` itself shipped as a bare account card in that pass — rebuilt 2026-08-17 to match `mocks/frontend-design/profile.html`'s actual sidebar app-shell design; see `docs/progress.md` "Profile Page Mockup Fidelity".
 5. ~~Wire report submission form to `POST /reports`.~~ Done (2026-08-17) — see `docs/progress.md` "Report Submission Form". Form fields matched to the real `CreateReportDto` rather than the mock: added a required Title field, replaced free-text location with a real District `<select>`, dropped the mock's fake "Severity estimate" field, omitted photo/video attachment (no media backend exists). Surfaced and fixed a second validation bug along the way: `districtId` was decorated `@IsUUID()` on both `CreateReportDto` and `CreateAlertDto`, but this schema only generates CUIDs — any submission specifying a real district always failed. Verified live via a full browser click-through plus the admin review workflow (`SUBMITTED → UNDER_REVIEW → VERIFIED`).
