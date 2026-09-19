@@ -23,12 +23,15 @@ const AIR_QUALITY_PARAMS =
 const HOURLY_FORECAST_DAYS = 3;
 const DAILY_FORECAST_DAYS = 7;
 const MAX_ATTEMPTS = 3;
-const RETRY_DELAYS_MS = [500, 1500];
+const RETRY_DELAYS_MS = [2_000, 5_000];
+const MIN_REQUEST_INTERVAL_MS = 250;
 const FETCH_TIMEOUT_MS = 30_000;
 
 @Injectable()
 export class WeatherOpenMeteoClient {
   private readonly logger = new Logger(WeatherOpenMeteoClient.name);
+  private requestQueue = Promise.resolve();
+  private lastRequestAt = 0;
 
   fetchCurrent(lat: number, lng: number): Promise<OpenMeteoCurrentResponse> {
     const url = `${FORECAST_BASE_URL}?latitude=${lat}&longitude=${lng}&current=${CURRENT_PARAMS}&timezone=auto`;
@@ -85,24 +88,63 @@ export class WeatherOpenMeteoClient {
   private async getJson<T>(url: string): Promise<T> {
     let lastError: unknown;
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+      await this.waitForRequestSlot();
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
       try {
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timer);
         if (!response.ok) {
-          throw new Error(`OpenMeteo request failed: ${response.status} ${response.statusText}`);
+          const retryAfterMs = this.getRetryAfterMs(response);
+          const error = new Error(`OpenMeteo request failed: ${response.status} ${response.statusText}`);
+          Object.assign(error, { status: response.status, retryAfterMs });
+          throw error;
         }
         return (await response.json()) as T;
       } catch (err) {
         clearTimeout(timer);
         lastError = err;
         if (attempt < MAX_ATTEMPTS - 1) {
-          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+          const retryAfterMs = this.getErrorRetryAfterMs(err);
+          const delay = Math.max(retryAfterMs ?? 0, RETRY_DELAYS_MS[attempt]);
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
-    this.logger.error(`Giving up on ${url} after ${MAX_ATTEMPTS} attempts: ${String(lastError)}`);
+    this.logger.error(
+      `Giving up on ${new URL(url).pathname} after ${MAX_ATTEMPTS} attempts: ${String(lastError)}`,
+    );
     throw lastError;
+  }
+
+  /** Serialize requests from all schedulers in this process to avoid burst rate limits. */
+  private async waitForRequestSlot(): Promise<void> {
+    let release!: () => void;
+    const turn = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const previous = this.requestQueue;
+    this.requestQueue = previous.then(async () => {
+      const waitMs = MIN_REQUEST_INTERVAL_MS - (Date.now() - this.lastRequestAt);
+      if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
+      this.lastRequestAt = Date.now();
+      release();
+    });
+    await turn;
+  }
+
+  private getRetryAfterMs(response: Response): number | undefined {
+    const value = response.headers.get('retry-after');
+    if (!value) return undefined;
+    const seconds = Number(value);
+    if (Number.isFinite(seconds)) return Math.max(0, seconds * 1_000);
+    const date = Date.parse(value);
+    return Number.isNaN(date) ? undefined : Math.max(0, date - Date.now());
+  }
+
+  private getErrorRetryAfterMs(error: unknown): number | undefined {
+    if (!error || typeof error !== 'object') return undefined;
+    const retryAfterMs = (error as { retryAfterMs?: unknown }).retryAfterMs;
+    return typeof retryAfterMs === 'number' && Number.isFinite(retryAfterMs) ? retryAfterMs : undefined;
   }
 }

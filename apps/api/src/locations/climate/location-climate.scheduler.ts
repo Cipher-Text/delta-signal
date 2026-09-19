@@ -23,8 +23,8 @@ export class LocationClimateScheduler implements OnModuleInit {
     void this.dailyClimateSync();
   }
 
-  /** Run once a day at midnight — fetch union-level climate and aggregate bottom-up. */
-  @Cron('0 0 0 * * *')
+  /** Run once a day after the midnight weather jobs have had time to finish. */
+  @Cron('0 0 1 * * *')
   dailyClimateSync() {
     return withCronLock(this.prisma, this.logger, CRON_LOCK_KEYS.LOCATION_CLIMATE, async () => {
       this.logger.log('Starting daily union climate sync…');

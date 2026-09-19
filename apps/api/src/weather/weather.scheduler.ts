@@ -16,7 +16,8 @@ export class WeatherScheduler {
     private readonly prisma: PrismaService,
   ) {}
 
-  @Cron('0 */15 * * * *')
+  /** Open-Meteo current values are hourly-scale; avoid spending quota on 15-minute duplicates. */
+  @Cron('0 5 * * * *')
   syncCurrentWeather() {
     return withCronLock(this.prisma, this.logger, CRON_LOCK_KEYS.WEATHER_CURRENT, async () => {
       const providerId = await this.ingestionService.findProviderIdByName(OPENMETEO_PROVIDER_NAME);
