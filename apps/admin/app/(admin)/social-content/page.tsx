@@ -34,14 +34,24 @@ type OccurrenceOption = { id: string; species: { canonicalName: string }; distri
 type StationOption = { station: { id: string; name: string; riverName: string; districtId: string | null } };
 
 const TYPES = [
-  ['CURRENT_WEATHER', 'Current Weather'],
-  ['WEATHER_FORECAST', 'Weather Forecast'],
-  ['RIVER_SIGNAL', 'River / Discharge Signal'],
-  ['ENVIRONMENTAL_ALERT', 'Environmental Alert'],
-  ['BIODIVERSITY_OBSERVATION', 'Biodiversity Observation'],
+  ['CURRENT_WEATHER', 'Today in Bangladesh — current conditions'],
+  ['WEATHER_FORECAST', 'Rain Watch — forecast conditions'],
+  ['RIVER_SIGNAL', 'River Watch — station/discharge signal'],
+  ['ENVIRONMENTAL_ALERT', 'Alert Explainer — active alert'],
+  ['BIODIVERSITY_OBSERVATION', 'Wild Bangladesh — species observation'],
 ] as const;
 
 function label(value: string) { return value.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase()); }
+const SERIES_LABELS: Record<string, string> = {
+    CURRENT_WEATHER: 'Today in Bangladesh',
+    WEATHER_FORECAST: 'Rain Watch',
+    RIVER_SIGNAL: 'River Watch',
+    ENVIRONMENTAL_ALERT: 'Alert Explainer',
+    BIODIVERSITY_OBSERVATION: 'Wild Bangladesh',
+};
+function seriesLabel(value: string) {
+  return SERIES_LABELS[value] ?? label(value);
+}
 function date(value: string | null) { return value ? new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
 
 export default async function SocialContentPage(props: { searchParams: Promise<{ success?: string; error?: string }> }) {
@@ -83,7 +93,7 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
     <div className="social-draft-list">
       {drafts.length === 0 ? <div className="empty-state">No social drafts yet.</div> : drafts.map((draft) => <article className="social-draft-card" key={draft.id}>
         <div className="social-draft-main">
-          <div className="social-draft-heading"><span className={`tag ${draft.status === 'APPROVED' ? 'tag-success' : draft.status === 'ARCHIVED' ? 'tag-muted' : 'tag-info'}`}>{label(draft.status)}</span><span className="badge badge-info">{label(draft.type)}</span><h2>{draft.headline}</h2></div>
+          <div className="social-draft-heading"><span className={`tag ${draft.status === 'APPROVED' ? 'tag-success' : draft.status === 'ARCHIVED' ? 'tag-muted' : 'tag-info'}`}>{label(draft.status)}</span><span className="badge badge-info">{seriesLabel(draft.type)}</span><h2>{draft.headline}</h2></div>
           <p className="social-draft-meta">{draft.district?.name ?? 'Bangladesh'} · {draft.sourceLabel} · source as of {date(draft.sourceObservedAt)} · {draft.format === 'SQUARE_1_1' ? '1:1' : '4:5'}</p>
           <form action={updateSocialDraftAction} className="social-edit-form"><input type="hidden" name="id" value={draft.id} /><div className="form-row"><div className="field field-grow"><label>Headline</label><input name="headline" defaultValue={draft.headline} className="filter-input" /></div><div className="field field-fixed"><label>Language</label><select name="locale" defaultValue={draft.locale} className="role-select"><option value="en">English</option><option value="bn">Bengali</option></select></div><div className="field field-fixed"><label>Format</label><select name="format" defaultValue={draft.format} className="role-select"><option value="PORTRAIT_4_5">4:5</option><option value="SQUARE_1_1">1:1</option></select></div></div><textarea name="summary" defaultValue={draft.summary ?? ''} rows={2} className="note-input" placeholder="Summary" /><textarea name="caption" defaultValue={draft.caption ?? ''} rows={2} className="note-input" placeholder="Caption" /><input name="disclaimer" defaultValue={draft.disclaimer ?? ''} className="filter-input" placeholder="Disclaimer" /><div className="form-actions"><button className="btn btn-secondary" type="submit" disabled={draft.status === 'APPROVED' || draft.status === 'ARCHIVED'}>Save edits</button></div></form>
           {draft.renderedAssets[0] && <div className="social-preview">
