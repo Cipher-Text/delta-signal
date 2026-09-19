@@ -19,7 +19,8 @@ export async function createSocialDraftAction(formData: FormData) {
   try {
     await apiPost('/api/v1/social-content/drafts', {
       type: String(formData.get('type') ?? ''),
-      districtId: String(formData.get('districtId') ?? ''),
+      districtId: String(formData.get('districtId') ?? '').trim() || undefined,
+      cadence: String(formData.get('cadence') ?? 'DAILY'),
       sourceId: String(formData.get('sourceId') ?? '').trim() || undefined,
       stationId: String(formData.get('stationId') ?? '').trim() || undefined,
       format: String(formData.get('format') ?? 'PORTRAIT_4_5'),

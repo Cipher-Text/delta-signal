@@ -191,7 +191,7 @@ Remaining gap: no SMS channel (EMAIL only). Government agency and emergency broa
 
 ### 6e. Reviewed social content cards — Done (2026-09-19)
 
-Phase 1 manual card creation is implemented in `social-content` and `apps/admin`: source-backed drafts for current weather, weather forecast, river/discharge signal, environmental alerts, and biodiversity observations; editable copy; deterministic 4:5/1:1 SVG rendering; S3/MinIO asset storage; approval, download, and manual external-publication marking; DB-backed permissions and audit events. The additive Prisma migration is ready to apply. Automatic suggestions, rule evaluation, scheduling, and Meta publishing remain future phases.
+Phase 1 manual card creation is implemented in `social-content` and `apps/admin`: source-backed drafts for current weather, weather forecast, river/discharge signal, environmental alerts, and biodiversity observations; editable copy; deterministic 4:5/1:1 SVG rendering; S3/MinIO asset storage; approval, download, and manual external-publication marking; DB-backed permissions and audit events. A live nationwide ranking suggestion endpoint and Admin Suggested Posts panel now provide on-demand daily/weekly/monthly review candidates from existing weather, air-quality, river, alert, report, and biodiversity data. Suggestions are not yet persisted, scheduled, or automatically published. The additive Prisma migration is ready to apply. Meta publishing remains future work.
 
 Exit criteria:
 

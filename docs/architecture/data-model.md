@@ -2,7 +2,7 @@
 
 Delta Signal uses PostgreSQL as the primary database. The Prisma schema lives at `packages/database/prisma/schema.prisma`. The Prisma client is regenerated via `pnpm run db:generate` from the `packages/database` directory.
 
-Current schema state: **63 models, 35 enums, 15 migration files**. The additive social-content migration is ready to apply; the existing database remains at the prior migration until `pnpm db:migrate` is run.
+Current schema state: **63 models, 36 enums, 16 migration files**. The additive social-content migrations are ready to apply; the existing database remains at the prior migration until `pnpm db:migrate` is run.
 
 ## Enums
 
@@ -40,7 +40,7 @@ Current schema state: **63 models, 35 enums, 15 migration files**. The additive 
 | `NotificationChannel` | `EMAIL` |
 | `DeliveryStatus` | `PENDING SENT FAILED` |
 | `AuditAction` | Existing auth, report, alert, dataset, observation, restoration, permission, facility, company, and community actions plus `SOCIAL_DRAFT_CREATE SOCIAL_DRAFT_UPDATE SOCIAL_CARD_RENDER SOCIAL_DRAFT_APPROVE SOCIAL_DRAFT_ARCHIVE SOCIAL_CARD_DOWNLOAD SOCIAL_PUBLICATION_MARK` |
-| `SocialContentType` | `CURRENT_WEATHER WEATHER_FORECAST RIVER_SIGNAL ENVIRONMENTAL_ALERT BIODIVERSITY_OBSERVATION` |
+| `SocialContentType` | `CURRENT_WEATHER WEATHER_FORECAST RIVER_SIGNAL ENVIRONMENTAL_ALERT BIODIVERSITY_OBSERVATION NATIONAL_RAIN_WATCH NATIONAL_AIR_QUALITY_WATCH NATIONAL_HEAT_WATCH NATIONAL_RIVER_WATCH NATIONAL_ALERT_WATCH NATIONAL_COMMUNITY_SIGNALS NATIONAL_BIODIVERSITY` |
 | `SocialDraftStatus` | `DRAFT RENDERED APPROVED ARCHIVED` |
 | `SocialCardFormat` | `PORTRAIT_4_5 SQUARE_1_1` |
 

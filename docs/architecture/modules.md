@@ -368,10 +368,11 @@ Status: implemented service + read controller. `WeatherScheduler`, `Biodiversity
 
 ## social-content ✓
 
-Owns the Phase 1 human-reviewed social-card workflow. It reads existing weather, forecast, river-discharge, alert, biodiversity, and district records; it does not ingest new environmental data or publish to Meta platforms.
+Owns the Phase 1 human-reviewed social-card workflow plus live nationwide ranking suggestions. It reads existing weather, air-quality, forecast, river-discharge, alert, verified-report, biodiversity, and district records; it does not ingest new environmental data or publish to Meta platforms.
 
 | Method | Path | Access |
 | --- | --- | --- |
+| GET | `/social-content/suggestions/national?cadence=DAILY|WEEKLY|MONTHLY` | `social_content.create` |
 | GET | `/social-content/drafts` | `social_content.create` |
 | GET | `/social-content/drafts/:id` | `social_content.create` |
 | POST | `/social-content/drafts` | `social_content.create` |
@@ -382,7 +383,7 @@ Owns the Phase 1 human-reviewed social-card workflow. It reads existing weather,
 | GET | `/social-content/drafts/:id/download` | `social_content.download` |
 | POST | `/social-content/drafts/:id/mark-published` | `social_content.approve` |
 
-Supported types are `CURRENT_WEATHER`, `WEATHER_FORECAST`, `RIVER_SIGNAL`, `ENVIRONMENTAL_ALERT`, and `BIODIVERSITY_OBSERVATION`. `SocialPostDraft` stores the source snapshot and source timestamp. `SocialRenderedAsset` stores the content hash, dimensions, render version, and S3/MinIO object URL. The renderer emits deterministic SVG in 1080×1350 (4:5) or 1080×1080 (1:1). Approval requires a rendered asset; editing resets a draft to `DRAFT`. All mutations write social `AuditEvent` actions.
+Supported draft types include district-level `CURRENT_WEATHER`, `WEATHER_FORECAST`, `RIVER_SIGNAL`, `ENVIRONMENTAL_ALERT`, and `BIODIVERSITY_OBSERVATION`, plus nationwide ranking types for rain, modeled air quality, heat, rivers, alerts, verified community signals, and biodiversity. The national suggestion resolver ranks existing records for daily, weekly, or monthly review windows and returns coverage/freshness metadata; it is currently live/on-demand and not persisted. `SocialPostDraft` stores the source snapshot and source timestamp. `SocialRenderedAsset` stores the content hash, dimensions, render version, and S3/MinIO object URL. The renderer emits deterministic SVG in 1080×1350 (4:5) or 1080×1080 (1:1). Approval requires a rendered asset; editing resets a draft to `DRAFT`. All mutations write social `AuditEvent` actions.
 
 ## permissions ✓
 

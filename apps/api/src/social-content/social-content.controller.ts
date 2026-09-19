@@ -5,11 +5,23 @@ import { Permissions } from '../common/decorators/permissions.decorator';
 import { CreateSocialDraftDto } from './dto/create-social-draft.dto';
 import { MarkPublishedDto } from './dto/mark-published.dto';
 import { UpdateSocialDraftDto } from './dto/update-social-draft.dto';
+import { NationalCadence, NationalRankingService } from './national-ranking.service';
 import { SocialContentService } from './social-content.service';
 
 @Controller('social-content')
 export class SocialContentController {
-  constructor(private readonly service: SocialContentService) {}
+  constructor(
+    private readonly service: SocialContentService,
+    private readonly ranking: NationalRankingService,
+  ) {}
+
+  @Get('suggestions/national')
+  @Permissions('social_content.create')
+  nationalSuggestions(@Query('cadence') cadence?: string) {
+    const supported: NationalCadence[] = ['DAILY', 'WEEKLY', 'MONTHLY'];
+    const value = (cadence ?? 'DAILY').toUpperCase() as NationalCadence;
+    return this.ranking.getSuggestions(supported.includes(value) ? value : 'DAILY');
+  }
 
   @Get('drafts')
   @Permissions('social_content.create')

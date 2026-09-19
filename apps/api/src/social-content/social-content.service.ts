@@ -14,6 +14,7 @@ import type { JwtPayload } from '../common/decorators/current-user.decorator';
 import { CreateSocialDraftDto } from './dto/create-social-draft.dto';
 import { UpdateSocialDraftDto } from './dto/update-social-draft.dto';
 import { MarkPublishedDto } from './dto/mark-published.dto';
+import { NationalRankingService } from './national-ranking.service';
 
 const DRAFT_INCLUDE = {
   district: { select: { id: true, name: true, bnName: true, division: { select: { name: true } } } },
@@ -38,6 +39,13 @@ const seriesLabelFor = (type: SocialContentType): string => {
     case SocialContentType.RIVER_SIGNAL: return 'RIVER WATCH';
     case SocialContentType.ENVIRONMENTAL_ALERT: return 'ALERT EXPLAINER';
     case SocialContentType.BIODIVERSITY_OBSERVATION: return 'WILD BANGLADESH';
+    case SocialContentType.NATIONAL_RAIN_WATCH: return 'BANGLADESH RAIN WATCH';
+    case SocialContentType.NATIONAL_AIR_QUALITY_WATCH: return 'BANGLADESH AIR QUALITY WATCH';
+    case SocialContentType.NATIONAL_HEAT_WATCH: return 'BANGLADESH HEAT WATCH';
+    case SocialContentType.NATIONAL_RIVER_WATCH: return 'RIVER WATCH BANGLADESH';
+    case SocialContentType.NATIONAL_ALERT_WATCH: return 'BANGLADESH ALERT WATCH';
+    case SocialContentType.NATIONAL_COMMUNITY_SIGNALS: return 'COMMUNITY SIGNALS BANGLADESH';
+    case SocialContentType.NATIONAL_BIODIVERSITY: return 'WILD BANGLADESH';
     default: return String(type).replaceAll('_', ' ');
   }
 };
@@ -48,6 +56,13 @@ const evidenceLabelFor = (type: SocialContentType): string => {
     case SocialContentType.RIVER_SIGNAL: return 'FORECAST';
     case SocialContentType.ENVIRONMENTAL_ALERT: return 'ALERT';
     case SocialContentType.BIODIVERSITY_OBSERVATION: return 'GBIF OBSERVATION';
+    case SocialContentType.NATIONAL_ALERT_WATCH: return 'ALERT';
+    case SocialContentType.NATIONAL_COMMUNITY_SIGNALS: return 'VERIFIED REPORTS';
+    case SocialContentType.NATIONAL_BIODIVERSITY: return 'GBIF OBSERVATION';
+    case SocialContentType.NATIONAL_RAIN_WATCH:
+    case SocialContentType.NATIONAL_AIR_QUALITY_WATCH:
+    case SocialContentType.NATIONAL_HEAT_WATCH:
+    case SocialContentType.NATIONAL_RIVER_WATCH: return 'NATIONAL DATA';
     default: return 'MODEL DATA';
   }
 };
@@ -66,6 +81,7 @@ export class SocialContentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly ranking: NationalRankingService,
   ) {}
 
   list(status?: SocialDraftStatus) {
@@ -201,6 +217,31 @@ export class SocialContentService {
   }
 
   private async loadSource(dto: CreateSocialDraftDto) {
+    if (dto.type.startsWith('NATIONAL_')) {
+      const cadence = dto.cadence ?? 'DAILY';
+      const suggestions = await this.ranking.getSuggestions(cadence);
+      const seriesByType: Record<string, string> = {
+        NATIONAL_RAIN_WATCH: 'RAIN_WATCH',
+        NATIONAL_AIR_QUALITY_WATCH: 'AIR_QUALITY_WATCH',
+        NATIONAL_HEAT_WATCH: 'HEAT_WATCH',
+        NATIONAL_RIVER_WATCH: 'RIVER_WATCH',
+        NATIONAL_ALERT_WATCH: 'ALERT_WATCH',
+        NATIONAL_COMMUNITY_SIGNALS: 'COMMUNITY_SIGNALS',
+        NATIONAL_BIODIVERSITY: 'WILD_BANGLADESH',
+      };
+      const suggestion = suggestions.find((item) => item.series === seriesByType[dto.type]);
+      if (!suggestion) throw new BadRequestException(`No ${cadence.toLowerCase()} data is currently available for this national card`);
+      return {
+        sourceId: suggestion.id,
+        sourceLabel: suggestion.sourceLabel,
+        observedAt: new Date(suggestion.windowEnd),
+        snapshot: { kind: dto.type, series: suggestion.series, cadence, headline: suggestion.headline, reason: suggestion.reason, coverage: suggestion.coverage, ranking: suggestion.sourceSnapshot },
+        defaultHeadline: suggestion.headline,
+        defaultSummary: suggestion.reason,
+        defaultDisclaimer: suggestion.series === 'AIR_QUALITY_WATCH' ? 'Modeled PM2.5 values are not direct ground-station measurements or an official AQI.' : 'National ranking generated from the available source data for the stated time window.',
+      };
+    }
+    if (!dto.districtId) throw new BadRequestException('A district is required for district-level cards');
     const district = await this.prisma.district.findUnique({ where: { id: dto.districtId }, select: { id: true, name: true, bnName: true } });
     if (!district) throw new NotFoundException('District not found');
     const base = { district: { id: district.id, name: district.name, bnName: district.bnName } };
@@ -237,7 +278,12 @@ export class SocialContentService {
     const source = draft.sourceSnapshot as Record<string, any>;
     const location = draft.district?.name ?? source.district?.name ?? 'Bangladesh';
     const metrics = this.metricsFor(draft.type, source);
+    const national = draft.type.startsWith('NATIONAL_');
     const metricMarkup = metrics.map((metric: { label: string; value: string }, index: number) => {
+      if (national) {
+        const y = 500 + index * 62;
+        return `<text x="90" y="${y}" fill="#172026" font-size="25" font-weight="700" font-family="Arial, sans-serif">${escapeXml(`${index + 1}. ${metric.label}`)}</text><text x="${width - 90}" y="${y}" text-anchor="end" fill="#2e7b83" font-size="25" font-weight="700" font-family="Arial, sans-serif">${escapeXml(metric.value)}</text>`;
+      }
       const y = 560 + index * 112;
       return `<text x="90" y="${y}" fill="#5b6d74" font-size="24" font-family="Arial, sans-serif">${escapeXml(metric.label)}</text><text x="90" y="${y + 48}" fill="#172026" font-size="40" font-weight="700" font-family="Arial, sans-serif">${escapeXml(metric.value)}</text>`;
     }).join('');
@@ -256,6 +302,13 @@ export class SocialContentService {
     if (type === SocialContentType.WEATHER_FORECAST) return [{ label: 'Forecast high', value: `${source.forecast?.temperature2mMax ?? '—'} °C` }, { label: 'Rain probability', value: `${source.forecast?.precipitationProbabilityMax ?? '—'}%` }];
     if (type === SocialContentType.RIVER_SIGNAL) return [{ label: 'Forecast discharge', value: `${source.forecast?.riverDischarge ?? '—'} m³/s` }, { label: 'Forecast date', value: `${String(source.forecast?.forecastDate ?? '').slice(0, 10)}` }];
     if (type === SocialContentType.ENVIRONMENTAL_ALERT) return [{ label: 'Severity', value: text(source.alert?.severity) }, { label: 'Status', value: text(source.alert?.status) }];
+    if (type.startsWith('NATIONAL_')) {
+      const rows = Array.isArray(source.ranking?.rows) ? source.ranking.rows : [];
+      return rows.slice(0, 5).map((row: Record<string, unknown>) => ({
+        label: text(row.district ?? row.station ?? row.species ?? row.title ?? 'Bangladesh'),
+        value: text(row.rainfallMm ?? row.pm25 ?? row.avgPm25 ?? row.apparentTemperature ?? row.avgTemperature ?? row.discharge ?? row.severity ?? row.category ?? ''),
+      }));
+    }
     return [{ label: 'Species', value: text(source.occurrence?.species?.canonicalName) }, { label: 'Observed', value: text(source.occurrence?.observedAt ?? '').slice(0, 10) }];
   }
 }

@@ -245,6 +245,7 @@ Provider job-tracking API for scheduled external syncs. Weather, GBIF, and Flood
 
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
+| GET | `/social-content/suggestions/national?cadence=DAILY|WEEKLY|MONTHLY` | `social_content.create` | ✓ | Generate live nationwide ranked suggestions with source windows, coverage, and quality metadata; review-only |
 | GET | `/social-content/drafts` | `social_content.create` | ✓ | List reviewed social drafts |
 | GET | `/social-content/drafts/:id` | `social_content.create` | ✓ | Draft, source snapshot, and rendered assets |
 | POST | `/social-content/drafts` | `social_content.create` | ✓ | Create a source-backed draft |
@@ -255,7 +256,7 @@ Provider job-tracking API for scheduled external syncs. Weather, GBIF, and Flood
 | GET | `/social-content/drafts/:id/download` | `social_content.download` | ✓ | Return approved asset URL and dimensions |
 | POST | `/social-content/drafts/:id/mark-published` | `social_content.approve` | ✓ | Record external manual publication |
 
-Meta/Facebook/Instagram publishing and automatic suggestions are not implemented.
+Meta/Facebook/Instagram publishing and persisted/scheduled rule evaluation are not implemented. National suggestions are currently generated on demand from existing data.
 
 ## Metrics
 

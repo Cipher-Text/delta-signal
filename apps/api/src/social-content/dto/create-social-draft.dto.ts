@@ -1,12 +1,17 @@
 import { SocialCardFormat, SocialContentType } from '@prisma/client';
-import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEnum, IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreateSocialDraftDto {
   @IsEnum(SocialContentType)
   type!: SocialContentType;
 
+  @IsOptional()
   @IsString()
-  districtId!: string;
+  districtId?: string;
+
+  @IsOptional()
+  @IsIn(['DAILY', 'WEEKLY', 'MONTHLY'])
+  cadence?: 'DAILY' | 'WEEKLY' | 'MONTHLY';
 
   @IsOptional()
   @IsString()
