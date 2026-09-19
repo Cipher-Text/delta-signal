@@ -1,7 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
-import { classifyFloodRisk } from '@delta-signal/shared';
+
+function classifyFloodRisk(
+  discharge: number | null,
+  historicalMean: number | null,
+  p75: number | null,
+): 'HIGH' | 'ELEVATED' | null {
+  if (discharge == null || historicalMean == null || historicalMean === 0) {
+    return null;
+  }
+
+  const ratio = discharge / historicalMean;
+
+  if (ratio >= 2 || (p75 != null && discharge > p75 * 1.5)) return 'HIGH';
+  if (ratio >= 1.5 || (p75 != null && discharge > p75)) return 'ELEVATED';
+
+  return null;
+}
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
