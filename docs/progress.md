@@ -1,5 +1,7 @@
 # Progress
 
+Current update (2026-09-19): Division, district, upazila, and union detail pages now share the same location-page presentation primitives for the header, freshness/status treatment, in-page navigation, and source note. Each level keeps its own relevant content and capability scope, while the continuous non-tabbed layout and interaction model remain consistent. No API or schema changes were required.
+
 Current update (2026-09-19): Union detail pages now use the shared continuous location-page UX with sticky in-page navigation for overview, climate, and context. Climate scope is explicitly labelled as 30-day derived OpenMeteo aggregates, freshness is shown, and district-level environmental capabilities remain clearly linked rather than implied at union precision.
 
 Current update (2026-09-19): Upazila detail pages now use the same continuous location-page UX as district pages: sticky in-page navigation for overview, climate, and geography; explicit 30-day PM2.5 and freshness labels; climate-detail empty states; and clear OpenMeteo derived-data provenance. Existing union navigation remains unchanged.

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { routes } from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
+import { LocationHeader, LocationSectionNav, LocationSourceNote } from '../../../../../components/location-page';
 import { relativeTime } from '../../../../../lib/format';
 
 interface UnionDetail {
@@ -58,32 +59,25 @@ export default async function UnionPage(props: { params: Promise<{ id: string }>
         ]}
       />
 
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">Union · {upazila.name}, {district.name}</p>
-          <h1>
-            {union.name}
-            {union.bnName && (
-              <span className="muted" style={{ fontWeight: 400, marginLeft: 10, fontSize: '0.75em' }}>
-                {union.bnName}
-              </span>
-            )}
-          </h1>
-        <p>Most granular climate data available for this location · 30-day derived averages</p>
-      </div>
-        <div style={{ display: 'grid', justifyItems: 'end', gap: 8 }}>
-          <span className={`aqi-badge ${aqi.css}`}>{aqi.label} · 30-day PM2.5</span>
-          <small className="muted">
-            {union.climateUpdatedAt ? `Climate updated ${relativeTime(union.climateUpdatedAt)}` : 'Climate update time unavailable'}
-          </small>
-        </div>
-      </div>
+      <LocationHeader
+        level="Union"
+        parentLabel={`${upazila.name}, ${district.name}`}
+        name={union.name}
+        bnName={union.bnName}
+        summary="Most granular climate data available for this location · 30-day derived averages"
+        statusLabel={`${aqi.label} · 30-day PM2.5`}
+        statusClass={aqi.css}
+        freshness={union.climateUpdatedAt ? `Climate updated ${relativeTime(union.climateUpdatedAt)}` : 'Climate update time unavailable'}
+      />
 
-      <nav className="location-section-nav" aria-label="Union sections">
-        <a href="#overview">Overview</a>
-        <a href="#climate">Climate</a>
-        <a href="#context">Context</a>
-      </nav>
+      <LocationSectionNav
+        label="Union sections"
+        items={[
+          { id: 'overview', label: 'Overview' },
+          { id: 'climate', label: 'Climate' },
+          { id: 'context', label: 'Context' },
+        ]}
+      />
 
       <div className="location-section-stack">
         <section id="overview" className="location-section" aria-labelledby="overview-heading">
@@ -202,9 +196,9 @@ export default async function UnionPage(props: { params: Promise<{ id: string }>
         </section>
       </div>
 
-      <p className="muted" style={{ fontSize: '0.8rem', marginTop: 12 }}>
+      <LocationSourceNote>
         Source: OpenMeteo forecast and air-quality data · Union values are derived aggregates, not local station observations.
-      </p>
+      </LocationSourceNote>
     </>
   );
 }

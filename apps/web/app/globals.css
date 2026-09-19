@@ -1804,6 +1804,29 @@ a {
   background: var(--surface-2);
 }
 
+.location-page-header h1 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.location-bn-name {
+  font-weight: 400;
+  font-size: 0.75em;
+}
+
+.location-header-status {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.location-source-note {
+  margin-top: 12px;
+  font-size: 0.8rem;
+}
+
 .location-section-stack {
   display: grid;
   gap: 18px;

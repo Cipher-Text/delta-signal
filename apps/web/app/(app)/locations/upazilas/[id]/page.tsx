@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { routes } from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
+import { LocationHeader, LocationSectionNav, LocationSourceNote } from '../../../../../components/location-page';
 import { relativeTime } from '../../../../../lib/format';
 
 interface UpazilaDetail {
@@ -53,35 +54,25 @@ export default async function UpazilaPage(props: { params: Promise<{ id: string 
         ]}
       />
 
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">Upazila · {upazila.district.name}, {upazila.district.division.name}</p>
-          <h1>
-            {upazila.name}
-            {upazila.bnName && (
-              <span className="muted" style={{ fontWeight: 400, marginLeft: 10, fontSize: '0.75em' }}>
-                {upazila.bnName}
-              </span>
-            )}
-          </h1>
-          <p>
-            {upazila.unions.length} union{upazila.unions.length !== 1 ? 's' : ''}
-            {upazila.areaSqKm != null && ` · ${upazila.areaSqKm.toLocaleString()} km²`}
-          </p>
-        </div>
-        <div style={{ display: 'grid', justifyItems: 'end', gap: 8 }}>
-          <span className={`aqi-badge ${aqi.css}`}>{aqi.label} · 30-day PM2.5</span>
-          <small className="muted">
-            {upazila.climateUpdatedAt ? `Climate updated ${relativeTime(upazila.climateUpdatedAt)}` : 'Climate update time unavailable'}
-          </small>
-        </div>
-      </div>
+      <LocationHeader
+        level="Upazila"
+        parentLabel={`${upazila.district.name}, ${upazila.district.division.name}`}
+        name={upazila.name}
+        bnName={upazila.bnName}
+        summary={`${upazila.unions.length} union${upazila.unions.length !== 1 ? 's' : ''}${upazila.areaSqKm != null ? ` · ${upazila.areaSqKm.toLocaleString()} km²` : ''}`}
+        statusLabel={`${aqi.label} · 30-day PM2.5`}
+        statusClass={aqi.css}
+        freshness={upazila.climateUpdatedAt ? `Climate updated ${relativeTime(upazila.climateUpdatedAt)}` : 'Climate update time unavailable'}
+      />
 
-      <nav className="location-section-nav" aria-label="Upazila sections">
-        <a href="#overview">Overview</a>
-        <a href="#climate">Climate</a>
-        <a href="#geography">Geography</a>
-      </nav>
+      <LocationSectionNav
+        label="Upazila sections"
+        items={[
+          { id: 'overview', label: 'Overview' },
+          { id: 'climate', label: 'Climate' },
+          { id: 'geography', label: 'Geography' },
+        ]}
+      />
 
       <div className="location-section-stack">
         <section id="overview" className="location-section" aria-labelledby="overview-heading">
@@ -216,9 +207,9 @@ export default async function UpazilaPage(props: { params: Promise<{ id: string 
         </section>
       </div>
 
-      <p className="muted" style={{ fontSize: '0.8rem', marginTop: 12 }}>
+      <LocationSourceNote>
         Source: OpenMeteo forecast and air-quality data · Values are derived 30-day averages, not local station observations.
-      </p>
+      </LocationSourceNote>
     </>
   );
 }

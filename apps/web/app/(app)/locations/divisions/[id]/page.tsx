@@ -15,6 +15,7 @@ import {
 } from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
+import { LocationHeader, LocationSectionNav, LocationSourceNote } from '../../../../../components/location-page';
 import { relativeTime, titleCase } from '../../../../../lib/format';
 
 function aqiClass(pm25: number | null): { label: string; css: string } {
@@ -78,19 +79,23 @@ export default async function DivisionPage(props: { params: Promise<{ id: string
       <LocationBreadcrumb crumbs={[{ label: 'Locations', href: '/locations' }, { label: division.name }]} />
       {emergency && <Link className="alert-strip danger" href={`/alerts/${emergency.id}`} role="alert">{emergency.title} — {emergency.district?.name ?? `${division.name} Division`} →</Link>}
 
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">Division · Bangladesh</p>
-          <h1>{division.name}{division.bnName && <span className="muted" style={{ fontWeight: 400, marginLeft: 10, fontSize: '0.75em' }}>{division.bnName}</span>}</h1>
-          <p>{districts.length} district{districts.length !== 1 ? 's' : ''}{division.areaSqKm != null && ` · ${division.areaSqKm.toLocaleString()} km²`}</p>
-        </div>
-        <div style={{ display: 'grid', justifyItems: 'end', gap: 8 }}>
-          <span className={`aqi-badge ${aqi.css}`}>{aqi.label} · 30-day PM2.5</span>
-          <small className="muted">{division.climateUpdatedAt ? `Climate updated ${relativeTime(division.climateUpdatedAt)}` : 'Climate update time unavailable'}</small>
-        </div>
-      </div>
+      <LocationHeader
+        level="Division"
+        parentLabel="Bangladesh"
+        name={division.name}
+        bnName={division.bnName}
+        summary={`${districts.length} district${districts.length !== 1 ? 's' : ''}${division.areaSqKm != null ? ` · ${division.areaSqKm.toLocaleString()} km²` : ''}`}
+        statusLabel={`${aqi.label} · 30-day PM2.5`}
+        statusClass={aqi.css}
+        freshness={division.climateUpdatedAt ? `Climate updated ${relativeTime(division.climateUpdatedAt)}` : 'Climate update time unavailable'}
+      />
 
-      <div className="metric-grid">
+      <LocationSectionNav
+        label="Division sections"
+        items={[{ id: 'overview', label: 'Overview' }, { id: 'hazards', label: 'Hazards' }, { id: 'activity', label: 'Activity' }, { id: 'districts', label: 'Districts' }]}
+      />
+
+      <div id="overview" className="metric-grid">
         <div className="metric"><span>Avg temperature</span><strong>{division.avgTemp30d != null ? `${division.avgTemp30d.toFixed(1)}°C` : '—'}</strong><small>{division.minTemp30d != null && division.maxTemp30d != null ? `${division.minTemp30d.toFixed(1)}–${division.maxTemp30d.toFixed(1)}°C range` : '30-day average'}</small></div>
         <div className="metric"><span>Total precipitation</span><strong>{division.totalPrecip30d != null ? <>{division.totalPrecip30d.toFixed(0)}<small style={{ fontSize: '1rem' }}>mm</small></> : '—'}</strong><small>Last 30 days</small></div>
         <div className="metric"><span>Avg humidity</span><strong>{division.avgHumidity30d != null ? `${division.avgHumidity30d.toFixed(0)}%` : '—'}</strong><small>30-day average</small></div>
@@ -98,7 +103,7 @@ export default async function DivisionPage(props: { params: Promise<{ id: string
       </div>
 
       <div className="content-grid" style={{ marginTop: 18 }}>
-        <article className="panel">
+        <article id="hazards" className="panel">
           <div className="panel-header"><div><h2>Active alerts</h2><p>Operational warnings affecting this division</p></div><Link href="/alerts" className="button ghost">View all</Link></div>
           {activeAlerts.length > 0 ? <div className="table" role="table" aria-label="Active division alerts"><div className="table-row table-head" role="row"><span>Alert</span><span>Severity</span><span>Issued</span></div>{activeAlerts.slice(0, 5).map((alert) => <Link className="table-row table-row-link" role="row" key={alert.id} href={`/alerts/${alert.id}`}><strong>{alert.title}</strong><span className={`tag ${SEVERITY_BADGE[alert.severity] ?? 'info'}`}>{titleCase(alert.severity)}</span><span>{relativeTime(alert.issuedAt)}</span></Link>)}</div> : <p className="empty-state">No active alerts for this division.</p>}
         </article>
@@ -117,7 +122,7 @@ export default async function DivisionPage(props: { params: Promise<{ id: string
 
       {divisionFlood.length > 0 && <article className="panel" style={{ marginTop: 18 }}><div className="panel-header"><div><h2>Flood and water signals</h2><p>Station-based simulated river discharge · not an official warning</p></div><Link href="/water-bodies/stations" className="button ghost">View stations</Link></div><div className="table" role="table" aria-label="Division flood signals"><div className="table-row table-head" role="row"><span>Station</span><span>River</span><span>Forecast date</span><span>Discharge</span></div>{divisionFlood.slice(0, 6).map((reading) => <Link className="table-row table-row-link" role="row" key={reading.id} href={`/water-bodies/stations/${reading.stationId}`}><strong>{reading.station?.name ?? 'Station'}</strong><span>{reading.station?.riverName ?? '—'}</span><span>{new Date(reading.forecastDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span><span>{reading.riverDischarge != null ? `${reading.riverDischarge.toFixed(0)} m³/s` : '—'}</span></Link>)}</div></article>}
 
-      <article className="panel" style={{ marginTop: 18 }}>
+      <article id="activity" className="panel" style={{ marginTop: 18 }}>
         <div className="panel-header"><div><h2>Environmental activity</h2><p>Recent public evidence, biodiversity records, and restoration work</p></div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><Link href="/reports" className="button ghost">Reports</Link><Link href="/observations" className="button ghost">Observations</Link></div></div>
         {divisionReports.length > 0 && <><h3 style={{ fontSize: '0.92rem', margin: '4px 0 8px' }}>Verified reports</h3><div className="table" role="table" aria-label="Recent verified reports"><div className="table-row table-head" role="row"><span>Title</span><span>Category</span><span>District</span><span>Submitted</span></div>{divisionReports.slice(0, 5).map((report) => <Link className="table-row table-row-link" role="row" key={report.id} href={`/reports/${report.id}`}><strong>{report.title}</strong><span>{titleCase(report.category)}</span><span>{report.district?.name ?? '—'}</span><span>{relativeTime(report.createdAt)}</span></Link>)}</div></>}
         {divisionObservations.length > 0 && <><h3 style={{ fontSize: '0.92rem', margin: '18px 0 8px' }}>Observations</h3><div className="table" role="table" aria-label="Recent observations"><div className="table-row table-head" role="row"><span>Category</span><span>Species</span><span>Trust</span><span>Observed</span></div>{divisionObservations.slice(0, 5).map((observation) => <Link className="table-row table-row-link" role="row" key={observation.id} href={`/observations/${observation.id}`}><span>{titleCase(observation.category)}</span><span>{observation.species ?? '—'}</span><span className={`tag ${TRUST_BADGE[observation.trustLevel] ?? 'muted'}`}>{titleCase(observation.trustLevel)}</span><span>{relativeTime(observation.observedAt)}</span></Link>)}</div></>}
@@ -125,7 +130,7 @@ export default async function DivisionPage(props: { params: Promise<{ id: string
         {divisionReports.length === 0 && divisionObservations.length === 0 && divisionOccurrences.length === 0 && divisionRestoration.length === 0 && <p className="empty-state">No public activity records are available for this division yet.</p>}
       </article>
 
-      <article className="panel" style={{ marginTop: 18 }}>
+      <article id="districts" className="panel" style={{ marginTop: 18 }}>
         <div className="panel-header">
           <div>
             <h2>Districts</h2>
@@ -156,6 +161,9 @@ export default async function DivisionPage(props: { params: Promise<{ id: string
           {districts.length === 0 && <div className="empty-state">No districts found for this division.</div>}
         </div>
       </article>
+      <LocationSourceNote>
+        Climate: OpenMeteo 30-day derived averages. Other sections use the latest public records returned by their respective Delta Signal APIs.
+      </LocationSourceNote>
     </>
   );
 }

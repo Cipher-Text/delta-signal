@@ -15,6 +15,7 @@ import {
 } from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
+import { LocationHeader, LocationSectionNav, LocationSourceNote } from '../../../../../components/location-page';
 import { titleCase, relativeTime } from '../../../../../lib/format';
 
 // District detail includes upazilas list and all 11 climate fields
@@ -178,33 +179,21 @@ export default async function DistrictPage(
         </Link>
       )}
 
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">District · {district.division.name}</p>
-          <h1>
-            {district.name}
-            {district.bnName && (
-              <span className="muted" style={{ fontWeight: 400, marginLeft: 10, fontSize: '0.75em' }}>
-                {district.bnName}
-              </span>
-            )}
-          </h1>
-          <p>
-            {district.upazilas.length} upazila{district.upazilas.length !== 1 ? 's' : ''}
-            {district.areaSqKm != null && ` · ${district.areaSqKm.toLocaleString()} km²`}
-            {district.isCoastal && ' · Coastal district'}
-          </p>
-        </div>
-        <span className={`aqi-badge ${aqi.css}`}>{aqi.label}</span>
-      </div>
+      <LocationHeader
+        level="District"
+        parentLabel={district.division.name}
+        name={district.name}
+        bnName={district.bnName}
+        summary={`${district.upazilas.length} upazila${district.upazilas.length !== 1 ? 's' : ''}${district.areaSqKm != null ? ` · ${district.areaSqKm.toLocaleString()} km²` : ''}${district.isCoastal ? ' · Coastal district' : ''}`}
+        statusLabel={`${aqi.label} · 30-day PM2.5`}
+        statusClass={aqi.css}
+        freshness={district.climateUpdatedAt ? `Climate updated ${relativeTime(district.climateUpdatedAt)}` : 'Climate update time unavailable'}
+      />
 
-      <nav className="location-section-nav" aria-label="District sections">
-        <a href="#overview">Overview</a>
-        <a href="#hazards">Hazards</a>
-        <a href="#climate">Climate</a>
-        <a href="#activity">Activity</a>
-        <a href="#geography">Geography</a>
-      </nav>
+      <LocationSectionNav
+        label="District sections"
+        items={[{ id: 'overview', label: 'Overview' }, { id: 'hazards', label: 'Hazards' }, { id: 'climate', label: 'Climate' }, { id: 'activity', label: 'Activity' }, { id: 'geography', label: 'Geography' }]}
+      />
 
       <div className="location-section-stack">
         <section id="overview" className="location-section" aria-labelledby="overview-heading">
@@ -741,6 +730,9 @@ export default async function DistrictPage(
           </article>
         </section>
       </div>
+      <LocationSourceNote>
+        OpenMeteo forecast and air-quality data are labelled by period and source. District climate values are derived 30-day averages, not local station observations.
+      </LocationSourceNote>
     </>
   );
 }
