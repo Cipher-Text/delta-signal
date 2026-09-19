@@ -20,12 +20,12 @@ The public board is designed for scanning and discovery. It does not require an 
 
 | Role | View | Primary focus |
 | --- | --- | --- |
+| `CITIZEN` | My Environmental Activity | Personal reports, observations, restoration participation, and community contributions |
 | `ADMIN` | Platform Overview | Users, reports, alerts, organizations, datasets, species, observations, audit activity |
 | `MODERATOR` | Moderation Queue | Review backlog, submission trend, report categories, status breakdown |
 | `GOVERNMENT` | Environmental Intelligence | Nationwide alerts, canonical affected divisions, verified reports, climate averages, and station-based flood/water-level signals |
 | `RESEARCHER` | Biodiversity Intelligence | Species and occurrence totals, observation quality, monthly trends |
 | `ORGANIZATION_ADMIN` | Restoration Portfolio | Organization-scoped project status, categories, participation, and most-engaged projects |
-| `CITIZEN` | Empty state | Citizens use the public board and contribution routes; no analytics workspace is provided |
 
 The web route calls the matching API endpoint and renders the response with shared dashboard primitives: headers, KPI cards, bar charts, trend charts, section headers, and data tables. The client does not invent fallback analytics values.
 
@@ -60,6 +60,7 @@ Government flood indicators use the latest stored `StationFloodForecast` and `Wa
 
 | Endpoint | Required role |
 | --- | --- |
+| `GET /analytics/citizen` | `CITIZEN` |
 | `GET /analytics/admin` | `ADMIN` |
 | `GET /analytics/moderator` | `MODERATOR` |
 | `GET /analytics/government` | `GOVERNMENT` |

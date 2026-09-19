@@ -7,6 +7,7 @@ import { logoutAction } from '../lib/auth-actions';
 import type { CurrentUser } from '../lib/current-user';
 
 const DASHBOARD_ROLES = new Set([
+  'CITIZEN',
   'ADMIN',
   'MODERATOR',
   'GOVERNMENT',
@@ -113,8 +114,8 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
 
         {/* Nav links */}
         <nav aria-label="App navigation">
-          {user && DASHBOARD_ROLES.has(user.role) && (
-            <div>
+          <div>
+            {user && DASHBOARD_ROLES.has(user.role) && (
               <Link
                 href="/dashboard"
                 className={isActive('/dashboard') ? 'active' : undefined}
@@ -122,11 +123,8 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
               >
                 Dashboard
               </Link>
-            </div>
-          )}
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.label}>
-              {section.links.map((link) => (
+            )}
+            {NAV_SECTIONS.flatMap((section) => section.links).map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
@@ -136,8 +134,7 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
                   {link.label}
                 </Link>
               ))}
-            </div>
-          ))}
+          </div>
         </nav>
 
         {/* User footer */}

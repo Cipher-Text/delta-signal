@@ -134,6 +134,39 @@ export class AnalyticsService {
     }
   }
 
+  // ── Citizen ────────────────────────────────────────────────────────────────
+
+  async getCitizenDashboard(userId: string) {
+    const [reportsByStatus, observationsByCategory, joinedProjects, communityPosts] = await Promise.all([
+      this.prisma.citizenReport.groupBy({
+        by: ['status'],
+        where: { reporterId: userId },
+        _count: { id: true },
+      }),
+      this.prisma.observation.groupBy({
+        by: ['category'],
+        where: { observerId: userId },
+        _count: { id: true },
+      }),
+      this.prisma.restorationParticipant.count({ where: { userId } }),
+      this.prisma.communityPost.count({ where: { authorId: userId } }),
+    ]);
+
+    return {
+      meta: await this.getDashboardMeta([]),
+      reports: {
+        total: reportsByStatus.reduce((total, row) => total + row._count.id, 0),
+        byStatus: reportsByStatus.map((row) => ({ status: row.status, count: row._count.id })),
+      },
+      observations: {
+        total: observationsByCategory.reduce((total, row) => total + row._count.id, 0),
+        byCategory: observationsByCategory.map((row) => ({ category: row.category, count: row._count.id })),
+      },
+      restoration: { joinedProjects },
+      community: { posts: communityPosts },
+    };
+  }
+
   // ── Admin ──────────────────────────────────────────────────────────────────
 
   async getAdminDashboard() {

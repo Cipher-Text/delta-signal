@@ -241,6 +241,7 @@ export const routes = {
   },
 
   analytics: {
+    citizen: `${apiPrefix}/analytics/citizen`,
     admin: `${apiPrefix}/analytics/admin`,
     moderator: `${apiPrefix}/analytics/moderator`,
     government: `${apiPrefix}/analytics/government`,
@@ -828,6 +829,24 @@ export interface AdminDashboard {
     speciesRecorded: number;
     observationsThisMonth: number;
     auditEventsToday: number;
+  };
+}
+
+export interface CitizenDashboard {
+  meta: DashboardMeta;
+  reports: {
+    total: number;
+    byStatus: Array<{ status: string; count: number }>;
+  };
+  observations: {
+    total: number;
+    byCategory: Array<{ category: string; count: number }>;
+  };
+  restoration: {
+    joinedProjects: number;
+  };
+  community: {
+    posts: number;
   };
 }
 

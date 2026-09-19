@@ -7,6 +7,12 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
+  @Roles('CITIZEN')
+  @Get('citizen')
+  getCitizenDashboard(@CurrentUser() user: JwtPayload) {
+    return this.analyticsService.getCitizenDashboard(user.sub);
+  }
+
   @Roles('ADMIN')
   @Get('admin')
   getAdminDashboard() {

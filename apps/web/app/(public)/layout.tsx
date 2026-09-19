@@ -5,7 +5,7 @@ export default async function PublicLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const user = await getCurrentUser();
-  if (user) redirect('/reports');
+  if (user) redirect('/dashboard');
 
   return (
     <div className="public-shell">

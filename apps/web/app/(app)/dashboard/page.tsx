@@ -6,6 +6,7 @@ import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
 import {
   routes,
   type AdminDashboard,
+  type CitizenDashboard,
   type ModeratorDashboard,
   type GovernmentDashboard,
   type ResearcherDashboard,
@@ -16,8 +17,10 @@ import ModeratorDashboardView from './views/ModeratorDashboardView';
 import GovernmentDashboardView from './views/GovernmentDashboardView';
 import ResearcherDashboardView from './views/ResearcherDashboardView';
 import OrgAdminDashboardView from './views/OrgAdminDashboardView';
+import CitizenDashboardView from './views/CitizenDashboardView';
 
 const DASHBOARD_ROLES = new Set([
+  'CITIZEN',
   'ADMIN',
   'MODERATOR',
   'GOVERNMENT',
@@ -33,16 +36,20 @@ export default async function DashboardPage() {
   }
 
   if (!DASHBOARD_ROLES.has(user.role)) {
-    // Citizens and guests don't have a dashboard yet
     return (
       <div className="empty-state" style={{ padding: '48px 0' }}>
         <strong>Dashboard not available</strong>
-        <p>Dashboards are available for researchers, government officials, and administrators.</p>
+        <p>Your account does not have a supported dashboard role.</p>
       </div>
     );
   }
 
   const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
+
+  if (user.role === 'CITIZEN') {
+    const data = await apiGetAuthed<CitizenDashboard>(routes.analytics.citizen, accessToken);
+    return <CitizenDashboardView data={data} user={user} />;
+  }
 
   if (user.role === 'ADMIN') {
     const data = await apiGetAuthed<AdminDashboard>(routes.analytics.admin, accessToken);

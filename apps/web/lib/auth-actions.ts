@@ -18,7 +18,7 @@ export async function loginAction(formData: FormData) {
   }
 
   await setSessionCookies(tokens.accessToken, tokens.refreshToken);
-  redirect('/reports');
+  redirect('/dashboard');
 }
 
 export async function registerAction(formData: FormData) {
@@ -35,7 +35,7 @@ export async function registerAction(formData: FormData) {
   }
 
   await setSessionCookies(tokens.accessToken, tokens.refreshToken);
-  redirect('/reports');
+  redirect('/dashboard');
 }
 
 export async function logoutAction() {

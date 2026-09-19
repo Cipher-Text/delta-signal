@@ -10,7 +10,7 @@
  * This handler:
  *  1. POSTs the code to POST /api/v1/auth/exchange
  *  2. Sets httpOnly session cookies from the returned tokens
- *  3. Redirects to /reports (or /login on any failure)
+ *  3. Redirects to /dashboard (or /login on any failure)
  */
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const response = NextResponse.redirect(new URL('/reports', origin));
+  const response = NextResponse.redirect(new URL('/dashboard', origin));
   response.cookies.set(ACCESS_TOKEN_COOKIE, tokens.accessToken, cookieOptions(ACCESS_TOKEN_MAX_AGE_SECONDS));
   response.cookies.set(REFRESH_TOKEN_COOKIE, tokens.refreshToken, cookieOptions(REFRESH_TOKEN_MAX_AGE_SECONDS));
   return response;
