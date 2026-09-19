@@ -4,6 +4,25 @@
 
 The feature is an editorial projection of existing environmental data, not a new data authority. It must preserve source traceability, use deterministic templates, keep AI (if introduced later) limited to copy suggestions, and make approval explicit. No Meta integration belongs in the first implementation.
 
+## Editorial series are separate from technical source types
+
+The current `SocialContentType` values are useful backend source categories, but they should not become the public information architecture. A social-media manager chooses **Rain Watch**, **River Watch**, **Today in Bangladesh**, **Alert Explainer**, **Verified Community Report**, or **Wild Bangladesh**. The service then resolves that series to one or more allowed source types and a versioned template.
+
+This separation matters because the same weather source can support a practical forecast card or a calm daily snapshot, while a river forecast must not be presented as a flood declaration. It also gives design and editorial teams stable series names while backend providers evolve.
+
+Recommended MVP mapping:
+
+| Editorial series | Allowed source type(s) | Review policy |
+|---|---|---|
+| Rain Watch | `CURRENT_WEATHER`, `WEATHER_FORECAST` | Human approval; future scheduled drafts possible |
+| River Watch | `RIVER_SIGNAL` plus observed station reading | Human approval by default |
+| Today in Bangladesh | `CURRENT_WEATHER` plus district 30-day rollup | Human approval; freshness gate |
+| Alert Explainer | `ENVIRONMENTAL_ALERT` | Human approval; copy cannot exceed alert severity |
+| Verified Community Report | citizen report/media source (new source resolver) | Human approval, consent/redaction required |
+| Wild Bangladesh | `BIODIVERSITY_OBSERVATION` | Human approval, rights/quality gate |
+
+Do not add a new database type for every poster idea. Store the editorial `seriesKey` in the structured payload/template configuration first; introduce a normalized enum only when filtering, rules, or permissions need database-level querying.
+
 ## Minimum domain model
 
 Use names consistent with existing Prisma nouns and avoid placing card fields on `Dataset`, `Alert`, or `Media`.
@@ -54,6 +73,8 @@ Draft lifecycle: `DRAFT → READY_TO_RENDER → RENDERED → APPROVED → ARCHIV
 
 Approval must verify that the source snapshot still satisfies freshness and safety policies. Download should return a short-lived signed URL or streamed asset, and every render/approval/download/manual-publication action should write an `AuditEvent` with entity ID, version, source IDs, and content hash.
 
+Rule evaluation should also persist the reason a suggestion was accepted or rejected: freshness result, evidence label, quality flag, threshold/window, and source fingerprint. This makes “why did Delta Signal suggest this?” answerable to editors and prevents a threshold from being mistaken for an editorial judgment.
+
 ## API proposal
 
 All routes use `/api/v1/social-content` and are represented in `packages/contracts` before frontend calls are added:
@@ -89,4 +110,3 @@ Rendering can start synchronously for one card, with a BullMQ render queue later
 ## Future Meta architecture (recommendation only)
 
 Later add a provider-agnostic `PublicationService` and adapters for Facebook Page and Instagram Business publishing. Store encrypted, least-privilege page/account tokens outside normal draft rows; track token expiry, scopes, owner/account IDs, and refresh/re-consent state. Flow: approved draft → publication outbox with idempotency key `(draftId, platform, publishAttemptVersion)` → adapter → retry with bounded exponential backoff → status/log/error. Handle Instagram media-container creation/polling separately from Facebook Page photo/feed publishing. Support scheduled publication only from approved immutable assets, with a policy requiring human approval for alerts, citizen reports, and any low-quality/forecast content. Audit all token changes and external IDs; never retry non-idempotent requests without the idempotency record.
-

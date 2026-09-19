@@ -1,10 +1,23 @@
 # Implementation Roadmap
 
+## Editorial revision (2026-09-19)
+
+The implementation should follow the revised public series rather than expose all technically available datasets as equal poster types. The MVP content menu is:
+
+1. Rain Watch
+2. River Watch
+3. Today in Bangladesh
+4. Alert Explainer
+5. Verified Community Report
+6. Wild Bangladesh (manual, with image-rights checks)
+
+Current backend technical types can remain as source adapters. Add a small series/template configuration layer before adding more technical enum values. Air Quality Reading and District Climate Pulse are the next additions after methodology and completeness checks. Map of the Day, historical comparison, weekly/monthly summaries, facility performance, radiation, and national emissions are not MVP poster series.
+
 ## A. What Delta Signal can support today
 
-Today the platform can support human-authored or manually selected, human-reviewed cards based on current weather, weather forecasts, river/discharge forecasts, active alerts, GBIF occurrences, verified reports, raw air-quality readings, national annual emissions, radiation, marine forecasts, and restoration metrics. It can resolve Bangladesh locations, label provider metadata, inspect ingestion health, store files in S3-compatible storage, and audit admin mutations.
+The implemented Phase 1 workflow can create, render, approve, download, and manually mark as published cards for current weather, weather forecasts, river/discharge forecasts, active alerts, and GBIF observations. It uses the existing Admin Console, Delta Signal logo, S3-compatible storage, audit events, and source snapshots.
 
-It cannot yet safely support automated suggestions, generic historical comparisons, AQI health claims, static map export, automatic copy generation, or external social publishing without additional backend work.
+The broader platform also contains the source foundations for verified citizen reports, raw air-quality readings, marine forecasts, national annual emissions, radiation, restoration metrics, and station observations. Those should not automatically appear as MVP poster types until their editorial, rights, freshness, and scientific-interpretation policies are implemented.
 
 ## B. What requires additional backend work
 
@@ -19,17 +32,17 @@ It cannot yet safely support automated suggestions, generic historical compariso
 
 ## C. Recommended first five photocard types
 
-1. **Weather Forecast** — complete district forecast model and clearly bounded claims.
-2. **Current Weather / Daily Environmental Snapshot** — high-frequency, understandable, low editorial risk.
-3. **River / Discharge Signal** — differentiated, useful, and already supported by station/forecast entities when wording stays precise.
-4. **Environmental Alert** — leverages existing editorial severity, areas, expiry, and notification workflow.
-5. **Biodiversity / Species Observation** — strong public-interest content with GBIF/observation provenance, provided image rights and trust labels are enforced.
+1. **Rain Watch** — the most useful repeatable public-service series; maps to current/hourly/daily weather data.
+2. **River Watch** — Bangladesh-specific and important, provided observed/forecast/status language stays separate.
+3. **Today in Bangladesh** — a calm district briefing using current weather and explicitly labelled 30-day context.
+4. **Alert Explainer** — extends existing reviewed alerts without inventing new severity or instructions.
+5. **Verified Community Report** — local evidence with moderation, consent, privacy, and redaction controls.
 
-Verified Citizen Report is the next candidate, but should follow the first five because privacy, consent, redaction, and verification workflows add editorial risk.
+**Wild Bangladesh** is the sixth manual series and should be added alongside the first five when image rights and occurrence-quality gates are available. The existing technical weather/alert/river types remain source adapters beneath these public series names.
 
 ## D. Recommended MVP scope
 
-MVP is Phase 1 only: a Social Content area for MODERATOR/ADMIN with manual Create Post, source selection for the first five types, structured English/Bengali fields, deterministic 4:5 and 1:1 templates, evidence/provenance panel, server-rendered preview/final PNG or SVG, draft/render/approve/download lifecycle, manual “mark as published”, S3-compatible asset storage, strict freshness/disclaimer checks, and audit events. Include no automatic rule suggestions in the first deploy; the data adapters should be designed so Phase 2 can reuse them.
+MVP is the human-reviewed workflow for the six editorial series, while keeping the first release implementation narrow: Rain Watch, River Watch, Today in Bangladesh, and Alert Explainer can use existing source adapters; Verified Community Report and Wild Bangladesh should be enabled only when their media/rights/verification gates are present. Use structured English/Bengali fields, deterministic 4:5 and 1:1 templates, evidence/provenance panel, server-rendered preview/final SVG, draft/render/approve/download lifecycle, manual “mark as published”, S3-compatible asset storage, strict freshness/disclaimer checks, and audit events. Include no automatic rule suggestions in the first deploy.
 
 ## E. Explicitly out of MVP
 
@@ -156,4 +169,3 @@ MVP is Phase 1 only: a Social Content area for MODERATOR/ADMIN with manual Creat
 - Facility compliance/status is not proof of pollution or illegality.
 - Annual national emissions cannot support district or real-time claims.
 - Causal explanations and extreme-language headlines must be prohibited unless supported by explicit source evidence and reviewed copy.
-

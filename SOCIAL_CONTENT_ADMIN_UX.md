@@ -14,6 +14,21 @@ Add a top-level **Social Content** section between Moderation and Administration
 
 For Phase 1, Suggested Posts, Templates, Rules, and publication integrations can be visibly marked “Coming in later phase” or omitted from navigation. Keep the first usable path short: Create Post → Preview → Render → Approve → Download.
 
+## Revised editorial IA
+
+The content area should organize around **series**, not around every environmental domain. In the first usable release the Create Post form should present:
+
+- Rain Watch
+- River Watch
+- Today in Bangladesh
+- Alert Explainer
+- Verified Community Report
+- Wild Bangladesh
+
+The underlying source type can remain technical (`WEATHER_FORECAST`, `RIVER_SIGNAL`, `ENVIRONMENTAL_ALERT`, etc.), but the admin should first see the public-facing series name and a one-line explanation of its audience value. This prevents an editor from choosing a technically valid but weak social format such as a generic satellite-radiation card.
+
+Every series option should show three small badges before selection: **freshness**, **evidence type**, and **review level**. Example: `Rain Watch · forecast · refreshed 2h ago`; `Verified Community Report · human-verified · manual review`.
+
 ## Suggested Posts
 
 Use the existing URL-driven tab/filter and `data-table` patterns. Each row/card contains:
@@ -26,6 +41,8 @@ Use the existing URL-driven tab/filter and `data-table` patterns. Each row/card 
 - quality label: `HIGH`, `REVIEW`, or `STALE/UNAVAILABLE` with explanation;
 - small deterministic preview;
 - `Create Post` and `Dismiss` actions.
+
+Suggested Posts should be ranked by editorial usefulness, not only by threshold magnitude. The first row should explain the public reason in plain language, for example “Rain is forecast for Sylhet tomorrow” or “A verified report with an approved image is available in Khulna,” rather than “precipitationProbabilityMax > 60”. A suggestion should also state why it was not generated when a source fails freshness, evidence, or quality checks.
 
 Dismissal should require an optional reason for analytics, be reversible for ADMIN, and never delete source data. A suggestion must link to its exact source record IDs.
 
@@ -42,6 +59,27 @@ Dismissal should require an optional reason for analytics, be reversible for ADM
 9. **Approve** only after required disclaimer/source checks pass. Approval captures actor/time and a content hash.
 10. **Download/export** the approved PNG. The browser should not be the system of record for rendering.
 11. **Mark externally published** optionally with platform, external URL/post ID if known, publication time, and note. This is a manual record only; it does not call Meta.
+
+### Editorial evidence panel
+
+The evidence panel should be visible while editing, not hidden behind a technical details link. It should answer “can I safely publish this?” at a glance:
+
+- `What`: the plain-language claim;
+- `Where`: district, station, or general report area;
+- `When`: observed, forecast, reported, or issued time;
+- `How`: source/provider and model or verification label;
+- `Limit`: the mandatory disclaimer and what the data cannot prove.
+
+For cards with a forecast, the preview should visibly display `FORECAST`. For a community card, it should display `VERIFIED COMMUNITY REPORT`. For GBIF, it should display `GBIF OBSERVATION`. These labels are content, not decorative badges, and cannot be removed by the editor.
+
+### Designer review rules
+
+- The poster should have a clear three-second read: logo/series, place, one claim, one metric.
+- The logo is a brand anchor, not a large decorative object; keep it small and consistently positioned.
+- Do not use red merely because a metric is high. Use red only for an approved alert/status state; otherwise use neutral or amber language with a written label.
+- Do not compress several charts into a dashboard collage. One line/range/bar or one image is enough.
+- Bengali copy needs its own line-breaking and spacing check; do not assume the English layout will reflow correctly.
+- Show source and as-of time at a size that survives mobile viewing. A disclaimer that cannot be read is not a safeguard.
 
 ## Reuse of existing Admin patterns
 
@@ -69,4 +107,3 @@ Block approval for missing source, stale data beyond the type policy, missing un
 Introduce `social_content.create`, `social_content.edit`, `social_content.render`, `social_content.approve`, `social_content.download`, `social_content.manage_templates`, and `social_content.manage_rules` only if the existing permissions matrix needs this granularity. MVP can use `social_content.manage` for MODERATOR/ADMIN, but approval should be separable before future publishing. ADMIN remains the emergency bypass as in `PermissionsGuard`.
 
 Suggested default: MODERATOR can create/edit/render/download; ADMIN can approve, manage templates/rules, archive, and mark publication. This aligns with existing moderation responsibilities while protecting public-facing claims.
-

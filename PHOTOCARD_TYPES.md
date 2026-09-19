@@ -1,51 +1,109 @@
-# Photocard Types
+# Photocard Types and Editorial System
 
-## Common structured contract
+## Editorial position
 
-Every card should be generated from a typed payload, not from arbitrary model-generated layout:
+Delta Signal should behave like a trusted environmental briefing service, not a dashboard screenshot generator. A good post answers one practical question for a person in Bangladesh:
+
+- What is happening?
+- Where is it happening?
+- When was it observed or forecast?
+- What should the reader understand or check next?
+
+Each card should communicate one idea. The Admin Console may combine several source fields, but the visual hierarchy should never present more than three primary metrics. The source evidence panel can contain more detail than the public card.
+
+The strongest first-version editorial mix is:
+
+1. **Rain Watch** — short-term observed/forecast rain information.
+2. **River Watch** — station level/discharge conditions with careful status language.
+3. **Today in Bangladesh** — a district-level weather/climate pulse.
+4. **Alert Explainer** — an existing Delta Signal alert made understandable and shareable.
+5. **Verified Community Report** — a moderated local observation with clear provenance.
+6. **Wild Bangladesh** — a single GBIF species observation with rights-cleared media.
+
+These should be treated as content series with consistent names, templates, and tone. They are more useful and sustainable than producing a new visual treatment for every database table.
+
+## Structured payload
+
+Every card is generated from a typed payload, never from arbitrary AI-generated layout:
 
 ```json
 {
-  "type": "RIVER_SIGNAL",
+  "series": "RAIN_WATCH",
+  "type": "WEATHER_FORECAST",
   "location": {"districtId": "…", "nameEn": "…", "nameBn": "…"},
-  "metrics": [{"label": "…", "value": 123, "unit": "m³/s", "asOf": "…"}],
-  "headline": "…",
-  "summary": "…",
-  "source": "…",
-  "disclaimer": "…",
+  "metrics": [{"label": "Rain probability", "value": 70, "unit": "%", "asOf": "…"}],
+  "headline": "Rain may arrive in Sylhet tomorrow",
+  "summary": "Forecast rainfall probability is 70% for 20 September.",
+  "caption": "…",
+  "source": "Open-Meteo daily forecast",
+  "evidenceLabel": "FORECAST",
+  "disclaimer": "Forecast conditions can change.",
   "timestamp": "…",
-  "templateKey": "river-signal-v1",
-  "locale": "en",
+  "templateKey": "rain-watch-v1",
+  "locale": "bn",
   "format": "4:5"
 }
 ```
 
-The backend owns validation, source traceability, units, freshness, and card type. Copy may be suggested by deterministic templates or a future constrained copy service; it may not create measurements, causal explanations, or layout instructions.
+The backend owns validation, units, freshness, evidence labels, source traceability, and card type. AI, if added later, may suggest copy alternatives only. It must not create measurements, causal explanations, risk labels, or layout instructions.
 
-## Recommended types
+## Recommended editorial series
 
-| Type | Purpose / audience | Data and trigger | Visual / copy shape | Localization, attribution, disclaimer | Admin edits / formats / future publishing |
+| Series | Purpose and audience | Data support in repository | Public card structure | Safety / editorial rule | Phase |
 |---|---|---|---|---|---|
-| Daily Environmental Snapshot | A calm daily view for the general public | Current weather, AQ raw values, 30-day rollup; manual selection initially; later daily freshness rule | Metric grid plus district label; `Today in {district}: {metric}`; caption lists as-of time | English/Bengali labels; Open-Meteo and “last updated”; never imply health or climate causation | Edit headline, summary, metrics visibility, locale, source note; 4:5 and 1:1, later 9:16; publishable later after freshness gate |
-| Rain Signal | Make recent/current or forecast rain understandable | `CurrentWeatherReading` precipitation or forecast precipitation/probability; threshold configured by type and time window | Rain icon + value/probability + small bars; “Rain expected” only for forecast | Clearly distinguish observed precipitation from forecast; Open-Meteo + time window | Choose observed/forecast mode, threshold label, caption; 4:5/1:1/9:16; later schedulable |
-| Heat Signal | Highlight unusually hot conditions without overclaiming heatwave | Current/apparent temperature and daily max; only use HEATWAVE wording when existing official alert supports it | Large temperature, apparent temperature, date; “Hot conditions” | Model/source/time; no health advice without approved guidance; “heat signal” not heatwave unless alert | Edit temperature metric display and copy, not source value; all formats; later rule-based |
-| Weather Forecast | Useful short-term planning content | Hourly/daily forecast; selected district/date range | 3–5 day strip with max/min/rain chance; “Forecast: {district}, {dates}” | Every headline/visual says Forecast; issue/retrieved time and Open-Meteo | Select days and fields; 4:5/1:1, later story; safe for scheduled draft generation |
-| River / Discharge Signal | Explain river conditions and discharge forecast | Station readings/trend and/or `StationFloodForecast`; trigger on configured percentile/ratio/level | Station/river name, line/range band, discharge or level, trend | Source and station/time; “discharge forecast is not a flood declaration”; threshold status only if configured | Select observed vs forecast, metrics, wording; 4:5/1:1/9:16; later suggestions, not autonomous emergency alerts |
-| Environmental Alert | Repackage an already issued alert for social reach | Active `Alert`, severity, areas, expiry, instructions; trigger on new ACTIVE alert | Severity banner, area, concise instruction | Delta Signal alert status, issued/expiry, underlying evidence/source; never strengthen severity | Edit social headline/body only with alert linkage; all formats; later scheduled publication after approval policy |
-| Biodiversity / Species Observation | Share a verified species record or notable observation | GBIF `Occurrence`/`Species`, research-grade `Observation`, optional licensed image; trigger on selected record | Species image/name, place/date, taxonomy fact | GBIF/occurrence key and image license; “observation, not population estimate” | Edit common name/fact/caption, image, credit; 4:5/1:1; later safe suggestion if rights/quality gate passes |
-| Citizen Report | Give visibility to a verified community incident | `CitizenReport` only VERIFIED/RESOLVED, `ReportMedia`, location/category; manual selection initially | Photo plus verified status/category/location | “Citizen report”; verification status/date; consent/privacy and no naming unless allowed | Select image/crop, redact/omit personal data, edit caption; 4:5/1:1; later only with human policy |
-| Data Fact / Explainer | Turn a stable measurement or annual statistic into public education | National emissions, radiation, water-body facts, or one weather metric | One large number plus definition/context | Indicator/source, unit, year/window; define what value does not mean | Edit explanatory copy and metric label; 4:5/1:1; later scheduled for stable annual data |
-| Restoration Milestone | Show measured project progress | Project activity/metric and reporting date | Progress bar/timeline or single milestone | Organization, metric definition, reporting period; do not imply ecological success beyond metric | Edit project story, metric visibility, image; 4:5/1:1; later scheduled |
+| **Rain Watch** | Help residents plan the next day or two; broad public audience | `CurrentWeatherReading`, `HourlyWeatherForecast`, `DailyWeatherForecast`; Open-Meteo schedulers run frequently | Large rain probability or precipitation value, forecast window, district, simple rain graphic, “forecast” badge | Never phrase probability as certainty; observed rain and forecast rain must be separate series states | 1 manual, 2 suggested |
+| **River Watch** | Make river conditions understandable for riverine communities, journalists, and responders | `WaterLevelReading`, `WaterLevelStation`, `StationFloodForecast`, station thresholds, flood service endpoints | Station/river, observed level or forecast discharge, trend/status, timestamp, “check official updates” footer | “Elevated discharge” is not “flooding”; show threshold status only when configured; show forecast/model label | 1 manual, 2 suggested |
+| **Today in Bangladesh** | A calm daily local-weather briefing, useful for repeat engagement | District `CurrentWeatherReading` plus 30-day climate fields (`avgTemp30d`, `totalPrecip30d`, `avgPm25_30d`, etc.) | One headline, two or three metric tiles, “last updated” and district; optional small 30-day context chip | Do not mix current and 30-day values without labels; do not call a district “better/worse” without a defined benchmark | 1 manual, 2 suggested |
+| **Alert Explainer** | Increase reach and comprehension of an already-issued alert | Active `Alert` and `AlertArea`, severity, issue/expiry, description/instructions | Severity/status strip, affected area, what the alert says, issued/expiry time, source | Must mirror the approved alert; social copy cannot increase severity or add unsupported instructions | 1 manual, 2 suggested |
+| **Verified Community Report** | Give local people visibility while preserving moderation and privacy | `CitizenReport`, `ReportStatus`, `ReportMedia`, location and status history | Verified/resolved badge, category, general location, approved image, neutral summary | Only VERIFIED/RESOLVED; redact personal data; distinguish community evidence from sensor/official data; consent required for media/credit | 1 manual after moderation, 2 suggested |
+| **Wild Bangladesh** | Make biodiversity data memorable and educational | GBIF `Occurrence`, `Species`, observed date, taxon, image/license fields | Species image/name, where/when observed, one taxonomy or ecology fact, GBIF credit | Occurrence is not abundance or population trend; publish only rights-cleared images and sufficiently identified records | 1 manual, 2 suggested |
+| **Air Quality Reading** | Explain what the platform currently has without pretending it is an official health index | `HourlyAirQuality` PM2.5/PM10 and pollutant fields | Pollutant value, unit, timestamp, model/source label, “what this number means” explainer | Do not publish AQI colors, health thresholds, or medical advice until a validated national/WHO mapping and methodology is implemented | 2 after small work |
+| **District Climate Pulse** | Show a 30-day local pattern rather than a single weather moment | District/upazila/union 30-day rollups and `UnionDailyClimate` | 30-day rainfall/temperature/air-quality metric with explicit window and coverage | Must show the exact 30-day window and completeness; never call it a climate trend from one month | 2 after freshness gate |
+| **Coastal Conditions** | Useful seasonal information for coastal districts, fishers, and coastal readers | `MarineForecast`, coastal district flag, wave/swell/wind fields | Forecast date, wave height, dominant direction, coastal district, forecast badge | Not a navigation, storm-warning, or beach-safety notice; use only coastal districts with rows | 2 manual, 3 suggested |
 
-## Types evaluated but deferred
+## Types deliberately removed from MVP
 
-- **District Environmental Snapshot:** recommended only as a version of Daily Environmental Snapshot after freshness and rollup completeness checks; otherwise it is a label for mixed-quality metrics.
-- **Map of the Day:** visually attractive, but no Admin map renderer/export and no card-safe map styling currently exist. Defer until a deterministic SVG/static-map pipeline is added.
-- **Historical Comparison:** valuable, but requires a documented comparison-window service, missing-data rules, and period labels. Do not infer “unusually high” from one current value.
-- **Weekly Environmental Summary / Monthly Environmental Summary:** require scheduled aggregation, deduplication, coverage metrics, and period-complete source data. Defer to Phase 2/3.
-- **Facility / industrial environmental overview:** neutral directory cards are possible, but facility environmental performance content is not supported by current measurements. Never publish pollution or illegality claims from compliance status alone.
+- **Map of the Day:** useful later, but there is no deterministic Admin map-card renderer. A generic map screenshot will look inconsistent and be hard to source/interpret.
+- **Historical Comparison:** valuable only after a comparison service defines baseline, period, missing days, and timezone semantics. The existing daily climate history is a foundation, not a ready comparison claim.
+- **Weekly/Monthly Summary:** requires period-complete aggregation, deduplication, coverage metrics, and a scheduler. It should not be assembled from whichever rows happen to be latest.
+- **Facility environmental performance:** current facility data is directory/compliance metadata, not measured emissions or verified pollution. Neutral facility profiles may be useful later, but they are not environmental evidence cards.
+- **National emissions as a recurring social series:** the World Bank annual readings support occasional data explainers, not a daily/weekly audience habit.
+- **Radiation/UV content:** satellite shortwave radiation is not UV exposure. This can be an educational explainer only after the distinction is made prominent.
 
-## Shared copy and output rules
+## Copy system
 
-Headline templates should include place/time where useful and use “forecast”, “observed”, “reported”, or “GBIF occurrence” as appropriate. Captions must include source, as-of/retrieval time, unit, comparison window if any, and disclaimer. Bengali should be a parallel reviewed field, not a machine-translated afterthought. Initial output dimensions: 1080×1350 (4:5) and 1080×1080 (1:1); reserve a layout-safe model for 1080×1920 (9:16).
+### Headline patterns
 
+- Rain Watch: `Rain forecast for {place}: {window}`
+- River Watch: `{river} at {station}: {observed/forecast} condition`
+- Today in Bangladesh: `Today in {district}: {plain-language condition}`
+- Alert Explainer: `{alert title} — what the current alert says`
+- Verified Community Report: `Verified community report from {general area}`
+- Wild Bangladesh: `{species}: an observation from {place}`
+
+Headlines should avoid “crisis”, “danger”, “flood”, “record”, “unprecedented”, “polluted”, and “climate change” unless the linked evidence and approved alert explicitly support those words.
+
+### Caption pattern
+
+`What we know` → `where/when` → `source and evidence label` → `what it does not mean` → `where to check next`.
+
+Captions should be Bengali-first for local public-service series, with an English parallel field for institutional audiences. Translation must preserve numbers, dates, uncertainty, and source labels exactly. Admin review remains required for both language versions.
+
+## Design system for every series
+
+- Delta Signal logo in the top-left brand lockup; preserve clear space and never crop it.
+- One dominant headline, one dominant metric or visual, and a maximum of three supporting metrics.
+- Location and date/time are always visible; use Bangladesh-relevant place names before provider names.
+- Use an evidence badge: `OBSERVED`, `FORECAST`, `ALERT`, `VERIFIED REPORT`, `GBIF OBSERVATION`, or `MODEL DATA`.
+- Use color as a secondary cue, not as the meaning itself; text labels must carry status.
+- Keep the source/disclaimer footer readable in 4:5 and 1:1 exports.
+- Use 4:5 as the primary feed design and 1:1 as a deliberate reflow, not a crop. Reserve a third safe layout for 9:16 stories.
+- Prefer simple line/range/bar visuals over decorative gauges. A chart must show its time window and units.
+
+## Admin-editable fields
+
+Admins may edit headline, summary, caption, Bengali/English copy, visible metric selection, location label, source note, disclaimer, template, and format. Source values, units, evidence type, observed/forecast timestamp, and source IDs are read-only; changing those requires selecting another source record.
+
+## Future automated publishing suitability
+
+Rain Watch, Today in Bangladesh, and Coastal Conditions can eventually support scheduled generation with freshness gates. River Watch, Alert Explainer, Verified Community Report, and Wild Bangladesh should retain human approval by default because their wording, social impact, rights, or public-safety implications are higher.

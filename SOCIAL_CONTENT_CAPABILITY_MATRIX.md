@@ -27,3 +27,30 @@ Ready today means a deterministic structured card can be built from one or a sma
 
 The practical A/B shortlist is: active environmental alert, current weather snapshot, weather forecast, river/discharge forecast, GBIF species observation, national emissions fact, and a neutral verified citizen report. Historical comparison, AQI health interpretation, and weekly/monthly summaries need explicit aggregation/completeness work.
 
+## Revised editorial prioritization
+
+The technical shortlist above is not the same as the best social-media product. The recommended editorial priority is:
+
+| Priority | Public series | Why it is relevant | Current data status | Decision |
+|---|---|---|---|---|
+| 1 | Rain Watch | High-frequency, practical, easy to understand, relevant across Bangladesh | Current/hourly/daily Open-Meteo weather data and schedulers exist | Build first |
+| 2 | River Watch | Bangladesh-specific public value; riverine communities need place-based information | Station readings, thresholds, discharge forecasts, and chart endpoints exist | Build first, with careful wording |
+| 3 | Today in Bangladesh | Creates a consistent daily habit without alarmism | District current readings and 30-day rollups exist | Build first after structured metric selection |
+| 4 | Alert Explainer | Converts already-reviewed platform alerts into useful reach | Active alerts and geographic areas exist | Build first, approval mandatory |
+| 5 | Verified Community Report | Human stories and local evidence are more engaging than raw dashboards | Reports, status history, uploaded media, and moderation workflow exist | Manual only until consent/redaction is explicit |
+| 6 | Wild Bangladesh | Strong visual appeal and national identity; useful educational format | GBIF occurrences/species and image/license metadata exist | Manual first; rights/quality gate |
+| 7 | Air Quality Reading | Important topic, but the repository does not yet provide a validated AQI interpretation | Raw pollutant fields exist | Small backend/methodology work first |
+| 8 | District Climate Pulse | Valuable for local context, but needs freshness/completeness rules | 30-day rollups and union daily history exist | Add aggregation metadata before scaling |
+
+This means national emissions, marine forecasts, radiation, facilities, and generic “data facts” should be secondary editorial formats rather than the MVP navigation or automatic suggestion feed. They are valid data assets, but they do not currently provide the same combination of local relevance, visual clarity, freshness, and repeatable audience value.
+
+## Data-to-poster decision rule
+
+Before a source can create a Suggested Post, it should pass all four checks:
+
+1. **Public value:** a reader can understand why this matters locally.
+2. **Evidence clarity:** observed, forecast, model-derived, alert, or community-reported status is visible.
+3. **Freshness:** the source timestamp is inside the series-specific window.
+4. **Editorial distinctiveness:** the post adds an interpretation or decision aid, not just a database value.
+
+If a source passes only the first two checks, it remains available for manual Create Post but should not generate automatic suggestions.
