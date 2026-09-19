@@ -78,6 +78,9 @@ Current implemented capabilities per domain. `✓` = permitted, `—` = not perm
 | Analytics dashboard (`/dashboard`) | — | empty state | researcher view | org view | government view | moderator view | admin view |
 | **Ingestion / Admin** | | | | | | | |
 | View ingestion job history | — | — | — | — | — | ✓ | ✓ |
+| **Social Content** | | | | | | | |
+| Create/edit/render/download cards | — | — | — | — | — | perm | ✓ |
+| Approve cards and mark external publication | — | — | — | — | — | — | perm |
 | View audit log | — | — | — | — | — | — | ✓ |
 | Manage permissions matrix | — | — | — | — | — | — | ✓ |
 
@@ -102,6 +105,11 @@ What the code enforces today (`@Roles`, `@RequirePermissions`, service-layer own
 | `/analytics/researcher` | `RESEARCHER` role |
 | `/analytics/orgadmin` | `ORGANIZATION_ADMIN` role |
 | `GET /ingestion/jobs`, `GET /ingestion/jobs/:id` | `MODERATOR`, `ADMIN` |
+| `/social-content/drafts*` create/list/read | `social_content.create` |
+| `/social-content/drafts/:id` edit/archive | `social_content.edit` |
+| `/social-content/drafts/:id/render` | `social_content.render` |
+| `/social-content/drafts/:id/approve`, `/mark-published` | `social_content.approve` |
+| `/social-content/drafts/:id/download` | `social_content.download` |
 
 Everything else public-facing uses `@Public()`. Dataset downloads and access requests are enforced via policy checks in the service layer.
 
@@ -109,7 +117,7 @@ Everything else public-facing uses `@Public()`. Dataset downloads and access req
 
 `PermissionsGuard` checks DB-backed permission grants for routes decorated with `@RequirePermissions(...)`. Results are cached per role for 5 minutes. `ADMIN` bypasses every check regardless of DB state.
 
-Named permissions seeded on first boot (11 total):
+Named permissions seeded on first boot (17 total):
 
 | Permission key | Purpose | Default role holders |
 | --- | --- | --- |
@@ -124,6 +132,12 @@ Named permissions seeded on first boot (11 total):
 | `organizations.access` | View own organization memberships | ORGANIZATION_ADMIN |
 | `organizations.manage` | Full organization CRUD in admin console | *(none — ADMIN bypasses guard)* |
 | `users.manage` | Manage user roles and deactivate accounts | *(none — ADMIN bypasses guard)* |
+| `social_content.create` | Create source-backed social drafts | MODERATOR |
+| `social_content.edit` | Edit and archive social drafts | MODERATOR |
+| `social_content.render` | Render deterministic card assets | MODERATOR |
+| `social_content.approve` | Approve cards and record external publication | *(none — ADMIN only by default)* |
+| `social_content.download` | Download approved cards | MODERATOR |
+| `social_content.manage` | Manage future templates and rules | *(none — ADMIN bypasses guard)* |
 
 Admins can grant or revoke any permission from any role via `POST/DELETE /admin/permissions/roles` — audited, runtime-configurable, no redeploy needed.
 

@@ -241,6 +241,22 @@ Provider job-tracking API for scheduled external syncs. Weather, GBIF, and Flood
 | POST | `/ingestion/jobs/:id/retry` | Admin | ✗ | Retry failed job |
 | POST | `/ingestion/providers/openmeteo/sync` | Admin | ✗ | Trigger OpenMeteo sync — superseded by the cron scheduler in `weather`, likely unnecessary now |
 
+## Social Content
+
+| Method | Path | Access | Status | Purpose |
+| --- | --- | --- | --- | --- |
+| GET | `/social-content/drafts` | `social_content.create` | ✓ | List reviewed social drafts |
+| GET | `/social-content/drafts/:id` | `social_content.create` | ✓ | Draft, source snapshot, and rendered assets |
+| POST | `/social-content/drafts` | `social_content.create` | ✓ | Create a source-backed draft |
+| PATCH | `/social-content/drafts/:id` | `social_content.edit` | ✓ | Edit copy, format, and locale |
+| POST | `/social-content/drafts/:id/render` | `social_content.render` | ✓ | Render deterministic SVG card |
+| POST | `/social-content/drafts/:id/approve` | `social_content.approve` | ✓ | Approve a rendered card |
+| POST | `/social-content/drafts/:id/archive` | `social_content.edit` | ✓ | Archive a draft |
+| GET | `/social-content/drafts/:id/download` | `social_content.download` | ✓ | Return approved asset URL and dimensions |
+| POST | `/social-content/drafts/:id/mark-published` | `social_content.approve` | ✓ | Record external manual publication |
+
+Meta/Facebook/Instagram publishing and automatic suggestions are not implemented.
+
 ## Metrics
 
 | Method | Path | Access | Status | Purpose |

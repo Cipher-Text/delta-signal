@@ -2,7 +2,7 @@
 
 Delta Signal uses PostgreSQL as the primary database. The Prisma schema lives at `packages/database/prisma/schema.prisma`. The Prisma client is regenerated via `pnpm run db:generate` from the `packages/database` directory.
 
-Current state: **61 models, 32 enums, 13 migrations applied.**
+Current schema state: **63 models, 35 enums, 15 migration files**. The additive social-content migration is ready to apply; the existing database remains at the prior migration until `pnpm db:migrate` is run.
 
 ## Enums
 
@@ -39,7 +39,10 @@ Current state: **61 models, 32 enums, 13 migrations applied.**
 | `IngestionStatus` | `QUEUED RUNNING SUCCEEDED FAILED CANCELLED` |
 | `NotificationChannel` | `EMAIL` |
 | `DeliveryStatus` | `PENDING SENT FAILED` |
-| `AuditAction` | `USER_REGISTER USER_LOGIN USER_LOGIN_FAILED USER_LOGOUT USER_ROLE_CHANGE USER_DEACTIVATE PASSWORD_CHANGE PASSWORD_RESET_REQUEST PASSWORD_RESET EMAIL_VERIFICATION_SENT EMAIL_VERIFIED REPORT_SUBMIT REPORT_STATUS_CHANGE REPORT_COMMENT_ADD REPORT_MEDIA_ADD ALERT_CREATE ALERT_STATUS_CHANGE DATASET_ACCESS DATASET_DOWNLOAD DATASET_UPDATE DATASET_VERSION_PUBLISH DATASET_ACCESS_DECISION OBSERVATION_SUBMIT OBSERVATION_TRUST_CHANGE OBSERVATION_UPDATE OBSERVATION_DELETE OBSERVATION_MEASUREMENT_ADD OBSERVATION_MEASUREMENT_DELETE RESTORATION_PROJECT_CREATE RESTORATION_PROJECT_UPDATE RESTORATION_PROJECT_JOIN RESTORATION_TARGET_ADD RESTORATION_ACTIVITY_ADD RESTORATION_METRIC_ADD PERMISSION_GRANT PERMISSION_REVOKE EMISSION_SOURCE_CREATE EMISSION_ENTRY_CREATE COMMUNITY_POST_CREATE COMMUNITY_POST_DELETE COMMUNITY_COMMENT_ADD COMMUNITY_COMMENT_DELETE COMMUNITY_POLL_VOTE FACILITY_CREATE FACILITY_UPDATE FACILITY_DELETE COMPANY_CREATE COMPANY_UPDATE` |
+| `AuditAction` | Existing auth, report, alert, dataset, observation, restoration, permission, facility, company, and community actions plus `SOCIAL_DRAFT_CREATE SOCIAL_DRAFT_UPDATE SOCIAL_CARD_RENDER SOCIAL_DRAFT_APPROVE SOCIAL_DRAFT_ARCHIVE SOCIAL_CARD_DOWNLOAD SOCIAL_PUBLICATION_MARK` |
+| `SocialContentType` | `CURRENT_WEATHER WEATHER_FORECAST RIVER_SIGNAL ENVIRONMENTAL_ALERT BIODIVERSITY_OBSERVATION` |
+| `SocialDraftStatus` | `DRAFT RENDERED APPROVED ARCHIVED` |
+| `SocialCardFormat` | `PORTRAIT_4_5 SQUARE_1_1` |
 
 All 48 `AuditAction` values are written by services (`EMISSION_SOURCE_CREATE` and `EMISSION_ENTRY_CREATE` are stale holdovers from the old emissions schema — no service writes them; they will be removed in a future migration). See the `audit` section in [modules.md](modules.md) for which services write what.
 
@@ -142,6 +145,15 @@ The unique constraint on `(projectId, userId)` is what makes joining a project i
 
 `IngestionJob` records are written by `IngestionService.startJob`/`completeJob`/`failJob`, called from `WeatherScheduler`, `BiodiversityScheduler`, `FloodScheduler`, `RadiationScheduler`, `MarineScheduler`, and `LocationClimateScheduler` on every cron run. (`FloodScheduler` now persists to `StationFloodForecast`, not the old district-based `FloodForecast` model.) Successful jobs set `Dataset.lastSyncedAt` for matching dataset categories. See the `ingestion` module in [modules.md](modules.md).
 
+## Social Content
+
+| Model | Key Fields | Relations |
+| --- | --- | --- |
+| `SocialPostDraft` | `id`, `type SocialContentType`, `status SocialDraftStatus`, `format SocialCardFormat`, editable copy fields, `sourceLabel`, `sourceObservedAt?`, immutable `sourceSnapshot Json`, approval/publication timestamps | → `User` creator/updater/approver, `District?`, `SocialRenderedAsset[]` |
+| `SocialRenderedAsset` | `id`, `draftId`, `format`, `width`, `height`, unique `storageKey`, `publicUrl`, `contentHash`, `renderVersion` | → `SocialPostDraft` |
+
+Social drafts are source-backed editorial records. The source snapshot preserves the exact measurement/forecast/alert/occurrence facts used for rendering. Editing an approved or archived draft is blocked; editing a draft resets approval. Rendered assets are deterministic SVG files stored through the existing S3/MinIO `StorageService`. There is no Meta publication entity or automatic publishing integration in Phase 1; `publishedAt`/`publishedNote` only record a manual external publication mark.
+
 ## Permissions
 
 | Model | Key Fields | Relations |
@@ -149,7 +161,7 @@ The unique constraint on `(projectId, userId)` is what makes joining a project i
 | `Permission` | `id`, `key unique`, `description` | → `RolePermission[]` |
 | `RolePermission` | `role UserRole`, `permissionId`; unique `(role, permissionId)` | → `Permission` |
 
-Seeded on first boot by `PermissionsService.onModuleInit` with 13 named permissions and default role grants. Queried by `PermissionsGuard` for fine-grained access control on routes decorated with `@RequirePermissions(...)`. ADMIN bypasses all permission checks in the guard. Results cached per role for 5 minutes.
+Seeded on first boot by `PermissionsService.onModuleInit` with 17 named permissions and default role grants. Queried by `PermissionsGuard` for fine-grained access control on routes decorated with `@RequirePermissions(...)`. ADMIN bypasses all permission checks in the guard. Results cached per role for 5 minutes.
 
 ## Weather Models
 
@@ -320,4 +332,4 @@ pnpm run db:studio            # Open Prisma Studio at localhost:5555
 
 61 tables live.
 
-The `LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `CompaniesService`, and `SeedService` auto-seed data on first boot via `OnModuleInit`. `LocationsService` seeds 8 divisions, 64 districts (all with GeoJSON boundary), 494 upazilas, and 4,540 unions — all with lat/lng. All coordinates are hardcoded in `apps/api/src/locations/seed/bangladesh.ts`; no runtime file reads are required. This file is the source of truth — edit it directly if location data needs updating. `DatasetsService` seeds 9 catalog records (OpenMeteo Weather, OpenMeteo Flood, District Air Quality Index, Water Body Registry, Biodiversity Occurrences, Sundarbans Monitoring, Emissions Inventory, OpenMeteo Marine Weather, OpenMeteo Satellite Radiation). `ProvidersService` seeds the OpenMeteo, GBIF, and World Bank provider records. `PermissionsService` seeds 11 named permissions and default role grants. `CompaniesService` seeds 801 company records (two-pass: parents first, then subsidiaries) and 1,451 industrial facility records using pre-loaded company lookup maps — see `apps/api/src/companies/companies.seed.ts`, `apps/api/src/companies/mib-companies.seed.ts`, `apps/api/src/facilities/facilities.seed.ts`, and `apps/api/src/facilities/mib-facilities.seed.ts`. `SeedService` seeds 6 dev user accounts (one per role) and a seed organization for local development. No separate seed script is required for those tables.
+The `LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `CompaniesService`, and `SeedService` auto-seed data on first boot via `OnModuleInit`. `LocationsService` seeds 8 divisions, 64 districts (all with GeoJSON boundary), 494 upazilas, and 4,540 unions — all with lat/lng. All coordinates are hardcoded in `apps/api/src/locations/seed/bangladesh.ts`; no runtime file reads are required. This file is the source of truth — edit it directly if location data needs updating. `DatasetsService` seeds 9 catalog records (OpenMeteo Weather, OpenMeteo Flood, District Air Quality Index, Water Body Registry, Biodiversity Occurrences, Sundarbans Monitoring, Emissions Inventory, OpenMeteo Marine Weather, OpenMeteo Satellite Radiation). `ProvidersService` seeds the OpenMeteo, GBIF, and World Bank provider records. `PermissionsService` seeds 17 named permissions and default role grants. `CompaniesService` seeds 801 company records (two-pass: parents first, then subsidiaries) and 1,451 industrial facility records using pre-loaded company lookup maps — see `apps/api/src/companies/companies.seed.ts`, `apps/api/src/companies/mib-companies.seed.ts`, `apps/api/src/facilities/facilities.seed.ts`, and `apps/api/src/facilities/mib-facilities.seed.ts`. `SeedService` seeds 6 dev user accounts (one per role) and a seed organization for local development. No separate seed script is required for those tables.

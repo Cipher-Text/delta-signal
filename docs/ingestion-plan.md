@@ -60,7 +60,7 @@ Added these well-designed entities not yet in delta-signal:
 
 ## What delta-signal already has (do not duplicate)
 
-This table reflects the state at the time of original planning. The schema now has 61 models and 32 enums. See `docs/architecture/data-model.md` for the full current model list.
+This table reflects the state at the time of original planning. The schema now has 63 models and 35 enums. See `docs/architecture/data-model.md` for the full current model list.
 
 | Model | Module | Notes |
 | --- | --- | --- |

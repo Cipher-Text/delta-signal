@@ -21,6 +21,12 @@ const ALL_PERMISSIONS: { key: string; description: string }[] = [
   { key: 'organizations.access', description: 'View own organization memberships' },
   { key: 'organizations.manage', description: 'Full organization CRUD in admin console' },
   { key: 'users.manage',        description: 'Manage user roles and deactivate accounts' },
+  { key: 'social_content.create',  description: 'Create social content drafts' },
+  { key: 'social_content.edit',    description: 'Edit social content drafts' },
+  { key: 'social_content.render',  description: 'Render social content cards' },
+  { key: 'social_content.approve', description: 'Approve social content cards' },
+  { key: 'social_content.download', description: 'Download approved social cards' },
+  { key: 'social_content.manage',  description: 'Manage social content templates and settings' },
 ];
 
 // Default grants seeded on first boot. ADMIN is excluded from the DB rows —
@@ -47,6 +53,16 @@ const DEFAULT_GRANTS: { role: string; key: string }[] = [
   { role: 'MODERATOR',          key: 'alerts.manage' },
   { role: 'MODERATOR',          key: 'restoration.join' },
   { role: 'MODERATOR',          key: 'observations.delete' },
+  { role: 'MODERATOR',          key: 'social_content.create' },
+  { role: 'MODERATOR',          key: 'social_content.edit' },
+  { role: 'MODERATOR',          key: 'social_content.render' },
+  { role: 'MODERATOR',          key: 'social_content.download' },
+  { role: 'ADMIN',              key: 'social_content.create' },
+  { role: 'ADMIN',              key: 'social_content.edit' },
+  { role: 'ADMIN',              key: 'social_content.render' },
+  { role: 'ADMIN',              key: 'social_content.approve' },
+  { role: 'ADMIN',              key: 'social_content.download' },
+  { role: 'ADMIN',              key: 'social_content.manage' },
 ];
 
 @Injectable()

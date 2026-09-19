@@ -187,6 +187,33 @@ enum AuditAction {
   FACILITY_DELETE
   COMPANY_CREATE
   COMPANY_UPDATE
+  SOCIAL_DRAFT_CREATE
+  SOCIAL_DRAFT_UPDATE
+  SOCIAL_CARD_RENDER
+  SOCIAL_DRAFT_APPROVE
+  SOCIAL_DRAFT_ARCHIVE
+  SOCIAL_CARD_DOWNLOAD
+  SOCIAL_PUBLICATION_MARK
+}
+
+enum SocialContentType {
+  CURRENT_WEATHER
+  WEATHER_FORECAST
+  RIVER_SIGNAL
+  ENVIRONMENTAL_ALERT
+  BIODIVERSITY_OBSERVATION
+}
+
+enum SocialDraftStatus {
+  DRAFT
+  RENDERED
+  APPROVED
+  ARCHIVED
+}
+
+enum SocialCardFormat {
+  PORTRAIT_4_5
+  SQUARE_1_1
 }
 
 enum DatasetAccessRequestStatus {
@@ -396,6 +423,9 @@ model User {
   communityPosts             CommunityPost[]
   postComments               PostComment[]
   pollVotes                  PollVote[]
+  socialDraftsCreated        SocialPostDraft[]       @relation("SocialDraftCreator")
+  socialDraftsUpdated        SocialPostDraft[]       @relation("SocialDraftUpdater")
+  socialDraftsApproved       SocialPostDraft[]       @relation("SocialDraftApprover")
 
   @@index([email])
   @@index([role])
@@ -629,6 +659,7 @@ model District {
   marineForecasts            MarineForecast[]
   waterLevelStations         WaterLevelStation[]
   communityPosts             CommunityPost[]
+  socialPostDrafts           SocialPostDraft[]
   industrialFacilities       IndustrialFacility[]
   companiesHQ                Company[]
 
@@ -1625,6 +1656,61 @@ model AuditEvent {
   @@index([userId])
   @@index([action])
   @@index([entityType, entityId])
+}
+
+// ─── Social content ─────────────────────────────────────────────────────────
+
+model SocialPostDraft {
+  id                String            @id @default(cuid())
+  type              SocialContentType
+  status            SocialDraftStatus @default(DRAFT)
+  format            SocialCardFormat  @default(PORTRAIT_4_5)
+  locale            String            @default("en")
+  headline          String
+  summary           String?           @db.Text
+  caption           String?           @db.Text
+  disclaimer        String?
+  templateKey       String            @default("delta-signal-v1")
+  districtId        String?
+  sourceId          String?
+  sourceLabel       String
+  sourceObservedAt  DateTime?
+  sourceSnapshot    Json
+  createdById       String
+  updatedById       String?
+  approvedById      String?
+  approvedAt        DateTime?
+  publishedAt       DateTime?
+  publishedNote     String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  district          District?         @relation(fields: [districtId], references: [id])
+  createdBy         User              @relation("SocialDraftCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy         User?             @relation("SocialDraftUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
+  approvedBy        User?             @relation("SocialDraftApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  renderedAssets    SocialRenderedAsset[]
+
+  @@index([status, createdAt])
+  @@index([type, createdAt])
+  @@index([districtId])
+}
+
+model SocialRenderedAsset {
+  id            String            @id @default(cuid())
+  draftId       String
+  format        SocialCardFormat
+  width         Int
+  height        Int
+  storageKey    String            @unique
+  publicUrl     String
+  contentHash   String
+  renderVersion String
+  createdAt     DateTime          @default(now())
+
+  draft         SocialPostDraft   @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId, createdAt])
 }
 
 // ─── Community ────────────────────────────────────────────────────────────────

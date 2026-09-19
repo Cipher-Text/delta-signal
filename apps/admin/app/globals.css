@@ -733,6 +733,20 @@ body {
   font-size: 12px;
 }
 
+.social-draft-list { display: grid; gap: 16px; margin-top: 24px; }
+.social-draft-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+.social-draft-heading { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.social-draft-heading h2 { font-size: 17px; font-weight: 650; margin-left: 4px; }
+.social-draft-meta { color: var(--text-secondary); font-size: 12px; margin: 8px 0 16px; }
+.social-form, .social-edit-form { display: grid; gap: 12px; }
+.social-edit-form { border-top: 1px solid var(--border-subtle); padding-top: 16px; }
+.social-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+.social-actions form { display: inline; }
+.social-preview { display: flex; gap: 16px; align-items: center; margin-top: 16px; padding: 12px; background: var(--surface-subtle); border: 1px solid var(--border-subtle); border-radius: 7px; }
+.social-preview img { width: 120px; height: 150px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: #f0f4f5; }
+.social-preview strong { font-size: 13px; }
+.social-preview p { color: var(--text-secondary); font-size: 12px; margin-top: 4px; }
+
 .btn-danger-outline {
   background: transparent;
   color: #dc2626;

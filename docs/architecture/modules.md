@@ -366,9 +366,27 @@ Owns provider job visibility for scheduled external data fetches, using the `Ing
 
 Status: implemented service + read controller. `WeatherScheduler`, `BiodiversityScheduler`, `FloodScheduler`, `RadiationScheduler`, `MarineScheduler`, `EmissionsScheduler`, and `LocationClimateScheduler` all call `IngestionService.startJob`, `completeJob`, and `failJob`; successful jobs update `Dataset.lastSyncedAt` for matching dataset categories. Admin/moderator routes expose `GET /ingestion/jobs` and `GET /ingestion/jobs/:id`. There is no queue worker, manual trigger endpoint, or retry endpoint; recurring cron jobs are the retry mechanism.
 
+## social-content ✓
+
+Owns the Phase 1 human-reviewed social-card workflow. It reads existing weather, forecast, river-discharge, alert, biodiversity, and district records; it does not ingest new environmental data or publish to Meta platforms.
+
+| Method | Path | Access |
+| --- | --- | --- |
+| GET | `/social-content/drafts` | `social_content.create` |
+| GET | `/social-content/drafts/:id` | `social_content.create` |
+| POST | `/social-content/drafts` | `social_content.create` |
+| PATCH | `/social-content/drafts/:id` | `social_content.edit` |
+| POST | `/social-content/drafts/:id/render` | `social_content.render` |
+| POST | `/social-content/drafts/:id/approve` | `social_content.approve` |
+| POST | `/social-content/drafts/:id/archive` | `social_content.edit` |
+| GET | `/social-content/drafts/:id/download` | `social_content.download` |
+| POST | `/social-content/drafts/:id/mark-published` | `social_content.approve` |
+
+Supported types are `CURRENT_WEATHER`, `WEATHER_FORECAST`, `RIVER_SIGNAL`, `ENVIRONMENTAL_ALERT`, and `BIODIVERSITY_OBSERVATION`. `SocialPostDraft` stores the source snapshot and source timestamp. `SocialRenderedAsset` stores the content hash, dimensions, render version, and S3/MinIO object URL. The renderer emits deterministic SVG in 1080×1350 (4:5) or 1080×1080 (1:1). Approval requires a rendered asset; editing resets a draft to `DRAFT`. All mutations write social `AuditEvent` actions.
+
 ## permissions ✓
 
-Owns the DB-backed permission model: `Permission` (key, description) and `RolePermission` (role → permission join). Seeds 11 named permissions and default grants for all non-ADMIN roles on first boot. (`emissions.manage` and `emissions.report` were removed in 2026-09-02 when the emissions module was converted to API ingestion.)
+Owns the DB-backed permission model: `Permission` (key, description) and `RolePermission` (role → permission join). Seeds 17 named permissions and default grants for all non-ADMIN roles on first boot. Social-content permissions are granted to MODERATOR for create/edit/render/download and to ADMIN for the full workflow. (`emissions.manage` and `emissions.report` were removed in 2026-09-02 when the emissions module was converted to API ingestion.)
 
 | Method | Path | Access |
 | --- | --- | --- |
@@ -378,7 +396,7 @@ Owns the DB-backed permission model: `Permission` (key, description) and `RolePe
 
 `PermissionsService.getPermissionsForRole(role)` is the runtime path; results are cached per role for 5 minutes. `ADMIN` always receives every permission regardless of DB state. Grant and revoke each write `PERMISSION_GRANT` / `PERMISSION_REVOKE` audit events.
 
-Named permissions (11): `reports.create`, `reports.moderate`, `alerts.manage`, `restoration.create`, `restoration.join`, `observations.create`, `observations.verify`, `observations.delete`, `organizations.access`, `organizations.manage`, `users.manage`.
+Named permissions (17): existing report, alert, restoration, observation, organization, and user permissions plus `social_content.create`, `social_content.edit`, `social_content.render`, `social_content.approve`, `social_content.download`, and `social_content.manage`.
 
 ## analytics ✓
 

@@ -109,7 +109,13 @@ export type Permission =
   | 'observations.delete'  // Delete observations
   | 'organizations.access' // View own organization memberships (granted dynamically)
   | 'organizations.manage' // Full organization CRUD in admin console
-  | 'users.manage';        // Manage user roles and deactivate accounts
+  | 'users.manage'          // Manage user roles and deactivate accounts
+  | 'social_content.create'
+  | 'social_content.edit'
+  | 'social_content.render'
+  | 'social_content.approve'
+  | 'social_content.download'
+  | 'social_content.manage';
 
 export const ENVIRONMENTAL_EXPERTISE = [
   'Biodiversity monitoring',

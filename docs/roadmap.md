@@ -189,6 +189,10 @@ Remaining gap: no SMS channel (EMAIL only). Government agency and emergency broa
 - Observability. Audit *writes* are complete; a dashboard over `AuditEvent` is still missing.
 - ~~Secure file/media handling~~ Done (2026-08-29) — `media` module fully implemented with `StorageService`, `MediaService`, `POST /media/upload`, `POST /media/presign`.
 
+### 6e. Reviewed social content cards — Done (2026-09-19)
+
+Phase 1 manual card creation is implemented in `social-content` and `apps/admin`: source-backed drafts for current weather, weather forecast, river/discharge signal, environmental alerts, and biodiversity observations; editable copy; deterministic 4:5/1:1 SVG rendering; S3/MinIO asset storage; approval, download, and manual external-publication marking; DB-backed permissions and audit events. The additive Prisma migration is ready to apply. Automatic suggestions, rule evaluation, scheduling, and Meta publishing remain future phases.
+
 Exit criteria:
 
 - ~~No secret falls back to a hardcoded default.~~ **Met** (2026-08-21) — see 6a.
@@ -196,7 +200,7 @@ Exit criteria:
 - ~~Brute-force attempts leave a visible audit trail.~~ **Met** (2026-08-21) — `USER_LOGIN_FAILED` written on every rejected login; see 6a.
 - ~~An `EMERGENCY` alert reaches a subscribed user, and a failed delivery is visible.~~ **Met** (2026-08-22) — `NotificationDelivery` records track PENDING→SENT/FAILED per user per alert; `EmailProcessor` writes status on success/failure; BullMQ retries up to 4 times with exponential backoff.
 - Public and authenticated flows are tested. — **Met** (2026-09-02). 153 unit tests (11 spec files) + 45 e2e tests (4 spec files) covering public endpoints, auth token lifecycle, and CITIZEN/RESEARCHER/MODERATOR/ADMIN role + permission flows against a real database. `apps/web` and `apps/admin` still have no tests.
-- Sensitive actions are auditable. — **Met** (complete as of 2026-08-27). All 25 `AuditAction` values are written. Every implemented mutating endpoint audits.
+- Sensitive actions are auditable. — **Met** (complete as of 2026-08-27 and extended 2026-09-19 for social content). All currently defined implemented mutation actions are audited.
 - ~~Deployment and operations are repeatable.~~ **Met** (2026-08-22) — multi-stage Dockerfiles for all three apps; `docker-compose.yml` with Mailpit, Redis, API, web, and admin services; healthcheck-gated startup; `prisma migrate deploy` entrypoint in the API container.
 
 ---

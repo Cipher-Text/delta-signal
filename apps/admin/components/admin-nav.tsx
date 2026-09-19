@@ -12,6 +12,7 @@ const MODERATOR_LINKS = [
   { href: '/reports', label: 'Reports' },
   { href: '/alerts', label: 'Alerts' },
   { href: '/observations', label: 'Observations' },
+  { href: '/social-content', label: 'Social Content' },
   { href: '/ingestion', label: 'Ingestion' },
   { href: '/system', label: 'System Health' },
 ];

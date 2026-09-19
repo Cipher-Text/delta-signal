@@ -30,6 +30,7 @@ RUN pnpm install --frozen-lockfile \
 # Copy source after install so code edits don't bust the deps layer
 COPY packages/   ./packages/
 COPY apps/api/   ./apps/api/
+COPY apps/admin/public/logo.svg ./apps/admin/public/logo.svg
 COPY tsconfig.base.json ./
 
 # Generate Prisma client for the builder's platform (linux/amd64 or arm64)
@@ -61,6 +62,7 @@ COPY packages/ui/package.json             ./packages/ui/
 COPY packages/shared/src/     ./packages/shared/src/
 COPY packages/database/src/   ./packages/database/src/
 COPY packages/database/prisma ./packages/database/prisma
+COPY apps/admin/public/logo.svg ./apps/admin/public/logo.svg
 
 RUN pnpm install --frozen-lockfile --prod \
     --fetch-retries=5 \

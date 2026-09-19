@@ -26,4 +26,7 @@ export type {
   ProfileVisibility,
   IngestionStatus,
   AuditAction,
+  SocialContentType,
+  SocialDraftStatus,
+  SocialCardFormat,
 } from '@prisma/client';

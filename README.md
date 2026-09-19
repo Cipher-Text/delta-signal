@@ -156,5 +156,8 @@ pnpm exec jest --coverage                       # Coverage report
 | [docs/progress.md](docs/progress.md) | Detailed implementation changelog |
 | [docs/architecture/data-model.md](docs/architecture/data-model.md) | Schema, models, and field reference |
 | [docs/architecture/modules.md](docs/architecture/modules.md) | API module map and endpoints |
+| [EXISTING_DATA_AND_FEATURE_AUDIT.md](EXISTING_DATA_AND_FEATURE_AUDIT.md) | Social-content feature audit and current data capabilities |
+| [SOCIAL_CONTENT_ARCHITECTURE.md](SOCIAL_CONTENT_ARCHITECTURE.md) | Social-content domain and rendering architecture |
+| [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md) | Social-content implementation phases and MVP boundaries |
 | [docs/integrations/](docs/integrations/) | OpenMeteo, GBIF, and other provider docs |
 | [docs/decisions/](docs/decisions/) | Architecture decision records |

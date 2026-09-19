@@ -26,7 +26,7 @@ Build persistence and ingestion before features. Real environmental data in the 
 
 ## ~~Milestone 4: Database Foundation~~ — Done
 
-`packages/database` — Initial schema established and auto-seeding wired. Current state: 14 migrations, 61 models, 32 enums. PostgreSQL on port 5432. Auto-seed on boot via OnModuleInit hooks (`LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `SeedService`).
+`packages/database` — Initial schema established and auto-seeding wired. Current state: 15 migration files, 63 models, 35 enums. The latest social-content migration is ready to apply. PostgreSQL on port 5432. Auto-seed on boot via OnModuleInit hooks (`LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `SeedService`).
 
 ---
 

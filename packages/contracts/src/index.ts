@@ -253,6 +253,15 @@ export const routes = {
     subscriptions: `${apiPrefix}/notifications/subscriptions`,
     unsubscribe: (id: string) => `${apiPrefix}/notifications/subscriptions/${id}`,
   },
+
+  socialContent: {
+    drafts: `${apiPrefix}/social-content/drafts`,
+    draft: (id: string) => `${apiPrefix}/social-content/drafts/${id}`,
+    render: (id: string) => `${apiPrefix}/social-content/drafts/${id}/render`,
+    approve: (id: string) => `${apiPrefix}/social-content/drafts/${id}/approve`,
+    archive: (id: string) => `${apiPrefix}/social-content/drafts/${id}/archive`,
+    markPublished: (id: string) => `${apiPrefix}/social-content/drafts/${id}/mark-published`,
+  },
 } as const;
 
 // ─── Response Envelopes ───────────────────────────────────────────────────────
