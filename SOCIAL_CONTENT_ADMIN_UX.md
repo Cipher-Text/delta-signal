@@ -44,6 +44,12 @@ Use the existing URL-driven tab/filter and `data-table` patterns. Each row/card 
 
 Suggested Posts should be ranked by editorial usefulness, not only by threshold magnitude. The first row should explain the public reason in plain language, for example “Rain is forecast for Sylhet tomorrow” or “A verified report with an approved image is available in Khulna,” rather than “precipitationProbabilityMax > 60”. A suggestion should also state why it was not generated when a source fails freshness, evidence, or quality checks.
 
+## Draft queue layout
+
+Do not render every draft as a fully expanded editor on one long page. Use status tabs (`All`, `Drafts`, `Ready for approval`, `Approved`, `Archived`) and compact expandable draft rows. A collapsed row shows status, editorial series, headline, location/scope, source, freshness, and format. Opening a row reveals the editor, evidence, preview, and lifecycle actions. The Create Post form should be closed by default so the queue remains the primary workspace.
+
+The generated preview should be large enough to review typography, Bengali line breaks, logo placement, source footer, and disclaimer readability. Use a two-column editor on desktop: evidence/copy controls on the left and a large 4:5 or 1:1 preview on the right; stack them on narrow screens.
+
 Dismissal should require an optional reason for analytics, be reversible for ADMIN, and never delete source data. A suggestion must link to its exact source record IDs.
 
 ## Create Post workflow

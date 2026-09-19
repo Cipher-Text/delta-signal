@@ -90,11 +90,12 @@ const NATIONAL_TYPE_BY_SERIES: Record<string, string> = {
 };
 function date(value: string | null) { return value ? new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
 
-export default async function SocialContentPage(props: { searchParams: Promise<{ success?: string; error?: string }> }) {
+export default async function SocialContentPage(props: { searchParams: Promise<{ success?: string; error?: string; status?: string }> }) {
   const params = await props.searchParams;
   const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
+  const selectedStatus = params.status && ['DRAFT', 'RENDERED', 'APPROVED', 'ARCHIVED'].includes(params.status) ? params.status : undefined;
   const [drafts, districts, alerts, occurrences, stations, suggestions] = await Promise.all([
-    apiGet<Draft[]>('/api/v1/social-content/drafts', accessToken),
+    apiGet<Draft[]>(`/api/v1/social-content/drafts${selectedStatus ? `?status=${selectedStatus}` : ''}`, accessToken),
     apiGet<District[]>('/api/v1/locations/districts', accessToken),
     apiGet<{ data: AlertOption[] }>('/api/v1/alerts?status=ACTIVE&pageSize=100', accessToken).catch(() => ({ data: [] })),
     apiGet<{ data: OccurrenceOption[] }>('/api/v1/biodiversity/occurrences?pageSize=100', accessToken).catch(() => ({ data: [] })),
@@ -121,7 +122,7 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
       </article>)}</div>}
     </section>
 
-    <details className="create-panel" open>
+    <details className="create-panel">
       <summary className="create-panel-summary"><span className="create-panel-label">+ Create Post</span><span className="create-panel-hint">Manual source selection — publishing is not automatic</span></summary>
       <div className="create-panel-body">
         <form action={createSocialDraftAction} className="social-form">
@@ -140,11 +141,15 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
       </div>
     </details>
 
-    <div className="social-draft-list">
-      {drafts.length === 0 ? <div className="empty-state">No social drafts yet.</div> : drafts.map((draft) => <article className="social-draft-card" key={draft.id}>
+    <section className="social-drafts-section">
+      <div className="section-heading"><div><h2>Drafts</h2><p>Open a draft only when you need to edit, preview, or approve it.</p></div></div>
+      <nav className="social-status-tabs" aria-label="Draft status filter">
+        {[['', 'All'], ['DRAFT', 'Drafts'], ['RENDERED', 'Ready for approval'], ['APPROVED', 'Approved'], ['ARCHIVED', 'Archived']].map(([value, text]) => <a className={!selectedStatus && !value || selectedStatus === value ? 'active' : ''} href={value ? `/social-content?status=${value}` : '/social-content'} key={value || 'all'}>{text}</a>)}
+      </nav>
+      <div className="social-draft-list">
+      {drafts.length === 0 ? <div className="empty-state">No social drafts in this view.</div> : drafts.map((draft) => <details className="social-draft-card" key={draft.id} open={drafts.length === 1}>
+        <summary className="social-draft-summary"><div className="social-draft-heading"><span className={`tag ${draft.status === 'APPROVED' ? 'tag-success' : draft.status === 'ARCHIVED' ? 'tag-muted' : 'tag-info'}`}>{label(draft.status)}</span><span className="badge badge-info">{seriesLabel(draft.type)}</span><h2>{draft.headline}</h2></div><p className="social-draft-meta">{draft.district?.name ?? 'Bangladesh'} · {draft.sourceLabel} · source as of {date(draft.sourceObservedAt)} · {draft.format === 'SQUARE_1_1' ? '1:1' : '4:5'}</p></summary>
         <div className="social-draft-main">
-          <div className="social-draft-heading"><span className={`tag ${draft.status === 'APPROVED' ? 'tag-success' : draft.status === 'ARCHIVED' ? 'tag-muted' : 'tag-info'}`}>{label(draft.status)}</span><span className="badge badge-info">{seriesLabel(draft.type)}</span><h2>{draft.headline}</h2></div>
-          <p className="social-draft-meta">{draft.district?.name ?? 'Bangladesh'} · {draft.sourceLabel} · source as of {date(draft.sourceObservedAt)} · {draft.format === 'SQUARE_1_1' ? '1:1' : '4:5'}</p>
           <form action={updateSocialDraftAction} className="social-edit-form"><input type="hidden" name="id" value={draft.id} /><div className="form-row"><div className="field field-grow"><label>Headline</label><input name="headline" defaultValue={draft.headline} className="filter-input" /></div><div className="field field-fixed"><label>Language</label><select name="locale" defaultValue={draft.locale} className="role-select"><option value="en">English</option><option value="bn">Bengali</option></select></div><div className="field field-fixed"><label>Format</label><select name="format" defaultValue={draft.format} className="role-select"><option value="PORTRAIT_4_5">4:5</option><option value="SQUARE_1_1">1:1</option></select></div></div><textarea name="summary" defaultValue={draft.summary ?? ''} rows={2} className="note-input" placeholder="Summary" /><textarea name="caption" defaultValue={draft.caption ?? ''} rows={2} className="note-input" placeholder="Caption" /><input name="disclaimer" defaultValue={draft.disclaimer ?? ''} className="filter-input" placeholder="Disclaimer" /><div className="form-actions"><button className="btn btn-secondary" type="submit" disabled={draft.status === 'APPROVED' || draft.status === 'ARCHIVED'}>Save edits</button></div></form>
           {draft.renderedAssets[0] && <div className="social-preview">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -153,7 +158,8 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
           </div>}
           <div className="social-actions"><form action={renderSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-secondary" type="submit" disabled={draft.status === 'APPROVED' || draft.status === 'ARCHIVED'}>Generate card</button></form>{draft.status === 'RENDERED' && <form action={approveSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-success" type="submit">Approve</button></form>}{draft.status === 'APPROVED' && <form action={downloadSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-primary" type="submit">Download</button></form>}{draft.status === 'APPROVED' && <form action={markSocialDraftPublishedAction}><input type="hidden" name="id" value={draft.id} /><input type="hidden" name="note" value="Marked published externally by admin" /><button className="btn btn-ghost" type="submit">Mark published</button></form>}<form action={archiveSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-ghost" type="submit">Archive</button></form></div>
         </div>
-      </article>)}
-    </div>
+      </details>)}
+      </div>
+    </section>
   </>;
 }
