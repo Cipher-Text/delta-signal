@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import Link from 'next/link';
 import { routes, type MemberSummary, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { apiGetAuthed } from '../../../lib/api';
 import { titleCase, relativeTime } from '../../../lib/format';
@@ -108,9 +109,10 @@ export default async function MembersPage(
             const badgeCount = m.profile?.earnedBadges.length ?? 0;
             const points = m.profile?.contributionPoints ?? 0;
             return (
-              <div
-                className="table-row"
+              <Link
+                className="table-row table-row-link"
                 role="row"
+                href={`/members/${m.id}`}
                 key={m.id}
                 style={{ gridTemplateColumns: '1.8fr 1fr 1.3fr 1.6fr 1fr 0.9fr', minWidth: 760, alignItems: 'center' }}
               >
@@ -139,7 +141,7 @@ export default async function MembersPage(
                   {points === 0 && badgeCount === 0 && '—'}
                 </span>
                 <span>{relativeTime(m.createdAt)}</span>
-              </div>
+              </Link>
             );
           })}
         </div>

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma, UserRole } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { clampPagination } from '../common/pagination';
@@ -20,6 +20,31 @@ const MEMBER_SELECT = {
       contributionPoints: true,
     },
   },
+} satisfies Prisma.UserSelect;
+
+const MEMBER_DETAIL_SELECT = {
+  id: true,
+  displayName: true,
+  role: true,
+  createdAt: true,
+  profile: {
+    select: {
+      avatarUrl: true,
+      occupation: true,
+      bio: true,
+      institution: true,
+      education: true,
+      expertise: true,
+      researchInterests: true,
+      locationDistrict: true,
+      locationCountry: true,
+      earnedBadges: true,
+      contributionPoints: true,
+      profileVisibility: true,
+      linksVisibility: true,
+    },
+  },
+  socialLinks: { select: { platform: true, url: true } },
 } satisfies Prisma.UserSelect;
 
 export interface MemberListFilters {
@@ -57,6 +82,35 @@ export class MembersService {
       }),
       this.prisma.user.count({ where }),
     ]).then(([data, total]) => ({ data, total, page, pageSize }));
+  }
+
+  /**
+   * A PRIVATE profile 404s rather than 403s — same reasoning as the list filter:
+   * a member who opted out shouldn't be distinguishable from one who never existed.
+   * `phone` is never returned here regardless of contactVisibility — it's PII with
+   * no legitimate use on a public directory page, unlike the owner's own profile view.
+   */
+  async getById(id: string) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, isActive: true },
+      select: MEMBER_DETAIL_SELECT,
+    });
+
+    if (!user || user.profile?.profileVisibility === 'PRIVATE') {
+      throw new NotFoundException('Member not found');
+    }
+
+    const { profileVisibility, linksVisibility, ...profileRest } = user.profile ?? {};
+    const showLinks = linksVisibility !== 'PRIVATE';
+
+    return {
+      id: user.id,
+      displayName: user.displayName,
+      role: user.role,
+      createdAt: user.createdAt,
+      profile: user.profile ? profileRest : null,
+      socialLinks: showLinks ? user.socialLinks : [],
+    };
   }
 
   /** Distinct districts currently represented in the directory, for the filter dropdown. */

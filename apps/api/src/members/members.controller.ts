@@ -1,4 +1,4 @@
-import { BadRequestException, Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { MembersService } from './members.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -35,5 +35,10 @@ export class MembersController {
   @Get('districts')
   listDistricts() {
     return this.membersService.listDistricts();
+  }
+
+  @Get(':id')
+  getById(@Param('id') id: string) {
+    return this.membersService.getById(id);
   }
 }

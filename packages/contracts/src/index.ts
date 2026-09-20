@@ -234,6 +234,7 @@ export const routes = {
   members: {
     list: `${apiPrefix}/members`,
     districts: `${apiPrefix}/members/districts`,
+    detail: (id: string) => `${apiPrefix}/members/${id}`,
   },
 
   permissions: {
@@ -619,6 +620,28 @@ export interface MemberSummary {
     earnedBadges: string[];
     contributionPoints: number;
   } | null;
+}
+
+/** GET /members/:id — richer than MemberSummary; phone is never included (PII, no public use case). */
+export interface MemberDetail {
+  id: string;
+  displayName: string;
+  role: UserRole;
+  createdAt: string;
+  profile: {
+    avatarUrl: string | null;
+    occupation: string | null;
+    bio: string | null;
+    institution: string | null;
+    education: string | null;
+    expertise: string[];
+    researchInterests: string[];
+    locationDistrict: string | null;
+    locationCountry: string;
+    earnedBadges: string[];
+    contributionPoints: number;
+  } | null;
+  socialLinks: UserSocialLink[];
 }
 
 export interface Provider {
