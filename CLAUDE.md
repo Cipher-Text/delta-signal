@@ -60,7 +60,7 @@ Global setup in `apps/api/src/main.ts`:
 - `JwtAuthGuard` + `RolesGuard` + `PermissionsGuard` registered via `useGlobalGuards`; `ThrottlerGuard` registered via `APP_GUARD` in `AppModule` (needs DI)
 - Rate limits: global 120 req / 60 s; auth endpoints tightened — login/register 5 req / 60 s, refresh 20 req / 60 s
 
-**Feature modules** (`apps/api/src/`): `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `observations`, `restoration`, `biodiversity`, `weather`, `flood`, `radiation`, `marine`, `emissions`, `companies`, `facilities`, `community`, `social-content`, `gamification`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `ingestion`, `media`, `database`, `common`. Also registered in `AppModule`: a `SeedService` (seeds dev users + organization on boot).
+**Feature modules** (`apps/api/src/`): `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `observations`, `restoration`, `biodiversity`, `weather`, `flood`, `radiation`, `marine`, `emissions`, `companies`, `facilities`, `community`, `social-content`, `social-publishing`, `gamification`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `ingestion`, `media`, `database`, `common`. Also registered in `AppModule`: a `SeedService` (seeds dev users + organization on boot).
 
 Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.ts` → `dto/` folder.
 
@@ -79,7 +79,7 @@ Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.
 
 ### Database (Prisma)
 
-Schema: `packages/database/prisma/schema.prisma` — 63 models, 35 enums. 16 migrations applied (latest: `20260919000001_add_national_social_types`).
+Schema: `packages/database/prisma/schema.prisma` — 65 models, 38 enums. 17 migrations applied (latest: `20260920190436_add_social_publishing`).
 
 **All IDs are Prisma CUIDs** (e.g. `cmstewlrj0012usw17sqz1d3n`). Use `@IsString()` in DTO validators, never `@IsUUID()`.
 
@@ -116,6 +116,7 @@ Notable schema decisions:
 - `IndustrialFacility` — physical industrial site linked to a company; `FacilityType` enum (15 types); `ComplianceStatus` enum (COMPLIANT/NON_COMPLIANT/UNDER_REVIEW/UNKNOWN); `etpInstalled Boolean`; seeded by `CompaniesService`
 - `CommunityPost` / `PostComment` / `Poll` / `PollOption` / `PollVote` — lightweight district-scoped discussion boards; a post may carry one optional `Poll` with options and votes
 - `SocialPostDraft` / `SocialRenderedAsset` — editorial drafts for shareable social cards (weather/river/alert/biodiversity snapshots or nationwide ranking watches) and their rendered SVG outputs; see [Social Content module](#social-content-module) below
+- `SocialPlatformAccount` / `SocialPublication` — connected social platform accounts (Facebook Page access tokens, encrypted at rest) and per-attempt publish records; see the "Social publishing" section under Social Content module below
 
 ### Frontend (apps/web)
 
@@ -243,16 +244,25 @@ Complex queries use raw SQL via `prisma.$queryRaw`.
 
 - **`NationalRankingService`** (`national-ranking.service.ts`) — `getSuggestions(cadence)` where `cadence` is `DAILY | WEEKLY | MONTHLY`. DAILY computes top-5 rankings for rain (`dailyWeatherForecast`), air quality (`hourlyAirQuality`, PM2.5 last 6h), heat (`currentWeatherReading`, last 3h), and river discharge (`stationFloodForecast`, 48h discharge/mean ratio); WEEKLY/MONTHLY swap these for rolling-average summaries (`unionDailyClimate` / `District.totalPrecip30d`/`avgPm25_30d`/`avgTemp30d`) and drop the river ranking (daily-only). All cadences also include active alerts, verified/resolved citizen reports (7d/30d), and recent biodiversity occurrences. Each suggestion carries a `quality: HIGH | REVIEW | UNAVAILABLE` (by data coverage %) and results sort best-quality-first.
 - **`SocialContentService`** (`social-content.service.ts`) — draft CRUD, source-record loading (`loadSource()` resolves a `NATIONAL_*` type to its ranking series via a `seriesByType` map), and on-demand SVG card rendering (no image library, no queue — built with Node `crypto`/`fs`, uploaded to object storage via the existing `MediaModule`/`StorageService` at `social-cards/{draftId}/{format}-{hash}.svg`). Re-rendering is blocked once a draft is `APPROVED` or `ARCHIVED` (must be edited back to `DRAFT` first).
-- **Endpoints** (`GET /social-content/suggestions/national?cadence=`, `GET /social-content/drafts`, `GET /social-content/drafts/:id`, `POST /social-content/drafts`, `PATCH /social-content/drafts/:id`, `POST /social-content/drafts/:id/render`, `/approve`, `/archive`, `/mark-published`, `GET /social-content/drafts/:id/download`) — all behind the global guard stack (JWT + role + permissions), gated by `@RequirePermissions('social_content.create' | 'edit' | 'render' | 'approve' | 'download')`. Default grants: MODERATOR gets create/edit/render/download (not approve); ADMIN gets all (and bypasses permission checks entirely). `packages/contracts`'s `socialContent` route builder mirrors all 8 routes; only `apps/web` consumes it — `apps/admin` hand-rolls these same paths directly.
+- **Endpoints** (`GET /social-content/suggestions/national?cadence=`, `GET /social-content/drafts`, `GET /social-content/drafts/:id`, `POST /social-content/drafts`, `PATCH /social-content/drafts/:id`, `POST /social-content/drafts/:id/render`, `/approve`, `/archive`, `/mark-published`, `GET /social-content/drafts/:id/download`) — all behind the global guard stack (JWT + role + permissions), gated by `@RequirePermissions('social_content.create' | 'edit' | 'render' | 'approve' | 'download')`. Default grants: MODERATOR gets create/edit/render/download (not approve); ADMIN gets all (and bypasses permission checks entirely). `packages/contracts`'s `socialContent` route builder mirrors these routes; only `apps/web` consumes it — `apps/admin` hand-rolls these same paths directly.
 - **`SocialContentType`** enum: per-source types (`CURRENT_WEATHER`, `WEATHER_FORECAST`, `RIVER_SIGNAL`, `ENVIRONMENTAL_ALERT`, `BIODIVERSITY_OBSERVATION`) plus 7 nationwide-ranking types (`NATIONAL_RAIN_WATCH`, `NATIONAL_AIR_QUALITY_WATCH`, `NATIONAL_HEAT_WATCH`, `NATIONAL_RIVER_WATCH`, `NATIONAL_ALERT_WATCH`, `NATIONAL_COMMUNITY_SIGNALS`, `NATIONAL_BIODIVERSITY`). `SocialDraftStatus`: `DRAFT → RENDERED → APPROVED → ARCHIVED`. `SocialCardFormat`: `PORTRAIT_4_5 | SQUARE_1_1`.
-- Every action writes an `AuditEvent` (`SOCIAL_DRAFT_CREATE/UPDATE/APPROVE/ARCHIVE`, `SOCIAL_CARD_RENDER/DOWNLOAD`, `SOCIAL_PUBLICATION_MARK`).
-- No dedicated scheduler — rendering is synchronous, on-demand. No new env vars — reuses `MediaModule`'s storage config; the brand logo is read from `apps/admin/public/logo.svg` on disk, not an env var.
-- Frontend lives entirely in `apps/admin/app/(admin)/social-content/page.tsx` (suggestions panel + create form + status-filterable drafts list) and `apps/admin/lib/social-content-actions.ts` (7 server actions, one per endpoint).
+- Every action writes an `AuditEvent` (`SOCIAL_DRAFT_CREATE/UPDATE/APPROVE/ARCHIVE`, `SOCIAL_CARD_RENDER/DOWNLOAD`, `SOCIAL_PUBLICATION_MARK`, plus `SOCIAL_PLATFORM_CONNECT/DISCONNECT` and `SOCIAL_PUBLISH_REQUEST` from the publishing sub-module below).
+- Card rendering itself has no dedicated scheduler and no env vars of its own — it's synchronous, on-demand SVG generation reusing `MediaModule`'s storage config; the brand logo is read from `apps/admin/public/logo.svg` on disk, not an env var.
+- Frontend lives entirely in `apps/admin/app/(admin)/social-content/page.tsx` (suggestions panel + connected-accounts panel + create form + status-filterable drafts list, each with a Publish action once `APPROVED`) and `apps/admin/lib/social-content-actions.ts` (10 server actions, one per endpoint).
 - Design-notes docs at the repo root (`SOCIAL_CONTENT_ARCHITECTURE.md`, `SOCIAL_CONTENT_ADMIN_UX.md`, `SOCIAL_CONTENT_CAPABILITY_MATRIX.md`, `PHOTOCARD_TYPES.md`, `IMPLEMENTATION_ROADMAP.md`) were written alongside this feature — read those for design rationale; this file covers only what's load-bearing for future changes.
+
+**Social publishing (Phase 1: Facebook Page)** — `apps/api/src/social-publishing/` — human-triggered publishing of an `APPROVED` draft's card to a connected Facebook Page. Deliberately **not** automatic/scheduled: every publish starts from a MODERATOR/ADMIN clicking "Publish" in the admin console, matching the existing approve-then-download pattern.
+
+- **Connect flow**: `GET /social-content/platforms/facebook/connect` (`@RequirePermissions('social_content.manage')`) returns a Facebook OAuth authorize URL whose `state` param is a short-lived (5 min) JWT signed via the existing `JwtModule` (from `AuthModule`, imported for this) carrying the connecting admin's id — Facebook's redirect to `GET /social-content/platforms/facebook/callback` is a plain, unauthenticated browser navigation (no Authorization header reaches our API), so this signed `state` is what proves an authorized admin started the flow. The callback exchanges the code for a long-lived Page access token per Page returned by `/me/accounts`, encrypts it, and upserts a `SocialPlatformAccount` row per Page.
+- **`TokenCipherService`** — AES-256-GCM encrypt/decrypt of stored Page access tokens, keyed by `SOCIAL_TOKEN_ENCRYPTION_KEY` (base64, 32 bytes — validated at boot in `env.validation.ts` the same way `JWT_SECRET` is, but only when the var is present; the connect flow 503s gracefully when it's absent).
+- **Publish flow**: `POST /social-content/drafts/:draftId/publish` (`@RequirePermissions('social_content.publish')`, **ADMIN-only** — stricter than the other social-content permissions since posting externally is harder to undo) validates the draft is `APPROVED` with a rendered asset, creates a `PENDING` `SocialPublication` row, and enqueues a `social-publish` BullMQ job (`attempts: 4`, exponential backoff, `jobId: publish:{id}` for de-dup — same shape as the `email` queue). `SocialPublishProcessor` fetches the rendered SVG, rasterizes it to PNG via `ImageRasterizerService` (`sharp` — no platform accepts SVG), re-uploads the PNG through `StorageService`, decrypts the Page token, and calls `FacebookPublisher` (Graph API `POST /{pageId}/photos` with the public PNG `url` + caption). Updates `SocialPublication.status` to `SENT`/`FAILED` (mirrors `NotificationDelivery`'s status pattern) — no per-outcome `AuditEvent`, only the initiating request is audited.
+- **Models**: `SocialPlatformAccount` (`SocialPlatform` enum, currently `FACEBOOK` only; `SocialPlatformAccountStatus`: `ACTIVE | REVOKED | ERROR`), `SocialPublication` (`SocialPublicationStatus`: `PENDING | SENT | FAILED`) — both included on `SocialPostDraft`/`SocialContentService.getById` via `publications`.
+- **Env vars** (all optional — absence disables the feature, doesn't block boot): `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`, `FACEBOOK_OAUTH_REDIRECT_URI`, `SOCIAL_TOKEN_ENCRYPTION_KEY`, `ADMIN_APP_URL` (where the callback redirects the browser back to). Because the org only posts to Pages its own Meta App admins/developers manage, `pages_manage_posts`/`pages_show_list`/`pages_read_engagement` work at Standard Access — no Meta App Review needed for this phase.
+- **Non-goals for this phase**: no X (Twitter) or Instagram integration yet (the `SocialPlatform` enum and `SocialPlatformPublisher` interface are designed to add them without a schema reshape); no unattended/scheduled auto-posting; no multi-Page picker UI (if `/me/accounts` returns several Pages, all are stored and the admin picks one per publish via `platformAccountId`).
 
 ### Testing
 
-153 unit tests in 11 spec files under `apps/api/src/` (all fully mocked — no DB, no running server):
+183 unit tests in 16 spec files under `apps/api/src/` (all fully mocked — no DB, no running server):
 - `roles.guard.spec.ts` — all 6 roles, case-sensitivity regression (9 tests)
 - `jwt-auth.guard.spec.ts` — `@Public()` bypass, error handling (5 tests)
 - `auth.service.spec.ts` — register/login/refresh/logout, token rotation, audit events, `USER_LOGIN_FAILED` in all three failure branches (24 tests)
@@ -264,6 +274,9 @@ Complex queries use raw SQL via `prisma.$queryRaw`.
 - `notifications.service.spec.ts` — deduplication, severity filtering, PENDING delivery record, ConflictException
 - `gamification.service.spec.ts` — earnedKeysForCategory, computeLevel, enqueue dedup, performEvaluation early-exit
 - `media.service.spec.ts` — MIME allowlist, size limit, key generation, presign TTL
+- `token-cipher.service.spec.ts` — AES-256-GCM round-trip, random IV per call, tamper/wrong-key rejection
+- `social-publishing.service.spec.ts` — `requestPublish` guards (non-APPROVED draft, missing rendered asset, missing/revoked platform account), job de-dup, audit event
+- `social-publish.processor.spec.ts` — idempotency guard (already-`SENT` skip), success path (rasterize → upload → publish → `SENT`), failure path (`FAILED` + rethrow for BullMQ retry)
 
 `apps/web` and `apps/admin` have no tests (`echo "No web tests configured yet"`).
 
@@ -282,3 +295,4 @@ CI (`.github/workflows/ci.yml`): `pnpm install --frozen-lockfile` → `pnpm audi
 | `BOOTSTRAP_ADMIN_EMAIL` / `BOOTSTRAP_ADMIN_PASSWORD` | Optional one-time production admin seed — skipped if already exists |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | Optional email delivery — wired to `EmailService` via nodemailer; used by the `email` BullMQ queue processor for password-reset, email-verification, and alert-notification jobs |
 | `STORAGE_ENDPOINT` / `STORAGE_ACCESS_KEY` / `STORAGE_SECRET_KEY` / `STORAGE_BUCKET` / `STORAGE_PUBLIC_URL` | Optional object storage (S3 / MinIO) for the `media` module — graceful degradation when absent |
+| `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` / `FACEBOOK_OAUTH_REDIRECT_URI` / `SOCIAL_TOKEN_ENCRYPTION_KEY` / `ADMIN_APP_URL` | Optional Facebook Page publishing (`social-publishing` module) — graceful degradation when absent |
