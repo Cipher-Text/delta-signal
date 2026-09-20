@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
 import { routes, type NationalEmissionReading, type EmissionIndicator } from '@delta-signal/contracts';
+import PageHeader from '../../../components/page-header';
 
 const INDICATOR_LABEL: Record<string, string> = {
   'EN.GHG.ALL.MT.CE.AR5': 'Total GHG',
@@ -48,16 +50,11 @@ export default async function EmissionsPage(
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>National GHG Emissions</h1>
-          <p>
-            Bangladesh greenhouse gas emissions sourced from the World Bank Climate Change API.
-            Values in Mt CO₂e, excluding land-use change (LULUCF).
-            {lastUpdated && <span className="muted"> · Last synced {lastUpdated}</span>}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={lastUpdated ? `Last synced ${lastUpdated}` : undefined}
+        title="National GHG Emissions"
+        description="Bangladesh greenhouse gas emissions sourced from the World Bank Climate Change API. Values in Mt CO₂e, excluding land-use change (LULUCF)."
+      />
 
       {/* Filters */}
       <form className="toolbar" method="get" aria-label="Emission filters">
@@ -99,7 +96,7 @@ export default async function EmissionsPage(
 
         <button type="submit" className="button">Apply</button>
         {(indicator || from || to) && (
-          <a className="button ghost" href="/emissions">Reset</a>
+          <Link className="button ghost" href="/emissions">Reset</Link>
         )}
       </form>
 

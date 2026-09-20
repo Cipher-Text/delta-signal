@@ -4,6 +4,7 @@ import { routes, type Dataset, type Provider, type PaginatedEnvelope } from '@de
 import { titleCase } from '../../../lib/format';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 const CATEGORIES = [
   'WEATHER',
@@ -46,12 +47,7 @@ export default async function DataPage(
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Data Hub</h1>
-          <p>Environmental dataset catalog for Bangladesh.</p>
-        </div>
-      </div>
+      <PageHeader title="Data Hub" description="Environmental dataset catalog for Bangladesh." />
 
       <div className="toolbar" aria-label="Category filter">
         <Link className={`chip${!category ? ' active' : ''}`} href={`/data${accessPolicy ? `?accessPolicy=${encodeURIComponent(accessPolicy)}` : ''}`}>
@@ -113,6 +109,7 @@ export default async function DataPage(
             <p>Organizations and agencies contributing data</p>
           </div>
         </div>
+        <ListResultToolbar total={providersRes.total} label="providers" />
         <div className="record-list">
           {providersRes.data.map((p) => (
             <div className="record-item" key={p.id}>

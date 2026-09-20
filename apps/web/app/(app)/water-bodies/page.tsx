@@ -2,6 +2,9 @@ import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
 import { routes, type WaterBodyPagedResponse, type DistrictSummary, type WaterBodyType, type HydrologicalClass } from '@delta-signal/contracts';
 import { titleCase } from '../../../lib/format';
+import ListPagination from '../../../components/list-pagination';
+import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 const TYPE_TAG: Record<string, string> = {
   RIVER: 'info',
@@ -49,22 +52,17 @@ export default async function WaterBodiesPage(
     return `/water-bodies${query ? `?${query}` : ''}`;
   }
 
-  function pageHref(nextPage: number) {
-    const href = filterHref({});
-    return `${href}${href.includes('?') ? '&' : '?'}page=${nextPage}`;
-  }
-
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Water Bodies</h1>
-          <p>Rivers, wetlands, and lakes of Bangladesh.</p>
-        </div>
-        <Link href="/water-bodies/stations" className="button ghost">
-          Water Level Stations
-        </Link>
-      </div>
+      <PageHeader
+        title="Water Bodies"
+        description="Rivers, wetlands, and lakes of Bangladesh."
+        action={
+          <Link href="/water-bodies/stations" className="button ghost">
+            Water Level Stations
+          </Link>
+        }
+      />
 
       <form className="toolbar" method="get" aria-label="Water body filters">
         <label htmlFor="hydrologicalClass">Class</label>
@@ -88,6 +86,8 @@ export default async function WaterBodiesPage(
         <button type="submit" className="button">Apply</button>
         {(waterBodyType || hydrologicalClass || districtId || upazilaId) && <Link className="button ghost" href={filterHref({ waterBodyType: '', hydrologicalClass: '', districtId: '', upazilaId: '' })}>Reset</Link>}
       </form>
+
+      <ListResultToolbar total={res.total} label="water bodies" />
 
       <div className="table" role="table" aria-label="Water bodies">
         <div className="table-row table-head" role="row">
@@ -139,29 +139,13 @@ export default async function WaterBodiesPage(
         )}
       </div>
 
-      {res.totalPages > 1 && (
-        <div className="toolbar" style={{ justifyContent: 'center', marginTop: '1rem' }}>
-          {page > 1 && (
-            <Link
-              className="chip"
-              href={pageHref(page - 1)}
-            >
-              ← Previous
-            </Link>
-          )}
-          <span className="chip active" aria-current="page">
-            {page} / {res.totalPages}
-          </span>
-          {page < res.totalPages && (
-            <Link
-              className="chip"
-              href={pageHref(page + 1)}
-            >
-              Next →
-            </Link>
-          )}
-        </div>
-      )}
+      <ListPagination
+        pathname="/water-bodies"
+        page={page}
+        pageSize={res.limit}
+        total={res.total}
+        query={{ waterBodyType, hydrologicalClass, districtId, upazilaId }}
+      />
     </>
   );
 }

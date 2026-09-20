@@ -4,6 +4,7 @@ import { routes, type Species, type Occurrence, type PaginatedEnvelope } from '@
 import { relativeTime } from '../../../lib/format';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 export default async function BiodiversityPage(
   props: {
@@ -27,13 +28,7 @@ export default async function BiodiversityPage(
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Biodiversity</h1>
-          <p>Species and occurrence records synced daily from GBIF.</p>
-        </div>
-        <ListResultToolbar total={speciesRes.total} label="species" />
-      </div>
+      <PageHeader title="Biodiversity" description="Species and occurrence records synced daily from GBIF." />
 
       <div className="metric-grid">
         <div className="metric">
@@ -62,6 +57,8 @@ export default async function BiodiversityPage(
             Search
           </button>
         </form>
+
+        <ListResultToolbar total={speciesRes.total} label="species" />
 
         <div className="table" role="table" aria-label="Species">
           <div className="table-row table-head" role="row">

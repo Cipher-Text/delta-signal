@@ -7,6 +7,7 @@ import { titleCase, relativeTime } from '../../../lib/format';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 const CATEGORIES = [
   'WATER_POLLUTION',
@@ -54,12 +55,7 @@ export default async function ReportsPage(
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Citizen Reports</h1>
-          <p>Only reviewed and accepted records appear here.</p>
-        </div>
-      </div>
+      <PageHeader title="Citizen Reports" description="Only reviewed and accepted records appear here." />
 
       <div className="metric-grid">
         <div className="metric">

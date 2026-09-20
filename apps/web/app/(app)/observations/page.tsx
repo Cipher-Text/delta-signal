@@ -7,6 +7,7 @@ import { titleCase, relativeTime } from '../../../lib/format';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 const CATEGORIES = [
   'BIODIVERSITY',
@@ -51,12 +52,7 @@ export default async function ObservationsPage(
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Observations</h1>
-          <p>Environmental observations from citizens and researchers.</p>
-        </div>
-      </div>
+      <PageHeader title="Observations" description="Environmental observations from citizens and researchers." />
 
       <div className="toolbar" aria-label="Category filter">
         <Link className={`chip${!category ? ' active' : ''}`} href={`/observations${trustLevel || districtId ? `?${new URLSearchParams({ ...(trustLevel ? { trustLevel } : {}), ...(districtId ? { districtId } : {}) }).toString()}` : ''}`}>

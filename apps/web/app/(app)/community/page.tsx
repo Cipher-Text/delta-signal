@@ -7,6 +7,7 @@ import { relativeTime } from '../../../lib/format';
 import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 type CommunityTab = 'posts' | 'polls';
 
@@ -41,22 +42,22 @@ export default async function CommunityPage(
     apiGet<DistrictWithDivision[]>(routes.locations.districts, 3600).catch(() => []),
   ]);
 
+  // District select for the create-post/poll forms is authenticated-only content,
+  // but the district *filter* below applies to everyone browsing the list.
   const districts: DistrictWithDivision[] = user ? allDistricts : [];
   const canCreatePoll = user?.role === 'ADMIN' || user?.role === 'MODERATOR';
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Community</h1>
-          <p>Posts, discussions, and polls from contributors across Bangladesh.</p>
-        </div>
-        {!user && (
+      <PageHeader
+        title="Community"
+        description="Posts, discussions, and polls from contributors across Bangladesh."
+        action={!user && (
           <Link href="/login" className="button">
             Sign in to post
           </Link>
         )}
-      </div>
+      />
 
       {/* Tab nav */}
       <nav className="tab-nav" aria-label="Community sections">
@@ -75,6 +76,19 @@ export default async function CommunityPage(
           Polls
         </Link>
       </nav>
+
+      <form className="toolbar" method="get" aria-label="Community filters">
+        <input type="hidden" name="tab" value={tab} />
+        <label htmlFor="communityDistrict">District</label>
+        <select id="communityDistrict" name="districtId" className="select-field" defaultValue={districtId ?? ''}>
+          <option value="">All districts</option>
+          {allDistricts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+        <button type="submit" className="button">Apply</button>
+        {districtId && (
+          <Link className="button ghost" href={`/community?tab=${tab}`}>Reset</Link>
+        )}
+      </form>
 
       {searchParams.created && (
         <p className="form-success">

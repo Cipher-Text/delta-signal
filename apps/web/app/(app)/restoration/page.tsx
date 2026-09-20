@@ -9,6 +9,7 @@ import DistrictSelect, { type DistrictWithDivision } from '../../../components/d
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 const CATEGORIES = [
   'TREE_PLANTING',
@@ -69,12 +70,7 @@ export default async function RestorationPage(
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Restoration</h1>
-          <p>Conservation and restoration projects.</p>
-        </div>
-      </div>
+      <PageHeader title="Restoration" description="Conservation and restoration projects." />
 
       {searchParams.joined && <p className="form-success">You&apos;ve joined the project.</p>}
       {searchParams.created && <p className="form-success">Project created.</p>}

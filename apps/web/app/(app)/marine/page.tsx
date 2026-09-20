@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
 import { routes, type MarineForecast, type DistrictSummary } from '@delta-signal/contracts';
+import PageHeader from '../../../components/page-header';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -49,16 +50,11 @@ export default async function MarinePage(
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Marine Weather Forecast</h1>
-          <p>
-            Wave height, swell, and sea surface temperature for coastal districts of Bangladesh.
-            Data sourced from OpenMeteo Marine API.
-            {selectedDistrict && <span className="muted"> · {selectedDistrict.name}</span>}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={selectedDistrict ? `Viewing ${selectedDistrict.name}` : undefined}
+        title="Marine Weather Forecast"
+        description="Wave height, swell, and sea surface temperature for coastal districts of Bangladesh. Data sourced from OpenMeteo Marine API."
+      />
 
       <form className="toolbar" method="get" aria-label="Marine forecast filters">
         <label htmlFor="districtId">District</label>
@@ -98,9 +94,9 @@ export default async function MarinePage(
           Apply
         </button>
         {hasFilter && (
-          <a className="button ghost" href="/marine">
+          <Link className="button ghost" href="/marine">
             Reset
-          </a>
+          </Link>
         )}
       </form>
 

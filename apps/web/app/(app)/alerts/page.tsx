@@ -1,10 +1,10 @@
 import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
-import { getCurrentUser } from '../../../lib/current-user';
 import { routes, type Alert, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { titleCase } from '../../../lib/format';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 const SEVERITIES = ['EMERGENCY', 'WARNING', 'WATCH', 'INFO'] as const;
 
@@ -21,8 +21,6 @@ const SEVERITY_BADGE_CLASS: Record<string, string> = {
   WATCH: 'warning',
   INFO: 'info',
 };
-
-const ISSUER_ROLES = new Set(['GOVERNMENT', 'MODERATOR', 'ADMIN']);
 
 export default async function AlertsPage(
   props: {
@@ -41,29 +39,17 @@ export default async function AlertsPage(
   alertParams.set('pageSize', '20');
   const activePath = alertParams.toString() ? `${routes.alerts.list}?${alertParams}` : routes.alerts.list;
 
-  const [activeRes, historyRes, user, districts] = await Promise.all([
+  const [activeRes, historyRes, districts] = await Promise.all([
     apiGet<PaginatedEnvelope<Alert>>(activePath),
     apiGet<PaginatedEnvelope<Alert>>(`${routes.alerts.list}?status=EXPIRED`),
-    getCurrentUser(),
     apiGet<{ id: string; name: string }[]>(routes.locations.districts),
   ]);
 
   const emergency = activeRes.data.find((a) => a.severity === 'EMERGENCY');
-  const canIssueAlerts = user !== null && ISSUER_ROLES.has(user.role);
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Alerts</h1>
-          <p>Active disaster and environmental warnings for Bangladesh.</p>
-        </div>
-        {canIssueAlerts && (
-          <span className="tag warning" title="Alert creation UI isn't built yet">
-            Issue alert — coming soon
-          </span>
-        )}
-      </div>
+      <PageHeader title="Alerts" description="Active disaster and environmental warnings for Bangladesh." />
 
       {emergency && (
         <Link className="alert-strip danger" href={`/alerts/${emergency.id}`} role="alert">

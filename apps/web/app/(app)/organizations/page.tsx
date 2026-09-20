@@ -5,6 +5,7 @@ import { apiGet, apiGetAuthed } from '../../../lib/api';
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 type Organization = {
   id: string;
@@ -59,11 +60,11 @@ export default async function OrganizationsPage(
 
   return (
     <div className="page-stack">
-      <header className="page-heading">
-        <p className="eyebrow">Directory</p>
-        <h1>Organizations</h1>
-        <p>{result.total} organization{result.total !== 1 ? 's' : ''} registered on the platform.</p>
-      </header>
+      <PageHeader
+        eyebrow="Directory"
+        title="Organizations"
+        description={`${result.total} organization${result.total !== 1 ? 's' : ''} registered on the platform.`}
+      />
 
       <nav className="tab-nav">
         {ORG_TYPES.map((t) => (

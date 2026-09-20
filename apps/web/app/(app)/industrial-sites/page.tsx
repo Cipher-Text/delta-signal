@@ -10,6 +10,9 @@ import {
   type DistrictSummary,
 } from '@delta-signal/contracts';
 import { titleCase } from '../../../lib/format';
+import ListPagination from '../../../components/list-pagination';
+import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 // ─── Label maps ──────────────────────────────────────────────────────────────
 
@@ -114,54 +117,33 @@ export default async function IndustryPage(props: { searchParams: Promise<Search
   // ── pagination helpers ─────────────────────────────────────────────────────
   const total = tab === 'sites' ? (sitesRes?.total ?? 0) : (companiesRes?.total ?? 0);
   const pageSize = tab === 'sites' ? (sitesRes?.pageSize ?? 25) : (companiesRes?.pageSize ?? 25);
-  const totalPages = Math.ceil(total / pageSize);
-
-  function pageHref(p: number) {
-    const q = new URLSearchParams({ tab, page: String(p) });
-    if (tab === 'sites') {
-      if (searchParams.facilityType) q.set('facilityType', searchParams.facilityType);
-      if (searchParams.complianceStatus) q.set('complianceStatus', searchParams.complianceStatus);
-      if (searchParams.districtId) q.set('districtId', searchParams.districtId);
-    } else {
-      if (searchParams.companyType) q.set('companyType', searchParams.companyType);
-      if (searchParams.districtId) q.set('districtId', searchParams.districtId);
-    }
-    return `/industrial-sites?${q}`;
-  }
 
   return (
     <>
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="panel-header">
-        <div>
-          <h1>Industry</h1>
-          <p>
-            Companies and industrial sites with environmental impact across Bangladesh.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Industry"
+        description="Companies and industrial sites with environmental impact across Bangladesh."
+      />
 
       {/* ── Tabs ───────────────────────────────────────────────────────────── */}
-      <div className="toolbar" style={{ marginBottom: 0, borderBottom: '1px solid var(--border)' }}>
+      <nav className="tab-nav" aria-label="Industry sections">
         <Link
           href="/industrial-sites"
-          className={`chip${tab === 'sites' ? ' active' : ''}`}
+          className={tab === 'sites' ? 'active' : ''}
           aria-current={tab === 'sites' ? 'page' : undefined}
         >
           Industrial Sites
         </Link>
         <Link
           href="/industrial-sites?tab=companies"
-          className={`chip${tab === 'companies' ? ' active' : ''}`}
+          className={tab === 'companies' ? 'active' : ''}
           aria-current={tab === 'companies' ? 'page' : undefined}
         >
           Companies
         </Link>
-        <span style={{ flex: 1 }} />
-        <span className="text-muted" style={{ fontSize: '0.8rem' }}>
-          {total} {tab === 'sites' ? 'sites' : 'companies'}
-        </span>
-      </div>
+      </nav>
+
+      <ListResultToolbar total={total} label={tab === 'sites' ? 'sites' : 'companies'} />
 
       {/* ══════════════════════════════════════════════════════════════════════
           INDUSTRIAL SITES TAB
@@ -352,20 +334,17 @@ export default async function IndustryPage(props: { searchParams: Promise<Search
         );
       })()}
 
-      {/* ── Pagination ─────────────────────────────────────────────────────── */}
-      {totalPages > 1 && (
-        <div className="toolbar" style={{ justifyContent: 'center', marginTop: '1rem' }}>
-          {currentPage > 1 && (
-            <Link className="chip" href={pageHref(currentPage - 1)}>← Previous</Link>
-          )}
-          <span className="chip active" aria-current="page">
-            {currentPage} / {totalPages}
-          </span>
-          {currentPage < totalPages && (
-            <Link className="chip" href={pageHref(currentPage + 1)}>Next →</Link>
-          )}
-        </div>
-      )}
+      <ListPagination
+        pathname="/industrial-sites"
+        page={currentPage}
+        pageSize={pageSize}
+        total={total}
+        query={
+          tab === 'sites'
+            ? { tab, facilityType: searchParams.facilityType, complianceStatus: searchParams.complianceStatus, districtId: searchParams.districtId }
+            : { tab, companyType: searchParams.companyType, districtId: searchParams.districtId }
+        }
+      />
     </>
   );
 }

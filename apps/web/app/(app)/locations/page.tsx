@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { routes, type DivisionWithClimate } from '@delta-signal/contracts';
 import { apiGet } from '../../../lib/api';
+import PageHeader from '../../../components/page-header';
 
 function aqiClass(pm25: number | null): { label: string; css: string } {
   if (pm25 === null) return { label: 'No data', css: 'aqi-none' };
@@ -18,13 +19,11 @@ export default async function LocationsPage() {
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">30-Day Rolling Average · All 8 Divisions</p>
-          <h1>Locations</h1>
-          <p>Browse Bangladesh by division, district, upazila, and union to view environmental conditions.</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="30-Day Rolling Average · All 8 Divisions"
+        title="Locations"
+        description="Browse Bangladesh by division, district, upazila, and union to view environmental conditions."
+      />
 
       <div className="division-grid">
         {divisions.map((div) => {

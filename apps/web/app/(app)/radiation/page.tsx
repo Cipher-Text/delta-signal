@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { apiGet } from '../../../lib/api';
 import { routes, type SatelliteRadiationReading, type DistrictSummary } from '@delta-signal/contracts';
+import PageHeader from '../../../components/page-header';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-GB', {
@@ -39,16 +40,11 @@ export default async function RadiationPage(
 
   return (
     <>
-      <div className="panel-header">
-        <div>
-          <h1>Satellite Radiation</h1>
-          <p>
-            Daily shortwave radiation sum (MJ/m²) from satellite observations across all districts
-            of Bangladesh. Data sourced from OpenMeteo Satellite API.
-            {selectedDistrict && <span className="muted"> · {selectedDistrict.name}</span>}
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow={selectedDistrict ? `Viewing ${selectedDistrict.name}` : undefined}
+        title="Satellite Radiation"
+        description="Daily shortwave radiation sum (MJ/m²) from satellite observations across all districts of Bangladesh. Data sourced from OpenMeteo Satellite API."
+      />
 
       <form className="toolbar" method="get" aria-label="Radiation filters">
         <label htmlFor="districtId">District</label>
@@ -88,9 +84,9 @@ export default async function RadiationPage(
           Apply
         </button>
         {hasFilter && (
-          <a className="button ghost" href="/radiation">
+          <Link className="button ghost" href="/radiation">
             Reset
-          </a>
+          </Link>
         )}
       </form>
 

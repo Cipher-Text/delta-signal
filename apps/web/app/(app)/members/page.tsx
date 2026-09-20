@@ -5,6 +5,7 @@ import { titleCase, relativeTime } from '../../../lib/format';
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
 import ListPagination from '../../../components/list-pagination';
 import ListResultToolbar from '../../../components/list-result-toolbar';
+import PageHeader from '../../../components/page-header';
 
 const ROLES = ['CITIZEN', 'RESEARCHER', 'ORGANIZATION_ADMIN', 'GOVERNMENT', 'MODERATOR', 'ADMIN'] as const;
 
@@ -49,11 +50,11 @@ export default async function MembersPage(
 
   return (
     <div className="page-stack">
-      <header className="page-heading">
-        <p className="eyebrow">Directory</p>
-        <h1>Members</h1>
-        <p>Citizens, researchers, and organizations contributing to Delta Signal&apos;s environmental data for Bangladesh.</p>
-      </header>
+      <PageHeader
+        eyebrow="Directory"
+        title="Members"
+        description="Citizens, researchers, and organizations contributing to Delta Signal's environmental data for Bangladesh."
+      />
 
       <ListResultToolbar total={result.total} label="members" />
 
@@ -90,46 +91,55 @@ export default async function MembersPage(
           <p>No members match this filter.</p>
         </section>
       ) : (
-        <div className="content-grid members-grid">
+        <div className="table" role="table" aria-label="Members">
+          <div
+            className="table-row table-head"
+            role="row"
+            style={{ gridTemplateColumns: '1.8fr 1fr 1.3fr 1.6fr 1fr 0.9fr', minWidth: 760 }}
+          >
+            <span>Member</span>
+            <span>Role</span>
+            <span>Location</span>
+            <span>Occupation</span>
+            <span>Contribution</span>
+            <span>Joined</span>
+          </div>
           {result.data.map((m) => {
             const badgeCount = m.profile?.earnedBadges.length ?? 0;
             const points = m.profile?.contributionPoints ?? 0;
             return (
-              <article className="content-card member-card" key={m.id}>
-                <div className="member-card-top">
-                  <div className="member-avatar" aria-hidden="true">
+              <div
+                className="table-row"
+                role="row"
+                key={m.id}
+                style={{ gridTemplateColumns: '1.8fr 1fr 1.3fr 1.6fr 1fr 0.9fr', minWidth: 760, alignItems: 'center' }}
+              >
+                <span className="member-row-identity">
+                  <span className="member-avatar member-avatar-sm" aria-hidden="true">
                     {m.profile?.avatarUrl ? <img src={m.profile.avatarUrl} alt="" /> : initials(m.displayName)}
-                  </div>
-                  <div>
-                    <h2>{m.displayName}</h2>
-                    <span className={`profile-role-badge ${ROLE_BADGE_CLASS[m.role] ?? 'role-citizen'}`}>
-                      {titleCase(m.role)}
-                    </span>
-                  </div>
-                </div>
-
-                {(m.profile?.occupation || m.profile?.institution) && (
-                  <p className="member-card-subline">
-                    {[m.profile?.occupation, m.profile?.institution].filter(Boolean).join(' · ')}
-                  </p>
-                )}
-
-                {m.profile?.bio && <p>{m.profile.bio}</p>}
-
-                <div className="card-meta">
-                  {m.profile?.locationDistrict && (
-                    <span>{m.profile.locationDistrict}, {m.profile.locationCountry}</span>
-                  )}
+                  </span>
+                  <strong>{m.displayName}</strong>
+                </span>
+                <span className={`profile-role-badge ${ROLE_BADGE_CLASS[m.role] ?? 'role-citizen'}`}>
+                  {titleCase(m.role)}
+                </span>
+                <span>
+                  {m.profile?.locationDistrict ? `${m.profile.locationDistrict}, ${m.profile.locationCountry}` : '—'}
+                </span>
+                <span>
+                  {[m.profile?.occupation, m.profile?.institution].filter(Boolean).join(' · ') || '—'}
+                </span>
+                <span>
                   {points > 0 && <span className="card-badge">{points} pts</span>}
                   {badgeCount > 0 && (
                     <span className="card-badge card-badge-member">
                       {badgeCount} badge{badgeCount !== 1 ? 's' : ''}
                     </span>
                   )}
-                </div>
-
-                <p className="member-card-joined">Joined {relativeTime(m.createdAt)}</p>
-              </article>
+                  {points === 0 && badgeCount === 0 && '—'}
+                </span>
+                <span>{relativeTime(m.createdAt)}</span>
+              </div>
             );
           })}
         </div>
