@@ -93,6 +93,26 @@ export function validateEnv(config: Record<string, unknown>): Record<string, unk
     );
   }
 
+  // ── SOCIAL_TOKEN_ENCRYPTION_KEY (optional) ───────────────────────────────────
+  // Encrypts connected social platform access tokens at rest (AES-256-GCM).
+  // Only validated when present — the social-publishing connect flow is disabled
+  // without it, the same graceful-degradation pattern as STORAGE_* credentials.
+  const tokenKey = typeof config.SOCIAL_TOKEN_ENCRYPTION_KEY === 'string' ? config.SOCIAL_TOKEN_ENCRYPTION_KEY.trim() : '';
+  if (tokenKey) {
+    let decodedLength = -1;
+    try {
+      decodedLength = Buffer.from(tokenKey, 'base64').length;
+    } catch {
+      // fall through — decodedLength stays -1, reported below
+    }
+    if (decodedLength !== 32) {
+      errors.push(
+        'SOCIAL_TOKEN_ENCRYPTION_KEY must be a base64-encoded 32-byte AES-256 key — ' +
+          'generate one with `openssl rand -base64 32`',
+      );
+    }
+  }
+
   if (errors.length > 0) {
     throw new Error(
       `Invalid environment configuration:\n${errors.map((e) => `  - ${e}`).join('\n')}\n` +

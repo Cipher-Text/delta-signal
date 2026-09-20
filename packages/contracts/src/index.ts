@@ -269,6 +269,10 @@ export const routes = {
     archive: (id: string) => `${apiPrefix}/social-content/drafts/${id}/archive`,
     markPublished: (id: string) => `${apiPrefix}/social-content/drafts/${id}/mark-published`,
     download: (id: string) => `${apiPrefix}/social-content/drafts/${id}/download`,
+    publish: (draftId: string) => `${apiPrefix}/social-content/drafts/${draftId}/publish`,
+    platforms: `${apiPrefix}/social-content/platforms`,
+    platformConnect: (platform: string) => `${apiPrefix}/social-content/platforms/${platform}/connect`,
+    platformDisconnect: (id: string) => `${apiPrefix}/social-content/platforms/${id}`,
   },
 } as const;
 

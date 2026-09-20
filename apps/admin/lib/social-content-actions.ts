@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { apiGet, apiPatch, apiPost, ApiError } from './api';
+import { apiDelete, apiGet, apiPatch, apiPost, ApiError } from './api';
 import { ADMIN_ACCESS_TOKEN_COOKIE } from './session-constants';
 
 const token = async () => {
@@ -81,4 +81,41 @@ export async function downloadSocialDraftAction(formData: FormData) {
     redirect(`/social-content?error=${encodeURIComponent(fail(error))}`);
   }
   redirect(url!);
+}
+
+export async function publishSocialDraftAction(formData: FormData) {
+  const accessToken = await token();
+  const id = String(formData.get('id') ?? '');
+  const platformAccountId = String(formData.get('platformAccountId') ?? '');
+  try {
+    await apiPost(`/api/v1/social-content/drafts/${id}/publish`, { platformAccountId }, accessToken);
+  } catch (error) {
+    redirect(`/social-content?error=${encodeURIComponent(fail(error))}`);
+  }
+  revalidatePath('/social-content');
+  redirect('/social-content?success=publish-queued');
+}
+
+export async function connectFacebookAction() {
+  const accessToken = await token();
+  let authorizeUrl: string;
+  try {
+    const result = await apiGet<{ authorizeUrl: string }>('/api/v1/social-content/platforms/facebook/connect', accessToken);
+    authorizeUrl = result.authorizeUrl;
+  } catch (error) {
+    redirect(`/social-content?error=${encodeURIComponent(fail(error))}`);
+  }
+  redirect(authorizeUrl!);
+}
+
+export async function disconnectPlatformAction(formData: FormData) {
+  const accessToken = await token();
+  const id = String(formData.get('id') ?? '');
+  try {
+    await apiDelete(`/api/v1/social-content/platforms/${id}`, accessToken);
+  } catch (error) {
+    redirect(`/social-content?error=${encodeURIComponent(fail(error))}`);
+  }
+  revalidatePath('/social-content');
+  redirect('/social-content?success=disconnected');
 }

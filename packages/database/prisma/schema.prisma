@@ -194,6 +194,9 @@ enum AuditAction {
   SOCIAL_DRAFT_ARCHIVE
   SOCIAL_CARD_DOWNLOAD
   SOCIAL_PUBLICATION_MARK
+  SOCIAL_PLATFORM_CONNECT
+  SOCIAL_PLATFORM_DISCONNECT
+  SOCIAL_PUBLISH_REQUEST
 }
 
 enum SocialContentType {
@@ -221,6 +224,22 @@ enum SocialDraftStatus {
 enum SocialCardFormat {
   PORTRAIT_4_5
   SQUARE_1_1
+}
+
+enum SocialPlatform {
+  FACEBOOK
+}
+
+enum SocialPlatformAccountStatus {
+  ACTIVE
+  REVOKED
+  ERROR
+}
+
+enum SocialPublicationStatus {
+  PENDING
+  SENT
+  FAILED
 }
 
 enum DatasetAccessRequestStatus {
@@ -433,6 +452,8 @@ model User {
   socialDraftsCreated        SocialPostDraft[]       @relation("SocialDraftCreator")
   socialDraftsUpdated        SocialPostDraft[]       @relation("SocialDraftUpdater")
   socialDraftsApproved       SocialPostDraft[]       @relation("SocialDraftApprover")
+  socialPlatformAccountsConnected SocialPlatformAccount[]
+  socialPublicationsRequested SocialPublication[]    @relation("SocialPublicationRequester")
 
   @@index([email])
   @@index([role])
@@ -1697,6 +1718,7 @@ model SocialPostDraft {
   updatedBy         User?             @relation("SocialDraftUpdater", fields: [updatedById], references: [id], onDelete: SetNull)
   approvedBy        User?             @relation("SocialDraftApprover", fields: [approvedById], references: [id], onDelete: SetNull)
   renderedAssets    SocialRenderedAsset[]
+  publications      SocialPublication[]
 
   @@index([status, createdAt])
   @@index([type, createdAt])
@@ -1716,8 +1738,48 @@ model SocialRenderedAsset {
   createdAt     DateTime          @default(now())
 
   draft         SocialPostDraft   @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  publications  SocialPublication[]
 
   @@index([draftId, createdAt])
+}
+
+model SocialPlatformAccount {
+  id                String                       @id @default(cuid())
+  platform          SocialPlatform
+  externalAccountId String
+  displayName       String
+  accessTokenCipher String                       @db.Text
+  status            SocialPlatformAccountStatus  @default(ACTIVE)
+  connectedById     String
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+
+  connectedBy       User                         @relation(fields: [connectedById], references: [id], onDelete: Restrict)
+  publications      SocialPublication[]
+
+  @@unique([platform, externalAccountId])
+}
+
+model SocialPublication {
+  id                String                   @id @default(cuid())
+  draftId           String
+  platformAccountId String
+  renderedAssetId   String
+  status            SocialPublicationStatus  @default(PENDING)
+  externalPostId    String?
+  externalUrl       String?
+  error             String?
+  requestedById     String
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+
+  draft             SocialPostDraft          @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  platformAccount   SocialPlatformAccount    @relation(fields: [platformAccountId], references: [id], onDelete: Restrict)
+  renderedAsset     SocialRenderedAsset      @relation(fields: [renderedAssetId], references: [id], onDelete: Restrict)
+  requestedBy       User                     @relation("SocialPublicationRequester", fields: [requestedById], references: [id], onDelete: Restrict)
+
+  @@index([draftId])
+  @@index([platformAccountId, createdAt])
 }
 
 // ─── Community ────────────────────────────────────────────────────────────────

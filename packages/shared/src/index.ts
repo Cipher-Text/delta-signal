@@ -115,7 +115,8 @@ export type Permission =
   | 'social_content.render'
   | 'social_content.approve'
   | 'social_content.download'
-  | 'social_content.manage';
+  | 'social_content.manage'
+  | 'social_content.publish';
 
 export const ENVIRONMENTAL_EXPERTISE = [
   'Biodiversity monitoring',

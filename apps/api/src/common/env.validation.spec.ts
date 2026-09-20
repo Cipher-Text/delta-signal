@@ -136,4 +136,28 @@ describe('validateEnv', () => {
       ).toThrow(/APP_URL must use https/);
     });
   });
+
+  describe('SOCIAL_TOKEN_ENCRYPTION_KEY', () => {
+    it('is not required — absent is valid', () => {
+      expect(validateEnv(VALID)).toBe(VALID);
+    });
+
+    it('accepts a base64-encoded 32-byte key', () => {
+      const key = Buffer.alloc(32, 1).toString('base64');
+      expect(validateEnv({ ...VALID, SOCIAL_TOKEN_ENCRYPTION_KEY: key })).toBeTruthy();
+    });
+
+    it('rejects a key that decodes to fewer than 32 bytes', () => {
+      const key = Buffer.alloc(16, 1).toString('base64');
+      expect(() => validateEnv({ ...VALID, SOCIAL_TOKEN_ENCRYPTION_KEY: key })).toThrow(
+        /32-byte AES-256 key/,
+      );
+    });
+
+    it('rejects non-base64 garbage', () => {
+      expect(() => validateEnv({ ...VALID, SOCIAL_TOKEN_ENCRYPTION_KEY: 'not-a-real-key' })).toThrow(
+        /32-byte AES-256 key/,
+      );
+    });
+  });
 });

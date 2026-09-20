@@ -21,6 +21,10 @@ const DRAFT_INCLUDE = {
   createdBy: { select: { id: true, displayName: true } },
   approvedBy: { select: { id: true, displayName: true } },
   renderedAssets: { orderBy: { createdAt: 'desc' as const } },
+  publications: {
+    orderBy: { createdAt: 'desc' as const },
+    include: { platformAccount: { select: { id: true, platform: true, displayName: true } } },
+  },
 } as const;
 
 const escapeXml = (value: string) => value

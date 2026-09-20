@@ -4,9 +4,12 @@ import { ADMIN_ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
 import {
   approveSocialDraftAction,
   archiveSocialDraftAction,
+  connectFacebookAction,
   createSocialDraftAction,
+  disconnectPlatformAction,
   downloadSocialDraftAction,
   markSocialDraftPublishedAction,
+  publishSocialDraftAction,
   renderSocialDraftAction,
   updateSocialDraftAction,
 } from '../../../lib/social-content-actions';
@@ -26,7 +29,17 @@ type Draft = {
   publishedAt: string | null;
   district: { id: string; name: string; bnName: string | null } | null;
   renderedAssets: { publicUrl: string; format: string; width: number; height: number }[];
+  publications: {
+    id: string;
+    status: string;
+    externalUrl: string | null;
+    error: string | null;
+    createdAt: string;
+    platformAccount: { id: string; platform: string; displayName: string };
+  }[];
 };
+
+type PlatformAccount = { id: string; platform: string; displayName: string; status: string };
 
 type District = { id: string; name: string; division?: { name: string } };
 type AlertOption = { id: string; title: string; severity: string; district: { name: string } | null };
@@ -94,13 +107,14 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
   const params = await props.searchParams;
   const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const selectedStatus = params.status && ['DRAFT', 'RENDERED', 'APPROVED', 'ARCHIVED'].includes(params.status) ? params.status : undefined;
-  const [drafts, districts, alerts, occurrences, stations, suggestions] = await Promise.all([
+  const [drafts, districts, alerts, occurrences, stations, suggestions, platformAccounts] = await Promise.all([
     apiGet<Draft[]>(`/api/v1/social-content/drafts${selectedStatus ? `?status=${selectedStatus}` : ''}`, accessToken),
     apiGet<District[]>('/api/v1/locations/districts', accessToken),
     apiGet<{ data: AlertOption[] }>('/api/v1/alerts?status=ACTIVE&pageSize=100', accessToken).catch(() => ({ data: [] })),
     apiGet<{ data: OccurrenceOption[] }>('/api/v1/biodiversity/occurrences?pageSize=100', accessToken).catch(() => ({ data: [] })),
     apiGet<StationOption[]>('/api/v1/flood/forecast', accessToken).catch(() => []),
     apiGet<NationalSuggestion[]>('/api/v1/social-content/suggestions/national?cadence=DAILY', accessToken).catch(() => []),
+    apiGet<PlatformAccount[]>('/api/v1/social-content/platforms', accessToken).catch(() => []),
   ]);
   return <>
     <div className="page-header">
@@ -109,6 +123,12 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
     </div>
     {params.success && <div className="flash flash-success">Social draft {params.success}.</div>}
     {params.error && <div className="flash flash-error">{params.error}</div>}
+
+    <section className="social-suggestions">
+      <div className="section-heading"><div><h2>Connected Accounts</h2><p>Publish approved cards directly to a connected Facebook Page.</p></div></div>
+      {platformAccounts.length === 0 ? <div className="empty-state">No platform accounts connected yet.</div> : <ul className="social-ranking-list">{platformAccounts.map((account) => <li key={account.id}><strong>{account.displayName}</strong><span>{label(account.platform)}<form action={disconnectPlatformAction} style={{ display: 'inline', marginLeft: '0.75rem' }}><input type="hidden" name="id" value={account.id} /><button className="btn btn-ghost" type="submit">Disconnect</button></form></span></li>)}</ul>}
+      <div className="form-actions"><form action={connectFacebookAction}><button className="btn btn-secondary" type="submit">Connect Facebook Page</button></form></div>
+    </section>
 
     <section className="social-suggestions">
       <div className="section-heading"><div><h2>Suggested Posts</h2><p>Live national rankings from current environmental data. Suggestions require editorial review.</p></div><span className="tag tag-info">Daily window</span></div>
@@ -156,7 +176,8 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
             <img className={draft.renderedAssets[0].format === 'SQUARE_1_1' ? 'social-preview-square' : ''} src={draft.renderedAssets[0].publicUrl} alt={`Preview of ${draft.headline}`} />
             <div><strong>Rendered preview</strong><p>{draft.renderedAssets[0].width}×{draft.renderedAssets[0].height} SVG · deterministic template</p></div>
           </div>}
-          <div className="social-actions"><form action={renderSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-secondary" type="submit" disabled={draft.status === 'APPROVED' || draft.status === 'ARCHIVED'}>Generate card</button></form>{draft.status === 'RENDERED' && <form action={approveSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-success" type="submit">Approve</button></form>}{draft.status === 'APPROVED' && <form action={downloadSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-primary" type="submit">Download</button></form>}{draft.status === 'APPROVED' && <form action={markSocialDraftPublishedAction}><input type="hidden" name="id" value={draft.id} /><input type="hidden" name="note" value="Marked published externally by admin" /><button className="btn btn-ghost" type="submit">Mark published</button></form>}<form action={archiveSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-ghost" type="submit">Archive</button></form></div>
+          <div className="social-actions"><form action={renderSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-secondary" type="submit" disabled={draft.status === 'APPROVED' || draft.status === 'ARCHIVED'}>Generate card</button></form>{draft.status === 'RENDERED' && <form action={approveSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-success" type="submit">Approve</button></form>}{draft.status === 'APPROVED' && <form action={downloadSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-primary" type="submit">Download</button></form>}{draft.status === 'APPROVED' && platformAccounts.length > 0 && <form action={publishSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><select name="platformAccountId" className="role-select" required defaultValue="">{platformAccounts.map((account) => <option key={account.id} value={account.id}>{account.displayName}</option>)}</select><button className="btn btn-primary" type="submit">Publish</button></form>}{draft.status === 'APPROVED' && <form action={markSocialDraftPublishedAction}><input type="hidden" name="id" value={draft.id} /><input type="hidden" name="note" value="Marked published externally by admin" /><button className="btn btn-ghost" type="submit">Mark published</button></form>}<form action={archiveSocialDraftAction}><input type="hidden" name="id" value={draft.id} /><button className="btn btn-ghost" type="submit">Archive</button></form></div>
+          {draft.publications.length > 0 && <ul className="social-ranking-list">{draft.publications.map((pub) => <li key={pub.id}><strong>{pub.platformAccount.displayName}</strong><span className={`tag ${pub.status === 'SENT' ? 'tag-success' : pub.status === 'FAILED' ? 'tag-danger' : 'tag-info'}`}>{pub.status}</span>{pub.status === 'SENT' && pub.externalUrl && <a href={pub.externalUrl} target="_blank" rel="noreferrer"> View post</a>}{pub.status === 'FAILED' && pub.error && <span className="social-draft-meta"> {pub.error}</span>}</li>)}</ul>}
         </div>
       </details>)}
       </div>

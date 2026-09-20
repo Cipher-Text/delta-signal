@@ -27,6 +27,7 @@ const ALL_PERMISSIONS: { key: string; description: string }[] = [
   { key: 'social_content.approve', description: 'Approve social content cards' },
   { key: 'social_content.download', description: 'Download approved social cards' },
   { key: 'social_content.manage',  description: 'Manage social content templates and settings' },
+  { key: 'social_content.publish', description: 'Publish approved social content cards to connected platform accounts' },
 ];
 
 // Default grants seeded on first boot. ADMIN is excluded from the DB rows —
@@ -63,6 +64,7 @@ const DEFAULT_GRANTS: { role: string; key: string }[] = [
   { role: 'ADMIN',              key: 'social_content.approve' },
   { role: 'ADMIN',              key: 'social_content.download' },
   { role: 'ADMIN',              key: 'social_content.manage' },
+  { role: 'ADMIN',              key: 'social_content.publish' },
 ];
 
 @Injectable()
