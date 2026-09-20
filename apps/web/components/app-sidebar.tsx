@@ -33,6 +33,7 @@ const NAV_SECTIONS = [
       { href: '/restoration', label: 'Restoration' },
       { href: '/organizations', label: 'Organizations' },
       { href: '/community', label: 'Community' },
+      { href: '/members', label: 'Members' },
     ],
   },
 ] as const;

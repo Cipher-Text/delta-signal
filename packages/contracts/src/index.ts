@@ -231,6 +231,11 @@ export const routes = {
       `${apiPrefix}/admin/organizations/${organizationId}/members/${userId}`,
   },
 
+  members: {
+    list: `${apiPrefix}/members`,
+    districts: `${apiPrefix}/members/districts`,
+  },
+
   permissions: {
     list: `${apiPrefix}/admin/permissions`,
     roles: `${apiPrefix}/admin/permissions/roles`,
@@ -596,6 +601,24 @@ export interface UserProfile {
 export interface UserSocialLink {
   platform: string;
   url: string;
+}
+
+/** Directory entry returned by GET /members — a privacy-filtered subset of User + UserProfile. */
+export interface MemberSummary {
+  id: string;
+  displayName: string;
+  role: UserRole;
+  createdAt: string;
+  profile: {
+    avatarUrl: string | null;
+    occupation: string | null;
+    bio: string | null;
+    institution: string | null;
+    locationDistrict: string | null;
+    locationCountry: string;
+    earnedBadges: string[];
+    contributionPoints: number;
+  } | null;
 }
 
 export interface Provider {

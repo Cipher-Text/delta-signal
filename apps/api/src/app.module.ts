@@ -35,6 +35,7 @@ import { CommunityModule } from './community/community.module';
 import { FacilitiesModule } from './facilities/facilities.module';
 import { CompaniesModule } from './companies/companies.module';
 import { SocialContentModule } from './social-content/social-content.module';
+import { MembersModule } from './members/members.module';
 import { HealthController } from './health.controller';
 import { SeedService } from './seed/seed.service';
 
@@ -93,6 +94,7 @@ import { SeedService } from './seed/seed.service';
     FacilitiesModule,
     CompaniesModule,
     SocialContentModule,
+    MembersModule,
   ],
   controllers: [HealthController],
   // ThrottlerGuard is registered here rather than in main.ts's useGlobalGuards
