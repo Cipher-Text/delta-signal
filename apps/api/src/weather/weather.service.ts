@@ -21,6 +21,10 @@ export class WeatherService {
     }) as Promise<DistrictWithCoords[]>;
   }
 
+  async hasDailyForecasts(): Promise<boolean> {
+    return (await this.prisma.dailyWeatherForecast.count()) > 0;
+  }
+
   async syncCurrentWeather(district: DistrictWithCoords, jobId?: string | null) {
     const { lat, lng } = district;
     const response = await this.client.fetchCurrent(lat, lng);

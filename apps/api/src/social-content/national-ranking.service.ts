@@ -31,6 +31,27 @@ const endOfDay = (date: Date) => {
   return value;
 };
 
+const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Open-Meteo daily/aggregate rows are fetched with `timezone=auto`, so each row's
+ * date column is Dhaka's local calendar date parsed as UTC midnight of that date
+ * string (see weather.service.ts). Comparing against the server's own UTC calendar
+ * day is wrong for ~6 hours every day (18:00-23:59 UTC, once Dhaka has already
+ * rolled into tomorrow) — these mirror that same "UTC midnight of the Dhaka date
+ * label" convention so window bounds line up with the stored labels.
+ */
+const startOfDhakaDay = (date: Date) => {
+  const shifted = new Date(date.getTime() + DHAKA_OFFSET_MS);
+  return new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
+};
+
+const endOfDhakaDay = (date: Date) => {
+  const value = startOfDhakaDay(date);
+  value.setUTCDate(value.getUTCDate() + 1);
+  return value;
+};
+
 const percent = (available: number, expected: number) => expected === 0 ? 0 : Math.round((available / expected) * 100);
 
 const QUALITY_RANK: Record<NationalSuggestion['quality'], number> = { HIGH: 0, REVIEW: 1, UNAVAILABLE: 2 };
@@ -73,7 +94,7 @@ export class NationalRankingService {
       return this.suggestion('MONTHLY_RAIN_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 districts by 30-day rainfall`, `Highest rolling 30-day precipitation totals`, 'Delta Signal 30-day climate rollup', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now, rows.length, expected, rows.map((row) => ({ districtId: row.id, district: row.name, districtBn: row.bnName, rainfallMm: row.totalPrecip30d, updatedAt: row.climateUpdatedAt })));
     }
     const windowStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const rows = await this.prisma.unionDailyClimate.findMany({ where: { date: { gte: startOfDay(windowStart), lt: endOfDay(now) }, totalPrecip: { not: null } }, select: { date: true, totalPrecip: true, union: { select: { upazila: { select: { district: { select: { id: true, name: true, bnName: true } } } } } } } });
+    const rows = await this.prisma.unionDailyClimate.findMany({ where: { date: { gte: startOfDhakaDay(windowStart), lt: endOfDhakaDay(now) }, totalPrecip: { not: null } }, select: { date: true, totalPrecip: true, union: { select: { upazila: { select: { district: { select: { id: true, name: true, bnName: true } } } } } } } });
     const totals = new Map<string, { district: { id: string; name: string; bnName: string | null }; total: number }>();
     for (const row of rows) {
       const district = row.union.upazila.district;
@@ -92,7 +113,7 @@ export class NationalRankingService {
       return this.suggestion('MONTHLY_AIR_QUALITY_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 districts by 30-day modeled PM2.5`, `Highest rolling 30-day modeled PM2.5 averages`, 'Delta Signal 30-day climate rollup', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now, rows.length, expected, rows.map((row) => ({ districtId: row.id, district: row.name, districtBn: row.bnName, avgPm25: row.avgPm25_30d, updatedAt: row.climateUpdatedAt })));
     }
     const windowStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const rows = await this.prisma.unionDailyClimate.findMany({ where: { date: { gte: startOfDay(windowStart), lt: endOfDay(now) }, avgPm25: { not: null } }, select: { avgPm25: true, union: { select: { upazila: { select: { district: { select: { id: true, name: true, bnName: true } } } } } } } });
+    const rows = await this.prisma.unionDailyClimate.findMany({ where: { date: { gte: startOfDhakaDay(windowStart), lt: endOfDhakaDay(now) }, avgPm25: { not: null } }, select: { avgPm25: true, union: { select: { upazila: { select: { district: { select: { id: true, name: true, bnName: true } } } } } } } });
     const totals = new Map<string, { district: { id: string; name: string; bnName: string | null }; sum: number; count: number }>();
     for (const row of rows) {
       const district = row.union.upazila.district;
@@ -115,9 +136,9 @@ export class NationalRankingService {
   }
 
   private async rainSuggestion(now: Date, expected: number, cadence: NationalCadence) {
-    const windowEnd = cadence === 'DAILY' ? endOfDay(now) : new Date(now.getTime() + 48 * 60 * 60 * 1000);
+    const windowEnd = cadence === 'DAILY' ? endOfDhakaDay(now) : new Date(now.getTime() + 48 * 60 * 60 * 1000);
     const rows = await this.prisma.dailyWeatherForecast.findMany({
-      where: { forecastDate: { gte: startOfDay(now), lt: windowEnd }, precipitationSum: { not: null } },
+      where: { forecastDate: { gte: startOfDhakaDay(now), lt: windowEnd }, precipitationSum: { not: null } },
       orderBy: [{ forecastDate: 'asc' }, { precipitationSum: 'desc' }],
       include: { district: { select: { id: true, name: true, bnName: true } } },
     });
@@ -126,7 +147,7 @@ export class NationalRankingService {
     const ranked = [...byDistrict.values()].sort((a, b) => (b.precipitationSum ?? 0) - (a.precipitationSum ?? 0)).slice(0, 5);
     if (ranked.length === 0) return null;
     const available = byDistrict.size;
-    return this.suggestion('RAIN_WATCH', 'WEATHER_FORECAST', cadence, `Top 5 districts by rain forecast`, `Highest forecast rainfall over the next ${cadence === 'DAILY' ? '24' : '48'} hours`, 'Open-Meteo daily forecast', startOfDay(now), windowEnd, available, expected, ranked.map((row) => ({ districtId: row.districtId, district: row.district.name, districtBn: row.district.bnName, rainfallMm: row.precipitationSum, forecastDate: row.forecastDate })));
+    return this.suggestion('RAIN_WATCH', 'WEATHER_FORECAST', cadence, `Top 5 districts by rain forecast`, `Highest forecast rainfall over the next ${cadence === 'DAILY' ? '24' : '48'} hours`, 'Open-Meteo daily forecast', startOfDhakaDay(now), windowEnd, available, expected, ranked.map((row) => ({ districtId: row.districtId, district: row.district.name, districtBn: row.district.bnName, rainfallMm: row.precipitationSum, forecastDate: row.forecastDate })));
   }
 
   private async airSuggestion(now: Date, expected: number, cadence: NationalCadence) {
