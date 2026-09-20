@@ -60,7 +60,7 @@ Global setup in `apps/api/src/main.ts`:
 - `JwtAuthGuard` + `RolesGuard` + `PermissionsGuard` registered via `useGlobalGuards`; `ThrottlerGuard` registered via `APP_GUARD` in `AppModule` (needs DI)
 - Rate limits: global 120 req / 60 s; auth endpoints tightened — login/register 5 req / 60 s, refresh 20 req / 60 s
 
-**Feature modules** (`apps/api/src/`): `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `observations`, `restoration`, `biodiversity`, `weather`, `flood`, `radiation`, `marine`, `emissions`, `companies`, `gamification`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `ingestion`, `media`, `database`, `common`. Also registered in `AppModule`: a `SeedService` (seeds dev users + organization on boot).
+**Feature modules** (`apps/api/src/`): `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `observations`, `restoration`, `biodiversity`, `weather`, `flood`, `radiation`, `marine`, `emissions`, `companies`, `facilities`, `community`, `social-content`, `gamification`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `ingestion`, `media`, `database`, `common`. Also registered in `AppModule`: a `SeedService` (seeds dev users + organization on boot).
 
 Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.ts` → `dto/` folder.
 
@@ -73,13 +73,13 @@ Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.
 - `@RequirePermissions('organizations.manage', ...)` — fine-grained permission gate backed by `Permission`/`RolePermission` models
 - `@CurrentUser()` — param decorator injecting `JwtPayload` from `request.user`
 
-**Refresh tokens:** Opaque crypto-random bytes stored as SHA-256 hash in Postgres (`RefreshToken` model). Not JWTs. Redeemable only via `POST /api/v1/auth/refresh`. Rotated on use; daily cleanup cron removes expired rows.
+**Refresh tokens:** Opaque crypto-random bytes stored as SHA-256 hash in Postgres (`RefreshToken` model). Not JWTs. Redeemable only via `POST /api/v1/auth/refresh`. Rotated on use; daily cleanup cron removes expired rows. Revocation-on-refresh is atomic: `AuthService.refresh()` revokes via a single `updateMany({ where: { tokenHash, revokedAt: null, expiresAt: { gt: now } } })` and checks `count === 1` before proceeding — this closes a check-then-act race where two concurrent replays of the same token could both pass validation before either revocation landed.
 
 **JWT_SECRET** is validated at boot in `apps/api/src/common/env.validation.ts`. The app refuses to start if the secret is missing, empty, a known placeholder (`dev-secret-change-in-production`, `change-me`, `changeme`, `secret`), or shorter than 32 characters. Generate with `openssl rand -base64 48`.
 
 ### Database (Prisma)
 
-Schema: `packages/database/prisma/schema.prisma` — 61 models, 32 enums. 13 migrations applied (latest: `20260906000000_add_restoration_project_indexes`).
+Schema: `packages/database/prisma/schema.prisma` — 63 models, 35 enums. 16 migrations applied (latest: `20260919000001_add_national_social_types`).
 
 **All IDs are Prisma CUIDs** (e.g. `cmstewlrj0012usw17sqz1d3n`). Use `@IsString()` in DTO validators, never `@IsUUID()`.
 
@@ -114,6 +114,8 @@ Notable schema decisions:
 - `WaterLevelReading` — observed water level readings per station with `WaterLevelTrend` enum
 - `Company` — legal entity that owns/operates industrial sites; self-referential `parentCompanyId` for conglomerates; `name @unique` for seed lookups; `CompanyType` enum (PRIVATE/STATE_OWNED/JOINT_VENTURE/MULTINATIONAL/CONGLOMERATE/CLUSTER)
 - `IndustrialFacility` — physical industrial site linked to a company; `FacilityType` enum (15 types); `ComplianceStatus` enum (COMPLIANT/NON_COMPLIANT/UNDER_REVIEW/UNKNOWN); `etpInstalled Boolean`; seeded by `CompaniesService`
+- `CommunityPost` / `PostComment` / `Poll` / `PollOption` / `PollVote` — lightweight district-scoped discussion boards; a post may carry one optional `Poll` with options and votes
+- `SocialPostDraft` / `SocialRenderedAsset` — editorial drafts for shareable social cards (weather/river/alert/biodiversity snapshots or nationwide ranking watches) and their rendered SVG outputs; see [Social Content module](#social-content-module) below
 
 ### Frontend (apps/web)
 
@@ -147,7 +149,7 @@ Route groups: `(auth)` — `/login`; `(admin)` — all other pages behind a dark
 
 **Nav:** `components/admin-nav.tsx` is `'use client'` (uses `usePathname()` for active-link state); Datasets and Users links are ADMIN-only. The layout itself stays a Server Component.
 
-Pages: Reports (moderation queue, 5-status tabs), Users (role change, deactivate, reactivate), Alerts (create, cancel, status tabs), Datasets (publish toggle, access policy), Organizations (create, membership management), Ingestion (job history, status tabs, per-job detail — ADMIN-only), Permissions (role ↔ permission matrix CRUD), Restoration (project admin), Audit (audit event log), Settings (layout & design tokens), System (system health).
+Pages: Reports (moderation queue, 5-status tabs), Users (role change, deactivate, reactivate), Alerts (create, cancel, status tabs), Datasets (publish toggle, access policy), Organizations (create, membership management), Ingestion (job history, status tabs, per-job detail — ADMIN-only), Permissions (role ↔ permission matrix CRUD), Restoration (project admin), Audit (audit event log), Settings (layout & design tokens), System (system health), **Social Content** (nationwide ranking suggestions, draft CRUD + render/approve/download/archive workflow — see below).
 
 ### Weather, Biodiversity, Flood, Radiation, Marine & Location Climate modules
 
@@ -221,6 +223,23 @@ BullMQ is wired via `BullModule.forRootAsync` in `AppModule`, parsing `REDIS_URL
 - `GET /analytics/orgadmin` — restoration projects by status, total/active counts, 30-day new projects, top projects by participant count
 
 Complex queries use raw SQL via `prisma.$queryRaw`.
+
+### Community module
+
+`apps/api/src/community/` — lightweight district-scoped discussion boards: posts, comments, optional polls. Models: `CommunityPost`, `PostComment`, `Poll`, `PollOption`, `PollVote`. Deletion permissions are checked inline in `CommunityService` (not guard-based): `deletePost()` and `deleteComment()` both allow the author, `ADMIN`, or **`MODERATOR`** to delete — MODERATOR was widened to delete any post/comment (previously author-or-ADMIN only). Exposed to `apps/web` at `/community`.
+
+### Social Content module
+
+`apps/api/src/social-content/` — editorial tool (admin-only, no `apps/web` surface) for producing shareable social-media cards from live platform data, plus a nationwide ranking engine that surfaces what's currently worth posting about.
+
+- **`NationalRankingService`** (`national-ranking.service.ts`) — `getSuggestions(cadence)` where `cadence` is `DAILY | WEEKLY | MONTHLY`. DAILY computes top-5 rankings for rain (`dailyWeatherForecast`), air quality (`hourlyAirQuality`, PM2.5 last 6h), heat (`currentWeatherReading`, last 3h), and river discharge (`stationFloodForecast`, 48h discharge/mean ratio); WEEKLY/MONTHLY swap these for rolling-average summaries (`unionDailyClimate` / `District.totalPrecip30d`/`avgPm25_30d`/`avgTemp30d`) and drop the river ranking (daily-only). All cadences also include active alerts, verified/resolved citizen reports (7d/30d), and recent biodiversity occurrences. Each suggestion carries a `quality: HIGH | REVIEW | UNAVAILABLE` (by data coverage %) and results sort best-quality-first.
+- **`SocialContentService`** (`social-content.service.ts`) — draft CRUD, source-record loading (`loadSource()` resolves a `NATIONAL_*` type to its ranking series via a `seriesByType` map), and on-demand SVG card rendering (no image library, no queue — built with Node `crypto`/`fs`, uploaded to object storage via the existing `MediaModule`/`StorageService` at `social-cards/{draftId}/{format}-{hash}.svg`). Re-rendering is blocked once a draft is `APPROVED` or `ARCHIVED` (must be edited back to `DRAFT` first).
+- **Endpoints** (`GET /social-content/suggestions/national?cadence=`, `GET /social-content/drafts`, `GET /social-content/drafts/:id`, `POST /social-content/drafts`, `PATCH /social-content/drafts/:id`, `POST /social-content/drafts/:id/render`, `/approve`, `/archive`, `/mark-published`, `GET /social-content/drafts/:id/download`) — all behind the global guard stack (JWT + role + permissions), gated by `@RequirePermissions('social_content.create' | 'edit' | 'render' | 'approve' | 'download')`. Default grants: MODERATOR gets create/edit/render/download (not approve); ADMIN gets all (and bypasses permission checks entirely). `packages/contracts`'s `socialContent` route builder mirrors all 8 routes; only `apps/web` consumes it — `apps/admin` hand-rolls these same paths directly.
+- **`SocialContentType`** enum: per-source types (`CURRENT_WEATHER`, `WEATHER_FORECAST`, `RIVER_SIGNAL`, `ENVIRONMENTAL_ALERT`, `BIODIVERSITY_OBSERVATION`) plus 7 nationwide-ranking types (`NATIONAL_RAIN_WATCH`, `NATIONAL_AIR_QUALITY_WATCH`, `NATIONAL_HEAT_WATCH`, `NATIONAL_RIVER_WATCH`, `NATIONAL_ALERT_WATCH`, `NATIONAL_COMMUNITY_SIGNALS`, `NATIONAL_BIODIVERSITY`). `SocialDraftStatus`: `DRAFT → RENDERED → APPROVED → ARCHIVED`. `SocialCardFormat`: `PORTRAIT_4_5 | SQUARE_1_1`.
+- Every action writes an `AuditEvent` (`SOCIAL_DRAFT_CREATE/UPDATE/APPROVE/ARCHIVE`, `SOCIAL_CARD_RENDER/DOWNLOAD`, `SOCIAL_PUBLICATION_MARK`).
+- No dedicated scheduler — rendering is synchronous, on-demand. No new env vars — reuses `MediaModule`'s storage config; the brand logo is read from `apps/admin/public/logo.svg` on disk, not an env var.
+- Frontend lives entirely in `apps/admin/app/(admin)/social-content/page.tsx` (suggestions panel + create form + status-filterable drafts list) and `apps/admin/lib/social-content-actions.ts` (7 server actions, one per endpoint).
+- Design-notes docs at the repo root (`SOCIAL_CONTENT_ARCHITECTURE.md`, `SOCIAL_CONTENT_ADMIN_UX.md`, `SOCIAL_CONTENT_CAPABILITY_MATRIX.md`, `PHOTOCARD_TYPES.md`, `IMPLEMENTATION_ROADMAP.md`) were written alongside this feature — read those for design rationale; this file covers only what's load-bearing for future changes.
 
 ### Testing
 

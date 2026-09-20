@@ -255,12 +255,14 @@ export const routes = {
   },
 
   socialContent: {
+    nationalSuggestions: `${apiPrefix}/social-content/suggestions/national`,
     drafts: `${apiPrefix}/social-content/drafts`,
     draft: (id: string) => `${apiPrefix}/social-content/drafts/${id}`,
     render: (id: string) => `${apiPrefix}/social-content/drafts/${id}/render`,
     approve: (id: string) => `${apiPrefix}/social-content/drafts/${id}/approve`,
     archive: (id: string) => `${apiPrefix}/social-content/drafts/${id}/archive`,
     markPublished: (id: string) => `${apiPrefix}/social-content/drafts/${id}/mark-published`,
+    download: (id: string) => `${apiPrefix}/social-content/drafts/${id}/download`,
   },
 } as const;
 
