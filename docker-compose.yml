@@ -49,6 +49,12 @@ services:
       GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
       GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
       GOOGLE_CALLBACK_URL: "${GOOGLE_CALLBACK_URL:-}"
+      # ── Social publishing (optional — Facebook Page publishing) ──────────
+      FACEBOOK_APP_ID: "${FACEBOOK_APP_ID:-}"
+      FACEBOOK_APP_SECRET: "${FACEBOOK_APP_SECRET:-}"
+      FACEBOOK_OAUTH_REDIRECT_URI: "${FACEBOOK_OAUTH_REDIRECT_URI:-}"
+      SOCIAL_TOKEN_ENCRYPTION_KEY: "${SOCIAL_TOKEN_ENCRYPTION_KEY:-}"
+      ADMIN_APP_URL: "${ADMIN_APP_URL:-http://localhost:3002}"
       # ── Object storage ────────────────────────────────────────────────────
       STORAGE_ENDPOINT: "${STORAGE_ENDPOINT:-}"
       STORAGE_ACCESS_KEY: "${STORAGE_ACCESS_KEY:-}"
