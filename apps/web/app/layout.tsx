@@ -17,11 +17,6 @@ export const metadata: Metadata = {
   title: 'Delta Signal — Bangladesh Environmental Intelligence',
   description:
     'Public environmental board for Bangladesh. Browse active alerts, verified reports, datasets, biodiversity records, and restoration projects — no login required.',
-  // Google Search Console site ownership verification (HTML tag method).
-  // Only rendered when GOOGLE_SITE_VERIFICATION is set — leave unset locally.
-  ...(process.env.GOOGLE_SITE_VERIFICATION
-    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
-    : {}),
 };
 
 export default function RootLayout({
