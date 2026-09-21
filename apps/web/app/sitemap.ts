@@ -1,5 +1,10 @@
 import type { MetadataRoute } from 'next';
 
+// Read NEXT_PUBLIC_SITE_URL at request time so the production Docker runtime
+// environment is honored. This must not be statically generated during the
+// image build, where the deployment environment is not available.
+export const dynamic = 'force-dynamic';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 // Static, publicly browsable top-level pages only (no auth flows, no /profile).

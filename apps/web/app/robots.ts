@@ -1,5 +1,9 @@
 import type { MetadataRoute } from 'next';
 
+// Keep this aligned with sitemap.ts: the site URL is supplied by the runtime
+// deployment environment rather than the Docker image build environment.
+export const dynamic = 'force-dynamic';
+
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
 
 export default function robots(): MetadataRoute.Robots {
