@@ -40,7 +40,9 @@ describe('Auth flows (e2e)', () => {
         // Ignore if already deleted.
       });
     }
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   // ── Registration ─────────────────────────────────────────────────────────────

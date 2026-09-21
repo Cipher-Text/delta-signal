@@ -60,7 +60,9 @@ describe('Protected endpoints (e2e)', () => {
       await prisma.citizenReport.deleteMany({ where: { id: { in: createdReportIds } } });
     }
 
-    await app.close();
+    if (app) {
+      await app.close();
+    }
   });
 
   // ── Profile ──────────────────────────────────────────────────────────────────

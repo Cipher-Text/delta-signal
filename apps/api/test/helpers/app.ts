@@ -1,6 +1,6 @@
 /**
  * Creates a fully-bootstrapped NestJS test application backed by the real
- * database. Three services that depend on BullMQ queue injection are replaced
+ * database. BullMQ-dependent services that are not under test are replaced
  * with no-op stubs — BullMQ ships as pure ESM and cannot be loaded by Jest's
  * CJS runtime. Everything else (Prisma, guards, pipes, filters, auth, seeding)
  * runs as in production.
@@ -18,6 +18,7 @@ import { AllExceptionsFilter } from '../../src/common/filters/all-exceptions.fil
 import { NotificationsService } from '../../src/notifications/notifications.service';
 import { EmailService } from '../../src/notifications/email.service';
 import { GamificationService } from '../../src/gamification/gamification.service';
+import { SocialPublishingService } from '../../src/social-publishing/social-publishing.service';
 import helmet from 'helmet';
 
 const notificationsStub = {
@@ -47,6 +48,14 @@ const gamificationStub = {
   performEvaluation: jest.fn().mockResolvedValue(undefined),
 };
 
+const socialPublishingStub = {
+  list: jest.fn().mockResolvedValue([]),
+  buildFacebookAuthorizeUrl: jest.fn().mockReturnValue(''),
+  connectFacebook: jest.fn().mockResolvedValue([]),
+  disconnect: jest.fn().mockResolvedValue(undefined),
+  requestPublish: jest.fn().mockResolvedValue(undefined),
+};
+
 export async function createTestApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
@@ -62,6 +71,8 @@ export async function createTestApp(): Promise<INestApplication> {
     .useValue(emailStub)
     .overrideProvider(GamificationService)
     .useValue(gamificationStub)
+    .overrideProvider(SocialPublishingService)
+    .useValue(socialPublishingStub)
     .compile();
 
   const app = moduleFixture.createNestApplication();
