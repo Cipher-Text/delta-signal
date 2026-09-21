@@ -742,7 +742,7 @@ body {
 .social-status-tabs a { color: var(--text-secondary); font-size: 12px; font-weight: 650; padding: 9px 12px; white-space: nowrap; text-decoration: none; border-bottom: 2px solid transparent; }
 .social-status-tabs a:hover, .social-status-tabs a.active { color: var(--accent); border-bottom-color: var(--accent); }
 .social-suggestions { margin: 24px 0 32px; }
-.social-suggestion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.social-suggestion-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
 .social-suggestion-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
 .social-suggestion-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
 .social-suggestion-card h3 { margin: 0 0 8px; font-size: 16px; font-weight: 650; }
