@@ -8,6 +8,7 @@ import { Prisma, SocialCardFormat, SocialContentType, SocialDraftStatus } from '
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import sharp from 'sharp';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../media/storage.service';
 import type { JwtPayload } from '../common/decorators/current-user.decorator';
@@ -162,9 +163,13 @@ export class SocialContentService {
       ? { width: 1080, height: 1080 }
       : { width: 1080, height: 1350 };
     const svg = this.renderSvg(draft, dimensions.width, dimensions.height);
-    const contentHash = createHash('sha256').update(svg).digest('hex');
-    const key = `social-cards/${draft.id}/${draft.format.toLowerCase()}-${contentHash.slice(0, 16)}.svg`;
-    const publicUrl = await this.storage.upload(key, Buffer.from(svg), 'image/svg+xml', 'attachment');
+    const png = await sharp(Buffer.from(svg), { density: 144 })
+      .resize(dimensions.width, dimensions.height)
+      .png()
+      .toBuffer();
+    const contentHash = createHash('sha256').update(png).digest('hex');
+    const key = `social-cards/${draft.id}/${draft.format.toLowerCase()}-${contentHash.slice(0, 16)}.png`;
+    const publicUrl = await this.storage.upload(key, png, 'image/png', 'attachment');
     const asset = await this.prisma.socialRenderedAsset.create({
       data: {
         draftId: id,
@@ -174,7 +179,7 @@ export class SocialContentService {
         storageKey: key,
         publicUrl,
         contentHash,
-        renderVersion: 'svg-v1',
+        renderVersion: 'png-v1',
       },
     });
     await this.prisma.socialPostDraft.update({ where: { id }, data: { status: SocialDraftStatus.RENDERED } });

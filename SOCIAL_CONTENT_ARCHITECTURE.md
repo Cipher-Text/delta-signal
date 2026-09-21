@@ -97,13 +97,13 @@ The controller should use `JwtAuthGuard`, `RolesGuard`, `PermissionsGuard` throu
 
 ## Rendering choice
 
-Use deterministic SVG generation on the backend, then rasterize to PNG using the lightest deployment-compatible mechanism already approved for the repository. The card is naturally vector: text, shapes, icons, metric bars, source footer, and optional licensed photo. SVG makes 4:5/1:1/9:16 layouts explicit and testable, avoids browser font/layout drift, and supports a shared preview representation. If the deployment image cannot rasterize SVG without a new dependency, retain SVG as the canonical asset and add a narrowly scoped PNG renderer only after a deployment spike.
+Use deterministic SVG generation as an internal template representation, then rasterize to PNG on the backend before storing the rendered asset. The card is naturally vector: text, shapes, icons, metric bars, source footer, and optional licensed photo. SVG makes 4:5/1:1/9:16 layouts explicit and testable, avoids browser font/layout drift, while PNG is the canonical downloadable and publishable asset.
 
 Do not use frontend HTML/CSS screenshots as the canonical output: they are difficult to reproduce server-side and can differ by browser. Do not allow arbitrary SVG/HTML from admins. Template code should expose typed slots and design tokens only. The Admin preview should call the same render endpoint or shared render contract used for the final asset.
 
 ## Storage and operations
 
-Use existing S3-compatible `StorageService`, add a dedicated folder and MIME policy for generated PNG/SVG, and store only object keys plus metadata in `RenderedAsset`. Keep the source image URL/credit in the payload if a biodiversity/report image is used. Do not copy unlicensed GBIF or citizen media into a card without rights/consent checks.
+Use existing S3-compatible `StorageService`, add a dedicated folder and MIME policy for generated PNG assets, and store only object keys plus metadata in `RenderedAsset`. Keep the source image URL/credit in the payload if a biodiversity/report image is used. Do not copy unlicensed GBIF or citizen media into a card without rights/consent checks.
 
 Rendering can start synchronously for one card, with a BullMQ render queue later if generation is slow. Record render duration, failures, template/render versions, asset size, and source freshness. Never allow a render failure to mutate approval state.
 

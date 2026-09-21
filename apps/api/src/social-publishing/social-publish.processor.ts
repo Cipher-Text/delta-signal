@@ -34,11 +34,13 @@ export class SocialPublishProcessor extends WorkerHost {
     if (!publication || publication.status === SocialPublicationStatus.SENT) return;
 
     try {
-      const svgResponse = await fetch(publication.renderedAsset.publicUrl);
-      if (!svgResponse.ok) throw new Error(`Failed to fetch rendered card (${svgResponse.status})`);
-      const svg = await svgResponse.text();
-
-      const png = await this.rasterizer.svgToPng(svg, publication.renderedAsset.width, publication.renderedAsset.height);
+      const imageResponse = await fetch(publication.renderedAsset.publicUrl);
+      if (!imageResponse.ok) throw new Error(`Failed to fetch rendered card (${imageResponse.status})`);
+      const contentType = imageResponse.headers?.get('content-type') ?? '';
+      const isSvg = contentType.includes('image/svg') || publication.renderedAsset.publicUrl.toLowerCase().endsWith('.svg');
+      const png = isSvg
+        ? await this.rasterizer.svgToPng(await imageResponse.text(), publication.renderedAsset.width, publication.renderedAsset.height)
+        : Buffer.from(await imageResponse.arrayBuffer());
       const pngHash = createHash('sha256').update(png).digest('hex').slice(0, 16);
       const pngKey = `social-cards/${publication.draftId}/${publication.renderedAsset.format.toLowerCase()}-${pngHash}.png`;
       const pngUrl = await this.storage.upload(pngKey, png, 'image/png', 'inline');
