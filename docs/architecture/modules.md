@@ -58,6 +58,8 @@ Roles (all in `UserRole`): `CITIZEN | RESEARCHER | ORGANIZATION_ADMIN | GOVERNME
 | GET | `/users` | Admin |
 | GET | `/users/:id` | Admin |
 | GET | `/users/audit-events` | Admin |
+| GET | `/users/researcher-applications` | Admin |
+| PATCH | `/users/researcher-applications/:id/review` | Admin |
 | PATCH | `/users/:id/role` | Admin |
 | PATCH | `/users/:id/deactivate` | Admin |
 | PATCH | `/users/:id/reactivate` | Admin |
@@ -65,6 +67,8 @@ Roles (all in `UserRole`): `CITIZEN | RESEARCHER | ORGANIZATION_ADMIN | GOVERNME
 `@Roles('ADMIN')` is applied at the controller level, so all routes are admin-only.
 
 `PATCH /users/:id/role` writes `USER_ROLE_CHANGE` with `{from, to}` in `meta`. `PATCH /users/:id/deactivate` writes `USER_DEACTIVATE` with `{wasActive}`. `PATCH /users/:id/reactivate` re-enables a deactivated account. `GET /users/audit-events` returns a paginated, filterable list of all `AuditEvent` rows (filterable by `action`, `userId`, `entityType`).
+
+Citizens apply through `POST /researcher-applications` and read their latest application at `GET /researcher-applications/mine`. Submission requires a Google Scholar, ResearchGate, or ORCID link saved on the citizen's profile. Admins manually review those links from the review queue; applicants do not enter publication details. `ResearcherApplication` stores the request and reviewer decision. Approval updates the application, changes the user's role to `RESEARCHER`, and writes audit events in one transaction. Admins cannot grant the researcher role through the generic role editor.
 
 ## organizations ✓
 

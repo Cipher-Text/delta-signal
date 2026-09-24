@@ -21,6 +21,7 @@ const ADMIN_ONLY_LINKS = [
   { href: '/permissions', label: 'Permissions' },
   { href: '/datasets', label: 'Datasets' },
   { href: '/users', label: 'Users' },
+  { href: '/researcher-applications', label: 'Researcher Applications' },
   { href: '/organizations', label: 'Organizations' },
   { href: '/restoration', label: 'Restoration' },
   { href: '/audit', label: 'Audit Log' },

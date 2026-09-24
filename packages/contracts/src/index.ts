@@ -220,6 +220,13 @@ export const routes = {
     deactivate: (id: string) => `${apiPrefix}/users/${id}/deactivate`,
     reactivate: (id: string) => `${apiPrefix}/users/${id}/reactivate`,
     auditEvents: `${apiPrefix}/users/audit-events`,
+    researcherApplications: `${apiPrefix}/users/researcher-applications`,
+    reviewResearcherApplication: (id: string) => `${apiPrefix}/users/researcher-applications/${id}/review`,
+  },
+
+  researcherApplications: {
+    mine: `${apiPrefix}/researcher-applications/mine`,
+    submit: `${apiPrefix}/researcher-applications`,
   },
 
   organizations: {
@@ -857,6 +864,15 @@ export interface CreateSubscriptionRequest {
 }
 
 // ─── Analytics Dashboards ─────────────────────────────────────────────────────
+
+export interface ResearcherApplication {
+  id: string;
+  status: 'PENDING' | 'NEEDS_INFORMATION' | 'APPROVED' | 'DECLINED';
+  reviewerNote: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export type DashboardFreshnessStatus = 'FRESH' | 'STALE' | 'UNKNOWN';
 

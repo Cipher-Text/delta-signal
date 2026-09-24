@@ -3,7 +3,6 @@ import type { UserRole } from '@delta-signal/shared';
 
 const ASSIGNABLE_ROLES: UserRole[] = [
   'CITIZEN',
-  'RESEARCHER',
   'ORGANIZATION_ADMIN',
   'GOVERNMENT',
   'MODERATOR',

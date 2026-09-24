@@ -58,7 +58,7 @@ them as coverage unless real tests have been added.
   separately through `DATABASE_URL` / `DOCKER_DATABASE_URL`.
 - Prisma schema: `packages/database/prisma/schema.prisma`.
 - IDs are Prisma CUIDs; use `@IsString()`, not `@IsUUID()`, in DTOs.
-- Current schema state: 61 models, 32 enums, 13 migrations.
+- Current schema state: 62 models, 33 enums, 14 migrations.
 - All enum values are uppercase and must remain consistent across Prisma,
   `packages/shared`, guards, DTOs, and contracts.
 

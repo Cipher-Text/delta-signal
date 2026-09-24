@@ -1581,6 +1581,11 @@ body {
   line-height: 1.6;
 }
 
+.application-note-label { display: grid; gap: 6px; color: var(--text-label); font-size: 12px; font-weight: 600; }
+.application-note-label textarea { width: 100%; max-width: 560px; resize: vertical; border: 1px solid var(--border); border-radius: 6px; padding: 9px 10px; color: var(--ink); font: inherit; }
+.application-review-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.application-review-actions .btn-primary { width: auto; padding: 7px 12px; }
+
 /* ── Tab link (restoration page) ── */
 .tab-link {
   display: inline-flex;

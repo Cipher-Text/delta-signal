@@ -37,7 +37,6 @@ interface PaginatedResponse {
 
 const ASSIGNABLE_ROLES: UserRole[] = [
   'CITIZEN',
-  'RESEARCHER',
   'ORGANIZATION_ADMIN',
   'GOVERNMENT',
   'MODERATOR',
@@ -180,6 +179,7 @@ export default async function UsersPage(
                         <input type="hidden" name="id" value={user.id} />
                         <input type="hidden" name="returnPage" value={String(page)} />
                         <select name="role" className="role-select" defaultValue={user.role}>
+                          {user.role === 'RESEARCHER' && <option value="RESEARCHER" disabled>Researcher (application approved)</option>}
                           {ASSIGNABLE_ROLES.map((r) => (
                             <option key={r} value={r}>{titleCase(r)}</option>
                           ))}

@@ -18,6 +18,13 @@ enum UserRole {
   ADMIN
 }
 
+enum ResearcherApplicationStatus {
+  PENDING
+  NEEDS_INFORMATION
+  APPROVED
+  DECLINED
+}
+
 enum OrganizationMemberRole {
   ADMIN
   MEMBER
@@ -197,6 +204,8 @@ enum AuditAction {
   SOCIAL_PLATFORM_CONNECT
   SOCIAL_PLATFORM_DISCONNECT
   SOCIAL_PUBLISH_REQUEST
+  RESEARCHER_APPLICATION_SUBMIT
+  RESEARCHER_APPLICATION_REVIEW
 }
 
 enum SocialContentType {
@@ -454,6 +463,8 @@ model User {
   socialDraftsApproved       SocialPostDraft[]       @relation("SocialDraftApprover")
   socialPlatformAccountsConnected SocialPlatformAccount[]
   socialPublicationsRequested SocialPublication[]    @relation("SocialPublicationRequester")
+  researcherApplications ResearcherApplication[] @relation("ResearcherApplicant")
+  reviewedResearcherApplications ResearcherApplication[] @relation("ResearcherApplicationReviewer")
 
   @@index([email])
   @@index([role])
@@ -498,6 +509,23 @@ model UserSocialLink {
 
   @@unique([userId, platform])
   @@index([userId])
+}
+
+model ResearcherApplication {
+  id               String                        @id @default(cuid())
+  userId           String
+  status           ResearcherApplicationStatus   @default(PENDING)
+  reviewerId       String?
+  reviewerNote     String?                       @db.Text
+  reviewedAt       DateTime?
+  createdAt        DateTime                      @default(now())
+  updatedAt        DateTime                      @updatedAt
+
+  user     User  @relation("ResearcherApplicant", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("ResearcherApplicationReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 model RefreshToken {

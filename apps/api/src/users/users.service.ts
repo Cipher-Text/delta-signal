@@ -34,6 +34,9 @@ export class UsersService {
   }
 
   async updateRole(id: string, role: UserRole, actor: JwtPayload) {
+    if (role === UserRole.RESEARCHER) {
+      throw new BadRequestException('Researcher role can only be granted through an approved application');
+    }
     const user = await this.getById(id);
 
     const [updated] = await this.prisma.$transaction([

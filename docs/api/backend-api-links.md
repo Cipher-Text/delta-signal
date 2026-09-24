@@ -43,8 +43,12 @@ Refresh tokens are opaque, Postgres-backed, and rotated on use — not Redis, no
 | GET | `/users/:id` | Admin | ✓ | User detail |
 | GET | `/users/audit-events` | Admin | ✓ | Paginated audit event log (`?action`, `?userId`, `?entityType`) |
 | PATCH | `/users/:id/role` | Admin | ✓ | Update user role (audited, records from/to) |
+| GET | `/users/researcher-applications?status=&page=&pageSize=` | Admin | ✓ | Review queue; returns applicant, publication, and application details |
+| PATCH | `/users/researcher-applications/:id/review` | Admin | ✓ | Request information, approve, or decline; approval grants `RESEARCHER` atomically |
 | PATCH | `/users/:id/deactivate` | Admin | ✓ | Deactivate user (audited) |
 | PATCH | `/users/:id/reactivate` | Admin | ✓ | Re-enable a deactivated user account |
+
+Authenticated citizens submit and view their own application through `POST /researcher-applications` and `GET /researcher-applications/mine`. Submission requires a Google Scholar, ResearchGate, or ORCID link already saved on the user's profile. Admins review those profile links manually; applicants do not submit publication details. Applications do not grant researcher access while pending. Admin approval is the only path to the `RESEARCHER` role; direct role assignment is rejected.
 
 ## Organizations
 

@@ -6,12 +6,32 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser, JwtPayload } from '../common/decorators/current-user.decorator';
 import { UserRole } from '@prisma/client';
+import { ResearcherApplicationsService } from './researcher-applications.service';
+import { ReviewResearcherApplicationDto } from './dto/review-researcher-application.dto';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService, private readonly researcherApplications: ResearcherApplicationsService) {}
+
+  @Get('researcher-applications')
+  listResearcherApplications(
+    @Query('page') page?: string,
+    @Query('pageSize') pageSize?: string,
+    @Query('status') status?: string,
+  ) {
+    return this.researcherApplications.list(Number(page ?? 1), Number(pageSize ?? 20), status);
+  }
+
+  @Patch('researcher-applications/:id/review')
+  reviewResearcherApplication(
+    @Param('id') id: string,
+    @Body() dto: ReviewResearcherApplicationDto,
+    @CurrentUser() actor: JwtPayload,
+  ) {
+    return this.researcherApplications.review(id, dto, actor);
+  }
 
   @Get()
   list(@Query('page') page?: string, @Query('pageSize') pageSize?: string) {

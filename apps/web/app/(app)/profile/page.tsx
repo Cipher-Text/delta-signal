@@ -376,6 +376,18 @@ export default async function ProfilePage(
         </div>
       </div>
 
+      {user?.role === 'CITIZEN' && (
+        <section className="panel" aria-labelledby="researcher-access-heading">
+          <div className="panel-header">
+            <div>
+              <h2 id="researcher-access-heading">Researcher access</h2>
+              <p>Have a published paper about nature or the environment? Apply to unlock researcher tools after review.</p>
+            </div>
+            <Link className="button" href="/researcher-application">Apply for researcher access</Link>
+          </div>
+        </section>
+      )}
+
       {/* ── Profile Strength Widget ─────────────────────────────────────────── */}
       <ProfileStrengthWidget game={gameData} />
 

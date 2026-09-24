@@ -103,6 +103,7 @@ What the code enforces today (`@Roles`, `@RequirePermissions`, service-layer own
 | `/analytics/moderator` | `MODERATOR` role — **exact match**; ADMIN cannot access this endpoint |
 | `/analytics/government` | `GOVERNMENT` role |
 | `/analytics/researcher` | `RESEARCHER` role |
+| `POST /researcher-applications`, `GET /researcher-applications/mine` | Authenticated `CITIZEN`; application review does not grant permissions until admin approval |
 | `/analytics/orgadmin` | `ORGANIZATION_ADMIN` role |
 | `GET /ingestion/jobs`, `GET /ingestion/jobs/:id` | `MODERATOR`, `ADMIN` |
 | `/social-content/drafts*` create/list/read | `social_content.create` |

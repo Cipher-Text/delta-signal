@@ -10,7 +10,7 @@ import {
 const API_BASE_URL = process.env.API_URL ?? 'http://localhost:3001';
 const isProd = process.env.NODE_ENV === 'production';
 
-const PROTECTED_PREFIXES = ['/profile', '/members'];
+const PROTECTED_PREFIXES = ['/profile', '/members', '/researcher-application'];
 
 /**
  * Decodes a JWT payload without verifying the signature — only used to check expiry.

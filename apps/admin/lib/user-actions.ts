@@ -25,6 +25,24 @@ export async function updateRoleAction(formData: FormData) {
   redirect(`/users?page=${returnPage}&success=role`);
 }
 
+export async function reviewResearcherApplicationAction(formData: FormData) {
+  const id = String(formData.get('id') ?? '');
+  const status = String(formData.get('status') ?? '');
+  const reviewerNote = String(formData.get('reviewerNote') ?? '').trim();
+  const returnStatus = String(formData.get('returnStatus') ?? 'PENDING');
+  const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value;
+  if (!accessToken) redirect('/login');
+  try {
+    await apiPatch(`/api/v1/users/researcher-applications/${id}/review`, { status, reviewerNote }, accessToken);
+  } catch (err) {
+    const message = err instanceof ApiError ? err.message : 'Application review failed';
+    redirect(`/researcher-applications?status=${encodeURIComponent(returnStatus)}&error=${encodeURIComponent(message)}`);
+  }
+  revalidatePath('/researcher-applications');
+  revalidatePath('/users');
+  redirect(`/researcher-applications?status=${encodeURIComponent(returnStatus)}&success=${encodeURIComponent(status)}`);
+}
+
 export async function deactivateUserAction(formData: FormData) {
   const id = String(formData.get('id') ?? '');
   const returnPage = String(formData.get('returnPage') ?? '1');
