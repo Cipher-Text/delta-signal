@@ -36,6 +36,7 @@ const escapeXml = (value: string) => value
   .replaceAll("'", '&apos;');
 
 const text = (value: unknown) => value == null ? '' : String(value);
+const POSTER_FONT = 'Noto Sans Bengali, Arial, sans-serif';
 
 const seriesLabelFor = (type: SocialContentType): string => {
   switch (type) {
@@ -293,19 +294,19 @@ export class SocialContentService {
     const metricMarkup = metrics.map((metric: { label: string; value: string }, index: number) => {
       if (national) {
         const y = 500 + index * 62;
-        return `<text x="90" y="${y}" fill="#172026" font-size="25" font-weight="700" font-family="Arial, sans-serif">${escapeXml(`${index + 1}. ${metric.label}`)}</text><text x="${width - 90}" y="${y}" text-anchor="end" fill="#2e7b83" font-size="25" font-weight="700" font-family="Arial, sans-serif">${escapeXml(metric.value)}</text>`;
+        return `<text x="90" y="${y}" fill="#172026" font-size="25" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(`${index + 1}. ${metric.label}`)}</text><text x="${width - 90}" y="${y}" text-anchor="end" fill="#2e7b83" font-size="25" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(metric.value)}</text>`;
       }
       const y = 560 + index * 112;
-      return `<text x="90" y="${y}" fill="#5b6d74" font-size="24" font-family="Arial, sans-serif">${escapeXml(metric.label)}</text><text x="90" y="${y + 48}" fill="#172026" font-size="40" font-weight="700" font-family="Arial, sans-serif">${escapeXml(metric.value)}</text>`;
+      return `<text x="90" y="${y}" fill="#5b6d74" font-size="24" font-family="${POSTER_FONT}">${escapeXml(metric.label)}</text><text x="90" y="${y + 48}" fill="#172026" font-size="40" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(metric.value)}</text>`;
     }).join('');
     const logo = deltaSignalLogoDataUri();
     const seriesLabel = seriesLabelFor(draft.type);
     const evidenceLabel = evidenceLabelFor(draft.type);
     const asOf = draft.sourceObservedAt ? `As of ${String(draft.sourceObservedAt).slice(0, 16).replace('T', ' ')}` : '';
     const brand = logo
-      ? `<image href="${logo}" x="70" y="55" width="96" height="96" preserveAspectRatio="xMidYMid meet"/><text x="190" y="120" fill="#172026" font-size="28" font-weight="700" font-family="Arial, sans-serif">DELTA SIGNAL</text>`
-      : `<text x="90" y="120" fill="#172026" font-size="28" font-weight="700" font-family="Arial, sans-serif">DELTA SIGNAL</text>`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#f0f4f5"/><rect x="0" y="0" width="${width}" height="24" fill="#3d9fa8"/>${brand}<text x="90" y="245" fill="#2e7b83" font-size="22" font-weight="700" letter-spacing="1" font-family="Arial, sans-serif">${escapeXml(seriesLabel)}</text><rect x="${width - 330}" y="205" width="240" height="48" rx="24" fill="#d9ecee"/><text x="${width - 210}" y="237" text-anchor="middle" fill="#246b73" font-size="17" font-weight="700" font-family="Arial, sans-serif">${escapeXml(evidenceLabel)}</text><text x="90" y="315" fill="#172026" font-size="48" font-weight="700" font-family="Arial, sans-serif">${escapeXml(location)}</text><text x="90" y="410" fill="#172026" font-size="38" font-weight="700" font-family="Arial, sans-serif">${escapeXml(draft.headline)}</text>${metricMarkup}<line x1="90" y1="${height - 230}" x2="${width - 90}" y2="${height - 230}" stroke="#d4dcdf"/><text x="90" y="${height - 175}" fill="#3a4f58" font-size="22" font-family="Arial, sans-serif">${escapeXml(draft.summary ?? '')}</text><text x="90" y="${height - 130}" fill="#5b6d74" font-size="18" font-family="Arial, sans-serif">${escapeXml(asOf)}</text><text x="90" y="${height - 95}" fill="#5b6d74" font-size="18" font-family="Arial, sans-serif">Source: ${escapeXml(draft.sourceLabel)}</text><text x="90" y="${height - 55}" fill="#8a9fa8" font-size="17" font-family="Arial, sans-serif">${escapeXml(draft.disclaimer ?? '')}</text></svg>`;
+      ? `<image href="${logo}" x="70" y="55" width="96" height="96" preserveAspectRatio="xMidYMid meet"/><text x="190" y="120" fill="#172026" font-size="28" font-weight="700" font-family="${POSTER_FONT}">DELTA SIGNAL</text>`
+      : `<text x="90" y="120" fill="#172026" font-size="28" font-weight="700" font-family="${POSTER_FONT}">DELTA SIGNAL</text>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#f0f4f5"/><rect x="0" y="0" width="${width}" height="24" fill="#3d9fa8"/>${brand}<text x="90" y="245" fill="#2e7b83" font-size="22" font-weight="700" letter-spacing="1" font-family="${POSTER_FONT}">${escapeXml(seriesLabel)}</text><rect x="${width - 330}" y="205" width="240" height="48" rx="24" fill="#d9ecee"/><text x="${width - 210}" y="237" text-anchor="middle" fill="#246b73" font-size="17" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(evidenceLabel)}</text><text x="90" y="315" fill="#172026" font-size="48" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(location)}</text><text x="90" y="410" fill="#172026" font-size="38" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(draft.headline)}</text>${metricMarkup}<line x1="90" y1="${height - 230}" x2="${width - 90}" y2="${height - 230}" stroke="#d4dcdf"/><text x="90" y="${height - 175}" fill="#3a4f58" font-size="22" font-family="${POSTER_FONT}">${escapeXml(draft.summary ?? '')}</text><text x="90" y="${height - 130}" fill="#5b6d74" font-size="18" font-family="${POSTER_FONT}">${escapeXml(asOf)}</text><text x="90" y="${height - 95}" fill="#5b6d74" font-size="18" font-family="${POSTER_FONT}">Source: ${escapeXml(draft.sourceLabel)}</text><text x="90" y="${height - 55}" fill="#8a9fa8" font-size="17" font-family="${POSTER_FONT}">${escapeXml(draft.disclaimer ?? '')}</text></svg>`;
   }
 
   private metricsFor(type: SocialContentType, source: Record<string, any>) {

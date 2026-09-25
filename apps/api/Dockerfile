@@ -1,5 +1,6 @@
 # ── Base ──────────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS base
+RUN apk add --no-cache font-noto-bengali
 # Suppress any corporate proxy injected by BuildKit so npm/pnpm reach
 # registry.npmjs.org directly (the proxy blocks their requests with 403).
 ARG HTTP_PROXY=""
