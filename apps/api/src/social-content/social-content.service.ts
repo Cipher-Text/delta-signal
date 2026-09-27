@@ -11,6 +11,7 @@ import { resolve } from 'node:path';
 import sharp from 'sharp';
 import { PrismaService } from '../database/prisma.service';
 import { StorageService } from '../media/storage.service';
+import { ensureBengaliFontconfig } from '../common/svg-fonts';
 import type { JwtPayload } from '../common/decorators/current-user.decorator';
 import { CreateSocialDraftDto } from './dto/create-social-draft.dto';
 import { UpdateSocialDraftDto } from './dto/update-social-draft.dto';
@@ -164,6 +165,7 @@ export class SocialContentService {
       ? { width: 1080, height: 1080 }
       : { width: 1080, height: 1350 };
     const svg = this.renderSvg(draft, dimensions.width, dimensions.height);
+    ensureBengaliFontconfig();
     const png = await sharp(Buffer.from(svg), { density: 144 })
       .resize(dimensions.width, dimensions.height)
       .png()

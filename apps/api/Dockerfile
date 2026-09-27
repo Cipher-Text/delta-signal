@@ -1,6 +1,10 @@
 # ── Base ──────────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS base
-RUN apk add --no-cache font-noto-bengali
+# Belt-and-suspenders: font-noto-bengali covers system-level rendering, but
+# apps/api/src/common/svg-fonts.ts also points sharp at the bundled
+# apps/api/assets/fonts copy via FONTCONFIG_PATH so social card rendering
+# doesn't depend on this OS package alone (see that file for why).
+RUN apk add --no-cache font-noto-bengali fontconfig && fc-cache -f
 # Suppress any corporate proxy injected by BuildKit so npm/pnpm reach
 # registry.npmjs.org directly (the proxy blocks their requests with 403).
 ARG HTTP_PROXY=""
@@ -64,6 +68,7 @@ COPY packages/shared/src/     ./packages/shared/src/
 COPY packages/database/src/   ./packages/database/src/
 COPY packages/database/prisma ./packages/database/prisma
 COPY apps/admin/public/logo.svg ./apps/admin/public/logo.svg
+COPY apps/api/assets/fonts ./apps/api/assets/fonts
 
 RUN pnpm install --frozen-lockfile --prod \
     --fetch-retries=5 \
