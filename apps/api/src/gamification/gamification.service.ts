@@ -119,7 +119,9 @@ export class GamificationService {
         backoff: { type: 'exponential', delay: 2_000 },
         removeOnComplete: true,
         // One pending evaluation per user is sufficient — deduplicate by userId.
-        jobId: `badge-eval:${userId}`,
+        // BullMQ rejects custom jobIds containing ':' unless they split into
+        // exactly 3 parts (reserved for repeatable-job ids), so use '-'.
+        jobId: `badge-eval-${userId}`,
       },
     );
   }

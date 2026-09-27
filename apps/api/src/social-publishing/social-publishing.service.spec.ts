@@ -85,7 +85,7 @@ describe('SocialPublishingService.requestPublish', () => {
     expect(queue.add).toHaveBeenCalledWith(
       'publish',
       { socialPublicationId: 'pub-1' },
-      expect.objectContaining({ jobId: 'publish:pub-1' }),
+      expect.objectContaining({ jobId: 'publish-pub-1' }),
     );
     expect(prisma.auditEvent.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({ action: 'SOCIAL_PUBLISH_REQUEST', userId: ACTOR.sub }),

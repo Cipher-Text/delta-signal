@@ -116,7 +116,7 @@ export class SocialPublishingService {
     const publication = await this.prisma.socialPublication.create({
       data: { draftId, platformAccountId, renderedAssetId: asset.id, requestedById: actor.sub },
     });
-    await this.queue.add('publish', { socialPublicationId: publication.id }, { ...PUBLISH_JOB_OPTIONS, jobId: `publish:${publication.id}` });
+    await this.queue.add('publish', { socialPublicationId: publication.id }, { ...PUBLISH_JOB_OPTIONS, jobId: `publish-${publication.id}` });
     await this.prisma.auditEvent.create({
       data: { action: 'SOCIAL_PUBLISH_REQUEST', userId: actor.sub, entityType: 'SocialPostDraft', entityId: draftId, meta: { platformAccountId, publicationId: publication.id } },
     });

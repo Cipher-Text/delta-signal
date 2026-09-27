@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, SocialCardFormat, SocialContentType, SocialDraftStatus } from '@prisma/client';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import sharp from 'sharp';
@@ -171,7 +171,11 @@ export class SocialContentService {
       .png()
       .toBuffer();
     const contentHash = createHash('sha256').update(png).digest('hex');
-    const key = `social-cards/${draft.id}/${draft.format.toLowerCase()}-${contentHash.slice(0, 16)}.png`;
+    // A re-render with unchanged inputs produces byte-identical PNGs (same
+    // contentHash), so the hash alone isn't enough to keep storageKey unique
+    // across separate render attempts — append a random suffix per attempt.
+    const uniqueSuffix = randomBytes(4).toString('hex');
+    const key = `social-cards/${draft.id}/${draft.format.toLowerCase()}-${contentHash.slice(0, 16)}-${uniqueSuffix}.png`;
     const publicUrl = await this.storage.upload(key, png, 'image/png', 'attachment');
     const asset = await this.prisma.socialRenderedAsset.create({
       data: {

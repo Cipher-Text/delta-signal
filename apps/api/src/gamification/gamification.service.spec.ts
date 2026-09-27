@@ -91,7 +91,7 @@ describe('GamificationService.evaluateBadges', () => {
     expect(gamificationQueue.add).toHaveBeenCalledWith(
       'evaluate-badges',
       { userId: 'u1' },
-      expect.objectContaining({ jobId: 'badge-eval:u1' }),
+      expect.objectContaining({ jobId: 'badge-eval-u1' }),
     );
   });
 
@@ -103,8 +103,8 @@ describe('GamificationService.evaluateBadges', () => {
 
     // Both calls use the same jobId — BullMQ will deduplicate at the queue level
     const calls = (gamificationQueue.add as jest.Mock).mock.calls;
-    expect(calls[0][2]).toMatchObject({ jobId: 'badge-eval:u1' });
-    expect(calls[1][2]).toMatchObject({ jobId: 'badge-eval:u1' });
+    expect(calls[0][2]).toMatchObject({ jobId: 'badge-eval-u1' });
+    expect(calls[1][2]).toMatchObject({ jobId: 'badge-eval-u1' });
   });
 });
 
