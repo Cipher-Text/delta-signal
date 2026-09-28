@@ -1,6 +1,6 @@
 import type { AdminDashboard } from '@delta-signal/contracts';
 import type { CurrentUser } from '../../../../lib/current-user';
-import { DashboardHeader, StatCard, BarChart, SectionHeader } from '../components/DashboardPrimitives';
+import { DashboardHeader, StatCard, SecondaryStats, BarChart, SectionHeader } from '../components/DashboardPrimitives';
 
 const SEVERITY_VARIANT: Record<string, string> = {
   EMERGENCY: 'danger',
@@ -31,12 +31,8 @@ export default function AdminDashboardView({
     <>
       <DashboardHeader title="Platform Overview" subtitle="Real-time snapshot of the Delta Signal platform" meta={data.meta} />
 
-      {/* KPI strip */}
+      {/* KPI strip — capped at 5 primary cards per DESIGN.md; the rest are secondary */}
       <div className="stat-grid">
-        <StatCard
-          label="Total users"
-          value={data.users.total.toLocaleString()}
-        />
         <StatCard
           label="Pending review"
           value={data.reports.pendingReview.toLocaleString()}
@@ -50,18 +46,8 @@ export default function AdminDashboardView({
           href="/alerts"
         />
         <StatCard
-          label="Organizations"
-          value={data.platform.organizations.toLocaleString()}
-        />
-        <StatCard
-          label="Datasets published"
-          value={data.platform.publishedDatasets.toLocaleString()}
-          href="/data"
-        />
-        <StatCard
-          label="Species recorded"
-          value={data.platform.speciesRecorded.toLocaleString()}
-          href="/biodiversity"
+          label="Total users"
+          value={data.users.total.toLocaleString()}
         />
         <StatCard
           label="Observations this month"
@@ -69,10 +55,19 @@ export default function AdminDashboardView({
           href="/observations"
         />
         <StatCard
-          label="Audit events today"
-          value={data.platform.auditEventsToday.toLocaleString()}
+          label="Datasets published"
+          value={data.platform.publishedDatasets.toLocaleString()}
+          href="/data"
         />
       </div>
+
+      <SecondaryStats
+        items={[
+          { label: 'organizations', value: data.platform.organizations.toLocaleString(), href: '/organizations' },
+          { label: 'species recorded', value: data.platform.speciesRecorded.toLocaleString(), href: '/biodiversity' },
+          { label: 'audit events today', value: data.platform.auditEventsToday.toLocaleString() },
+        ]}
+      />
 
       <div className="dashboard-two-col">
         {/* Reports funnel */}

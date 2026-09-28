@@ -4,15 +4,6 @@ import type { CurrentUser } from '../../../../lib/current-user';
 import { DashboardHeader, StatCard, BarChart, SectionHeader } from '../components/DashboardPrimitives';
 import { titleCase } from '../../../../lib/format';
 
-type StatVariant = 'default' | 'success' | 'warning' | 'danger' | 'info';
-
-const SEVERITY_STAT_VARIANT: Record<string, StatVariant> = {
-  EMERGENCY: 'danger',
-  WARNING: 'warning',
-  WATCH: 'info',
-  INFO: 'default',
-};
-
 const SEVERITY_BAR_VARIANT: Record<string, string> = {
   EMERGENCY: 'danger',
   WARNING: 'warning',
@@ -34,7 +25,10 @@ export default function GovernmentDashboardView({
     <>
       <DashboardHeader title="Environmental Intelligence" subtitle="Bangladesh-wide alerts, reports, and climate indicators" meta={data.meta} />
 
-      {/* KPI strip */}
+      {/* KPI strip — capped at 5 primary cards per DESIGN.md. Per-severity alert
+          counts are omitted here since they're already broken out in the
+          "Active alerts by severity" chart below; repeating them as cards too
+          would be the same number shown twice. */}
       <div className="stat-grid">
         <StatCard
           label="Active alerts (nationwide)"
@@ -42,21 +36,13 @@ export default function GovernmentDashboardView({
           variant={data.alerts.total > 0 ? 'warning' : 'default'}
           href="/alerts"
         />
-        {data.alerts.bySeverity.map((a) => (
-          <StatCard
-            key={a.severity}
-            label={`${titleCase(a.severity)} alerts`}
-            value={a.count.toLocaleString()}
-            variant={SEVERITY_STAT_VARIANT[a.severity] ?? 'default'}
-          />
-        ))}
+        <StatCard label="High flood signals" value={data.flood.highRiskStations.toLocaleString()} variant={data.flood.highRiskStations > 0 ? 'danger' : 'default'} href="/flood" />
+        <StatCard label="Elevated flood signals" value={data.flood.elevatedRiskStations.toLocaleString()} variant={data.flood.elevatedRiskStations > 0 ? 'warning' : 'default'} href="/flood" />
         <StatCard
           label="Verified reports (30d)"
           value={totalVerified.toLocaleString()}
           href="/reports?status=VERIFIED"
         />
-        <StatCard label="High flood signals" value={data.flood.highRiskStations.toLocaleString()} variant={data.flood.highRiskStations > 0 ? 'danger' : 'default'} href="/flood" />
-        <StatCard label="Elevated flood signals" value={data.flood.elevatedRiskStations.toLocaleString()} variant={data.flood.elevatedRiskStations > 0 ? 'warning' : 'default'} href="/flood" />
         <StatCard label="Rising gauges" value={data.flood.risingStations.toLocaleString()} variant={data.flood.risingStations > 0 ? 'info' : 'default'} href="/flood" />
       </div>
 

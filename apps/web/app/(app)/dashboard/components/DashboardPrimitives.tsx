@@ -58,6 +58,39 @@ export function StatCard({ label, value, variant = 'default', href }: StatCardPr
   return inner;
 }
 
+// ─── SecondaryStats ───────────────────────────────────────────────────────────
+// Compact, non-KPI counts — DESIGN.md caps primary stat cards at 4-5;
+// everything else belongs in a smaller secondary summary, not another tile.
+
+interface SecondaryStatItem {
+  label: string;
+  value: string;
+  href?: string;
+}
+
+export function SecondaryStats({ items }: { items: SecondaryStatItem[] }) {
+  return (
+    <div className="dashboard-secondary-stats">
+      {items.map((item) => {
+        const inner = (
+          <>
+            <strong>{item.value}</strong> {item.label}
+          </>
+        );
+        return item.href ? (
+          <Link key={item.label} href={item.href} className="dashboard-secondary-stat">
+            {inner}
+          </Link>
+        ) : (
+          <span key={item.label} className="dashboard-secondary-stat">
+            {inner}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── BarChart ─────────────────────────────────────────────────────────────────
 
 interface BarItem {
