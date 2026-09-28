@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { logoutAction } from '../lib/auth-actions';
 import type { CurrentUser } from '../lib/current-user';
+import type { Theme } from '../lib/theme';
+import ThemeToggle from './theme-toggle';
 
 const DASHBOARD_ROLES = new Set([
   'CITIZEN',
@@ -54,7 +56,7 @@ function initials(displayName: string): string {
   return (first + last).toUpperCase();
 }
 
-export default function AppSidebar({ user }: { user: CurrentUser | null }) {
+export default function AppSidebar({ user, theme }: { user: CurrentUser | null; theme: Theme | undefined }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -140,6 +142,7 @@ export default function AppSidebar({ user }: { user: CurrentUser | null }) {
 
         {/* User footer */}
         <div className="sidebar-footer">
+          <ThemeToggle theme={theme} />
           {user ? <Link className="sidebar-user sidebar-profile-link" href="/profile" onClick={close}>
             <div className="sidebar-avatar" aria-hidden="true">
               {user.profile?.avatarUrl ? <img src={user.profile.avatarUrl} alt="" /> : initials(user.displayName)}

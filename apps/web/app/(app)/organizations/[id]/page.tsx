@@ -58,7 +58,7 @@ export default async function OrganizationDetailPage(
         <h1>{org.name}</h1>
         <div className="card-meta" style={{ marginTop: '0.25rem', gap: '1rem' }}>
           <span>{org.country}</span>
-          {org.isVerified && <span style={{ color: '#16a34a' }}>Verified</span>}
+          {org.isVerified && <span style={{ color: 'var(--success)' }}>Verified</span>}
           <span>{org._count.memberships} member{org._count.memberships !== 1 ? 's' : ''}</span>
           <span>{org._count.restorationProjects} project{org._count.restorationProjects !== 1 ? 's' : ''}</span>
         </div>

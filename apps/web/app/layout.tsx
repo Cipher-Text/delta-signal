@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import Script from 'next/script';
+import { getTheme } from '../lib/theme';
 import './globals.css';
 
 const inter = Inter({
@@ -19,11 +20,12 @@ export const metadata: Metadata = {
     'Public environmental board for Bangladesh. Browse active alerts, verified reports, datasets, biodiversity records, and restoration projects — no login required.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const theme = await getTheme();
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} data-theme={theme}>
       <body>{children}</body>
       {/* Skipped entirely (no script injected) when the env var is unset. */}
       {gaMeasurementId ? <GoogleAnalytics gaId={gaMeasurementId} /> : null}

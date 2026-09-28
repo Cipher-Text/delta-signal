@@ -25,11 +25,11 @@ export default function GlobalError({
             fontFamily: 'system-ui, sans-serif',
           }}
         >
-          <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>
+          <p style={{ color: 'var(--muted, #5f6f68)', fontSize: '0.95rem' }}>
             Something went wrong. Please try again.
           </p>
           {error.digest && (
-            <p style={{ color: '#9ca3af', fontSize: '0.8rem' }}>
+            <p style={{ color: 'var(--muted-soft, #87948f)', fontSize: '0.8rem' }}>
               Reference: {error.digest}
             </p>
           )}
@@ -37,7 +37,7 @@ export default function GlobalError({
             onClick={reset}
             style={{
               padding: '0.5rem 1.25rem',
-              background: '#16a34a',
+              background: 'var(--primary, #178a63)',
               color: '#fff',
               border: 'none',
               borderRadius: 6,

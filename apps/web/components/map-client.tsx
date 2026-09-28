@@ -160,12 +160,12 @@ export default function MapClient({ districts, alerts, reports, isLive }: Props)
                 </div>
                 <strong style={{ fontSize: 13 }}>{alert.title}</strong>
                 {alert.districtName && (
-                  <div style={{ marginTop: 4, fontSize: 12, color: '#65736b' }}>
+                  <div style={{ marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>
                     {alert.districtName}
                   </div>
                 )}
                 {!alert.districtId && (
-                  <div style={{ marginTop: 4, fontSize: 12, color: '#65736b' }}>
+                  <div style={{ marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>
                     Nationwide
                   </div>
                 )}
@@ -184,8 +184,8 @@ export default function MapClient({ districts, alerts, reports, isLive }: Props)
           center={[report.lat, report.lng]}
           radius={7}
           pathOptions={{
-            color: '#2f7d5c',
-            fillColor: '#2f7d5c',
+            color: 'var(--primary)',
+            fillColor: 'var(--primary)',
             fillOpacity: 0.75,
             weight: 1.5,
           }}
@@ -197,7 +197,7 @@ export default function MapClient({ districts, alerts, reports, isLive }: Props)
                   fontSize: 10,
                   fontWeight: 700,
                   textTransform: 'uppercase',
-                  color: '#2f7d5c',
+                  color: 'var(--primary)',
                   marginBottom: 4,
                 }}
               >
@@ -205,11 +205,11 @@ export default function MapClient({ districts, alerts, reports, isLive }: Props)
               </div>
               <strong style={{ fontSize: 13 }}>{report.title}</strong>
               {report.districtName && (
-                <div style={{ marginTop: 4, fontSize: 12, color: '#65736b' }}>
+                <div style={{ marginTop: 4, fontSize: 12, color: 'var(--muted)' }}>
                   {report.districtName}
                 </div>
               )}
-              <a href={`/reports/${report.id}`} style={{ display: 'inline-block', marginTop: 8, color: '#2f7d5c', fontWeight: 700 }}>
+              <a href={`/reports/${report.id}`} style={{ display: 'inline-block', marginTop: 8, color: 'var(--primary)', fontWeight: 700 }}>
                 View report details →
               </a>
             </div>

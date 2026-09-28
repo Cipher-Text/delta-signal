@@ -1,4 +1,7 @@
 import Link from 'next/link';
+import ThemeToggle from './theme-toggle';
+import { getTheme } from '../lib/theme';
+
 const NAV_LINKS = [
   { href: '/#dashboard', label: 'Overview' },
   { href: '/map', label: 'Map' },
@@ -7,6 +10,7 @@ const NAV_LINKS = [
 ] as const;
 
 export default async function PublicNav() {
+  const theme = await getTheme();
   return (
     <header className="public-nav">
       <Link className="public-brand" href="/">
@@ -23,6 +27,7 @@ export default async function PublicNav() {
       </nav>
 
       <div className="nav-actions">
+        <ThemeToggle theme={theme} />
         <Link className="button ghost" href="/login">
           Sign in
         </Link>
