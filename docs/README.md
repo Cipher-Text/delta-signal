@@ -7,6 +7,7 @@
 - [Roles and permissions](roles-and-permissions.md)
 - [Access model](access-model.md)
 - [Dashboard guide](dashboard.md)
+- [Web app design system](DESIGN.md) (applies to `apps/web`; `apps/admin` follows a separate system)
 - [Business logic](business-logic.md)
 - [User and system flows](flows.md)
 - [Roadmap](roadmap.md)

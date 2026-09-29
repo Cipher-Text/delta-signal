@@ -1,8 +1,8 @@
 # Delta Signal — DESIGN.md
 
-> Canonical design specification for the Delta Signal frontend.
+> Canonical design specification for `apps/web`.
 >
-> This document applies to ALL frontend experiences:
+> This document applies to the public and authenticated experiences in `apps/web`:
 >
 > - Public website
 > - Public environmental data pages
@@ -11,13 +11,12 @@
 > - Authentication
 > - Authenticated workspace
 > - User dashboards
-> - Data contribution and moderation
-> - Administration
+> - Data contribution and moderation workflows in `apps/web`
 >
-> Do not create an independent visual language for individual modules.
-> Public and authenticated experiences may have different density and layout,
-> but they must use the same foundations, components, environmental semantics,
-> and data-visualization language.
+> The separate `apps/admin` console follows its own design system. Within
+> `apps/web`, public and authenticated experiences may have different density
+> and layout, but must use the same foundations, components, environmental
+> semantics, and data-visualization language.
 
 ---
 

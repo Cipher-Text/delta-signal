@@ -150,6 +150,7 @@ pnpm exec jest --coverage                       # Coverage report
 | [docs/business-logic.md](docs/business-logic.md) | Domain rules and the reasoning behind them |
 | [docs/access-model.md](docs/access-model.md) | What is public, login-gated, and role-gated |
 | [docs/dashboard.md](docs/dashboard.md) | Public board, role-scoped dashboard, UI conventions, and verification |
+| [docs/DESIGN.md](docs/DESIGN.md) | Design system for the public and authenticated experiences in `apps/web` |
 | [docs/roles-and-permissions.md](docs/roles-and-permissions.md) | Role matrix and permission gates |
 | [docs/flows.md](docs/flows.md) | Key user and system flows |
 | [docs/roadmap.md](docs/roadmap.md) | Phase-by-phase delivery history and plan |
