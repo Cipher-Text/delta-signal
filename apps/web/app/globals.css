@@ -7,6 +7,7 @@
   --muted-soft: #87948f;
   --surface: #ffffff;
   --surface-2: #f1f5f3;
+  --surface-elevated: #ffffff;
   --border: #dde5e1;
   --border-strong: #cbd7d1;
   --primary: #178a63;
@@ -17,6 +18,16 @@
   --accent: var(--primary);
   --data: #2878b5;
   --data-soft: #e4f1fa;
+  --map-alert-info: #3388c7;
+  --map-alert-watch: #d9a323;
+  --map-alert-warning: #e67e22;
+  --map-alert-critical: #d64545;
+  --map-alert-unknown: #7b8782;
+  --map-weather: #4a9fd8;
+  --map-air-quality: #2878b5;
+  --map-water: #2878b5;
+  --map-station: #9a7146;
+  --map-tile-filter: none;
   --warning: #d9a323;
   --warning-soft: #fbf3dc;
   --danger: #d64545;
@@ -41,6 +52,7 @@
     --muted-soft: #78857f;
     --surface: #171d1a;
     --surface-2: #1d2521;
+    --surface-elevated: #222b27;
     --border: #2d3833;
     --border-strong: #3b4942;
     --primary: #39ad80;
@@ -50,6 +62,16 @@
     --hero-on-ink: #f4f7f5;
     --data: #69b4e7;
     --data-soft: #1c3444;
+    --map-alert-info: #69b4e7;
+    --map-alert-watch: #e4b744;
+    --map-alert-warning: #ffac65;
+    --map-alert-critical: #f07878;
+    --map-alert-unknown: #aab7b1;
+    --map-weather: #78c1ef;
+    --map-air-quality: #69b4e7;
+    --map-water: #69b4e7;
+    --map-station: #d0a77f;
+    --map-tile-filter: brightness(0.72) invert(1) contrast(0.88) hue-rotate(180deg) saturate(0.6);
     --warning: #e4b744;
     --warning-soft: #3b321b;
     --danger: #f07878;
@@ -74,6 +96,7 @@
   --muted-soft: #78857f;
   --surface: #171d1a;
   --surface-2: #1d2521;
+  --surface-elevated: #222b27;
   --border: #2d3833;
   --border-strong: #3b4942;
   --primary: #39ad80;
@@ -83,6 +106,16 @@
   --hero-on-ink: #f4f7f5;
   --data: #69b4e7;
   --data-soft: #1c3444;
+  --map-alert-info: #69b4e7;
+  --map-alert-watch: #e4b744;
+  --map-alert-warning: #ffac65;
+  --map-alert-critical: #f07878;
+  --map-alert-unknown: #aab7b1;
+  --map-weather: #78c1ef;
+  --map-air-quality: #69b4e7;
+  --map-water: #69b4e7;
+  --map-station: #d0a77f;
+  --map-tile-filter: brightness(0.72) invert(1) contrast(0.88) hue-rotate(180deg) saturate(0.6);
   --warning: #e4b744;
   --warning-soft: #3b321b;
   --danger: #f07878;
@@ -442,26 +475,9 @@ a {
   padding: clamp(36px, 6vw, 76px) clamp(24px, 5vw, 64px);
   border: 1px solid var(--border);
   border-radius: 20px;
-  background:
-    radial-gradient(ellipse at 88% 14%, color-mix(in srgb, var(--data) 10%, transparent), transparent 34%),
-    radial-gradient(ellipse at 8% 100%, color-mix(in srgb, var(--primary) 9%, transparent), transparent 42%),
-    var(--surface);
+  background: var(--surface);
   box-shadow: var(--shadow-soft);
   width: 100%;
-}
-
-.public-hero::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  width: 340px;
-  height: 340px;
-  top: -210px;
-  right: 12%;
-  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
-  border-radius: 50%;
-  box-shadow: 0 0 0 34px color-mix(in srgb, var(--primary) 3%, transparent), 0 0 0 68px color-mix(in srgb, var(--primary) 2%, transparent);
-  pointer-events: none;
 }
 
 .public-hero h1 {
@@ -603,8 +619,7 @@ a {
   min-height: 340px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  background: linear-gradient(180deg, rgba(224, 240, 232, 0.68), rgba(255, 255, 255, 0.92)),
-    var(--surface);
+  background: var(--surface-elevated);
   box-shadow: var(--shadow);
   padding: 20px;
 }
@@ -1007,6 +1022,28 @@ a {
 
 .map-client .leaflet-container {
   min-height: 400px;
+}
+
+.leaflet-tile-pane {
+  filter: var(--map-tile-filter);
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip,
+.leaflet-control-zoom a,
+.leaflet-control-layers {
+  border-color: var(--border);
+  background: var(--surface-elevated);
+  color: var(--foreground);
+}
+
+.leaflet-control-attribution {
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  color: var(--muted);
+}
+
+.leaflet-control-attribution a {
+  color: var(--primary);
 }
 
 .map-preview-panel { grid-column: 1 / -1; }
@@ -3729,7 +3766,7 @@ a.dashboard-secondary-stat:hover {
 
 .emergency-banner-label {
   flex-shrink: 0;
-  background: #dc2626;
+  background: var(--map-alert-critical);
   color: #fff;
   font-size: 0.68rem;
   font-weight: 900;
@@ -4252,12 +4289,6 @@ a.dashboard-secondary-stat:hover {
 
 .hero-live-dot--pulse {
   background: var(--success);
-  animation: live-pulse 2s ease-in-out infinite;
-}
-
-@keyframes live-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.5; transform: scale(0.75); }
 }
 
 .hero-open-note {
@@ -5058,37 +5089,23 @@ a.dashboard-secondary-stat:hover {
 
 /* Tier-specific earned colours */
 .badge-earned.badge-tier-bronze {
-  background: linear-gradient(135deg, #3d2400 0%, #2a1a00 100%);
+  background: var(--surface-2);
   border-color: #cd7f32;
-  box-shadow: 0 0 12px color-mix(in srgb, #cd7f32 30%, transparent),
-              0 2px 8px rgba(0,0,0,0.4);
 }
 
 .badge-earned.badge-tier-silver {
-  background: linear-gradient(135deg, #222a2e 0%, #182025 100%);
+  background: var(--surface-2);
   border-color: #a8b8c0;
-  box-shadow: 0 0 12px color-mix(in srgb, #a8b8c0 25%, transparent),
-              0 2px 8px rgba(0,0,0,0.4);
 }
 
 .badge-earned.badge-tier-gold {
-  background: linear-gradient(135deg, #2e2200 0%, #1f1700 100%);
+  background: var(--surface-2);
   border-color: #f5c518;
-  box-shadow: 0 0 16px color-mix(in srgb, #f5c518 35%, transparent),
-              0 2px 8px rgba(0,0,0,0.4);
 }
 
 .badge-earned.badge-tier-emerald {
-  background: linear-gradient(135deg, #002e1a 0%, #001f12 100%);
+  background: var(--surface-2);
   border-color: #50c878;
-  box-shadow: 0 0 18px color-mix(in srgb, #50c878 40%, transparent),
-              0 2px 8px rgba(0,0,0,0.4);
-  animation: emerald-glow 2.5s ease-in-out infinite alternate;
-}
-
-@keyframes emerald-glow {
-  from { box-shadow: 0 0 12px color-mix(in srgb, #50c878 30%, transparent), 0 2px 8px rgba(0,0,0,0.4); }
-  to   { box-shadow: 0 0 22px color-mix(in srgb, #50c878 55%, transparent), 0 2px 8px rgba(0,0,0,0.4); }
 }
 
 .badge-card-header {
@@ -5116,6 +5133,10 @@ a.dashboard-secondary-stat:hover {
 .badge-tier-gold    .badge-tier-label { color: #f5c518; }
 .badge-tier-emerald .badge-tier-label { color: #50c878; }
 
+.badge-earned .badge-tier-label {
+  color: var(--foreground);
+}
+
 .badge-locked .badge-tier-label { color: var(--muted); }
 
 .badge-earned-mark {
@@ -5125,7 +5146,7 @@ a.dashboard-secondary-stat:hover {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.15);
+  background: var(--primary);
   color: #fff;
   flex-shrink: 0;
 }
@@ -5139,7 +5160,7 @@ a.dashboard-secondary-stat:hover {
 }
 
 .badge-earned .badge-description {
-  color: rgba(255,255,255,0.65);
+  color: var(--muted);
 }
 
 .badge-progress {
@@ -5176,13 +5197,35 @@ a.dashboard-secondary-stat:hover {
 }
 
 .badge-earned .badge-points {
-  color: rgba(255,255,255,0.5);
+  color: var(--muted);
 }
 
 /* Tab badge variant for gold achievements */
 .tab-badge-gold {
   background: color-mix(in srgb, #f5c518 15%, transparent);
   color: #f5c518;
+}
+
+/* Map colors share the documented semantic and environmental palettes. */
+.layer-alerts { background: var(--map-alert-critical); }
+.layer-weather { background: var(--map-weather); }
+.layer-air-quality { background: var(--map-air-quality); }
+.layer-water-bodies { background: var(--map-water); }
+.layer-stations { background: var(--map-station); }
+.layer-flood { background: var(--map-alert-watch); }
+.legend-alert-emergency::before { background: var(--map-alert-critical); }
+.legend-alert-warning::before { background: var(--map-alert-warning); }
+.legend-alert-watch::before { background: var(--map-alert-watch); }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @media (max-width: 900px) {

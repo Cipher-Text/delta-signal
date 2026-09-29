@@ -14,10 +14,10 @@ const BD_BOUNDS: [[number, number], [number, number]] = [
 const BD_CENTER: [number, number] = [23.7, 90.4];
 
 const SEVERITY_COLOR: Record<string, string> = {
-  INFO: '#3b82f6',
-  WATCH: '#d97706',
-  WARNING: '#ea580c',
-  EMERGENCY: '#dc2626',
+  INFO: 'var(--map-alert-info)',
+  WATCH: 'var(--map-alert-watch)',
+  WARNING: 'var(--map-alert-warning)',
+  EMERGENCY: 'var(--map-alert-critical)',
 };
 
 const SEVERITY_RADIUS: Record<string, number> = {
@@ -130,7 +130,7 @@ export default function MapClient({ districts, alerts, reports, isLive }: Props)
         const center: [number, number] = district
           ? [district.lat, district.lng]
           : BD_CENTER;
-        const color = SEVERITY_COLOR[alert.severity] ?? '#6b7280';
+        const color = SEVERITY_COLOR[alert.severity] ?? 'var(--map-alert-unknown)';
         const radius = SEVERITY_RADIUS[alert.severity] ?? 12;
 
         return (
