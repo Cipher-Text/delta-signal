@@ -90,7 +90,7 @@ export default async function BiodiversitySection() {
                       </span>
                       <span className="biodiversity-taxon-latin">{s.latin}</span>
                     </span>
-                    <strong className="biodiversity-taxon-count">{s.occurrenceCount.toLocaleString()}</strong>
+                    <span className="biodiversity-taxon-count">{s.occurrenceCount.toLocaleString()}</span>
                   </li>
                 ))}
               </ul>

@@ -4271,7 +4271,7 @@ a.dashboard-secondary-stat:hover {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 0;
+  padding: 14px 0;
   border-bottom: 1px solid var(--border);
 }
 
@@ -4301,7 +4301,9 @@ a.dashboard-secondary-stat:hover {
 
 .biodiversity-taxon-count {
   flex-shrink: 0;
-  font-size: 1.05rem;
+  font-weight: 400;
+  font-size: 1.3rem;
+  color: var(--foreground);
   font-variant-numeric: tabular-nums;
 }
 
