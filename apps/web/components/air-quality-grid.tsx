@@ -26,6 +26,7 @@ export default async function AirQualityGrid() {
     .sort((a, b) => b.avgPm25_30d - a.avgPm25_30d);
 
   const topDistricts = withAqi.slice(0, 6);
+  const topDistrictsShort = withAqi.slice(0, 4);
 
   const latestUpdate = districts
     .map((d) => d.climateUpdatedAt)
@@ -41,11 +42,12 @@ export default async function AirQualityGrid() {
       <div className="env-card-header">
         <div>
           <h2>Air quality</h2>
-          <p>Districts with the highest fine particulate matter (PM2.5)</p>
+          <p className="climate-band-note-full">Districts with the highest fine particulate matter (PM2.5)</p>
+          <p className="climate-band-note-short">Highest PM2.5 by district, µg/m³</p>
         </div>
         <div className="env-card-badges">
           <span className="badge-outline">Modeled</span>
-          {updatedLabel && <span className="badge-soft">Updated {updatedLabel}</span>}
+          {updatedLabel && <span className="badge-soft climate-band-note-full">Updated {updatedLabel}</span>}
         </div>
       </div>
 
@@ -54,33 +56,50 @@ export default async function AirQualityGrid() {
           {isLive ? 'No district PM2.5 summaries are available yet.' : 'Air-quality data is temporarily unavailable.'}
         </div>
       ) : (
-        <div className="data-table aqi-table" role="table" aria-label="District air quality ranking">
-          <div className="data-table-row data-table-head" role="row">
-            <span role="columnheader">#</span>
-            <span role="columnheader">District</span>
-            <span role="columnheader">PM2.5 µg/m³</span>
-            <span role="columnheader">Category</span>
+        <>
+          <div className="data-table aqi-table climate-band-cta-full" role="table" aria-label="District air quality ranking">
+            <div className="data-table-row data-table-head" role="row">
+              <span role="columnheader">#</span>
+              <span role="columnheader">District</span>
+              <span role="columnheader">PM2.5 µg/m³</span>
+              <span role="columnheader">Category</span>
+            </div>
+            {topDistricts.map((d, i) => {
+              const aqi = aqiClass(d.avgPm25_30d);
+              return (
+                <div key={d.id} className="data-table-row" role="row">
+                  <span role="cell" className="muted">{i + 1}</span>
+                  <span role="cell"><strong>{d.name}</strong></span>
+                  <span role="cell"><strong>{d.avgPm25_30d.toFixed(0)}</strong></span>
+                  <span role="cell">
+                    <mark className={`tag aqi-badge ${aqi.css}`}>
+                      <span className="aqi-badge-dot" />
+                      {aqi.label}
+                    </mark>
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          {topDistricts.map((d, i) => {
-            const aqi = aqiClass(d.avgPm25_30d);
-            return (
-              <div key={d.id} className="data-table-row" role="row">
-                <span role="cell" className="muted">{i + 1}</span>
-                <span role="cell"><strong>{d.name}</strong></span>
-                <span role="cell"><strong>{d.avgPm25_30d.toFixed(0)}</strong></span>
-                <span role="cell">
-                  <mark className={`tag aqi-badge ${aqi.css}`}>
-                    <span className="aqi-badge-dot" />
-                    {aqi.label}
-                  </mark>
-                </span>
-              </div>
-            );
-          })}
-        </div>
+
+          <div className="aqi-list climate-band-cta-short" role="list" aria-label="District air quality ranking">
+            {topDistrictsShort.map((d) => {
+              const aqi = aqiClass(d.avgPm25_30d);
+              return (
+                <div key={d.id} className="aqi-list-row" role="listitem">
+                  <div>
+                    <strong>{d.name}</strong>
+                    <span className={`aqi-list-category ${aqi.css}-text`}>{aqi.label}</span>
+                  </div>
+                  <strong className="aqi-list-value">{d.avgPm25_30d.toFixed(0)}</strong>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
-      <div className="aqi-legend">
+      <div className="aqi-legend climate-band-cta-full">
         {([
           ['aqi-good', 'Good 0–9.0'],
           ['aqi-moderate', 'Moderate 9.1–35.4'],
@@ -101,7 +120,7 @@ export default async function AirQualityGrid() {
 
       <div className="env-card-footer">
         <Link href="/locations">All 64 districts →</Link>
-        <Link href="/data">Download data</Link>
+        <Link href="/data" className="climate-band-cta-full">Download data</Link>
       </div>
     </div>
   );

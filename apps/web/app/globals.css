@@ -632,9 +632,14 @@ a {
   .climate-band-title-short { display: block; }
   .climate-band-note-full { display: none; }
   .climate-band-note-short { display: block; }
+  .badge-soft.climate-band-note-full { display: none; }
   .climate-band-cta-full { display: none; }
   .division-table-card.climate-band-cta-full { display: none; }
+  .data-table.climate-band-cta-full { display: none; }
+  .aqi-legend.climate-band-cta-full { display: none; }
+  .env-card-footer a.climate-band-cta-full { display: none; }
   .climate-band-cta-short { display: inline-block; margin-top: 14px; }
+  .aqi-list.climate-band-cta-short { display: flex; flex-direction: column; margin-top: 0; }
 
   .metric-toggle { width: 100%; }
   .metric-toggle button { flex: 1; }
@@ -4326,6 +4331,46 @@ a.dashboard-secondary-stat:hover {
   font-size: 0.75rem;
   color: var(--muted);
 }
+
+/* ── Mobile-only list variant (the 4-column table can't fit a phone width) ── */
+.aqi-list {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.aqi-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+}
+
+.aqi-list-row + .aqi-list-row {
+  border-top: 1px solid var(--border);
+}
+
+.aqi-list-row strong { display: block; font-size: 0.98rem; }
+
+.aqi-list-category {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+
+.aqi-list-value {
+  flex-shrink: 0;
+  font-size: 1.4rem;
+}
+
+.aqi-good-text           { color: var(--success); }
+.aqi-moderate-text       { color: var(--warning); }
+.aqi-sensitive-text      { color: var(--aqi-sensitive); }
+.aqi-unhealthy-text      { color: var(--danger); }
+.aqi-very-unhealthy-text { color: var(--aqi-very-unhealthy); }
+.aqi-hazardous-text      { color: var(--aqi-hazardous); }
 
 /* ═══════════════════════════════════════════════════════════════
    BIODIVERSITY SECTION
