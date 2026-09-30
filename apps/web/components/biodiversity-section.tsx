@@ -57,7 +57,7 @@ export default async function BiodiversitySection() {
       <div className="env-card-header">
         <div>
           <h2>Biodiversity records</h2>
-          <p>Occurrence records for Bangladesh · Synced daily from GBIF</p>
+          <p className="climate-band-note-full">Occurrence records for Bangladesh · Synced daily from GBIF</p>
         </div>
       </div>
 
@@ -76,8 +76,10 @@ export default async function BiodiversitySection() {
             </article>
           </div>
 
+          <p className="biodiversity-caption-short climate-band-note-short">Synced daily from GBIF</p>
+
           {stats.topSpecies.length > 0 && (
-            <div className="biodiversity-taxa">
+            <div className="biodiversity-taxa climate-band-cta-full">
               <p className="biodiversity-taxa-label">Most recorded taxa</p>
               <ul>
                 {stats.topSpecies.map((s, i) => (
@@ -88,7 +90,7 @@ export default async function BiodiversitySection() {
                         {s.name}
                         {s.isFamilyRank && <span className="tag muted">Family</span>}
                       </span>
-                      <span className="biodiversity-taxon-latin">{s.latin}</span>
+                      {s.name !== s.latin && <span className="biodiversity-taxon-latin">{s.latin}</span>}
                     </span>
                     <span className="biodiversity-taxon-count">{s.occurrenceCount.toLocaleString()}</span>
                   </li>

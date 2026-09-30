@@ -4408,6 +4408,12 @@ a.dashboard-secondary-stat:hover {
   margin-bottom: 20px;
 }
 
+.biodiversity-caption-short {
+  margin-top: 14px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
 .biodiversity-taxa-label {
   font-size: 0.82rem;
   font-weight: 700;
