@@ -500,6 +500,7 @@ a {
   background: var(--surface);
   box-shadow: var(--shadow-soft);
   width: 100%;
+  max-width: 1100px;
 }
 
 .public-hero h1 {
@@ -592,6 +593,9 @@ a {
 
 .public-section {
   margin-top: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1100px;
   scroll-margin-top: 86px;
 }
 
@@ -3744,9 +3748,6 @@ a.dashboard-secondary-stat:hover {
 
 .climate-band {
   padding: 40px 20px;
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .climate-band-header {
@@ -4063,9 +4064,6 @@ a.dashboard-secondary-stat:hover {
 
 .aqi-section {
   padding: 40px 20px;
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .aqi-section-header {
@@ -4250,9 +4248,6 @@ a.dashboard-secondary-stat:hover {
 
 .biodiversity-section {
   padding: 40px 20px;
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .biodiversity-stats {
@@ -4302,9 +4297,6 @@ a.dashboard-secondary-stat:hover {
 
 .topics-section {
   padding: 40px 20px;
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .topics-grid {
@@ -4340,9 +4332,6 @@ a.dashboard-secondary-stat:hover {
 
 .data-sources-section {
   padding: 40px 20px;
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .data-sources-grid {
@@ -4796,7 +4785,7 @@ a.dashboard-secondary-stat:hover {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
-  max-width: 1060px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
