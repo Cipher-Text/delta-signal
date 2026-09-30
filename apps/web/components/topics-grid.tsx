@@ -48,6 +48,25 @@ function AnchorWaveIcon() {
   );
 }
 
+function TreeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2.5 6.5 10h2.2L4.5 16h5.5v5.5M12 2.5l5.5 7.5h-2.2l4.2 6h-5.5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" strokeLinecap="round" />
+      <path d="M12 16v5.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function SproutIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 21V10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M12 10c0-4 3-6 7-6 0 4-3 6-7 6Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M12 14c0-3-2.2-4.5-5-4.5 0 3 2.2 4.5 5 4.5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function EmissionsIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -64,6 +83,8 @@ const TOPICS = [
   { href: '/water-bodies', label: 'Rivers & water', body: 'River discharge forecasts and water bodies.', icon: WaveIcon, accent: 'topic-icon--blue' },
   { href: '/locations', label: 'Air quality', body: 'Fine particulate levels for all 64 districts.', icon: WindIcon, accent: 'topic-icon--gray' },
   { href: '/biodiversity', label: 'Biodiversity', body: 'Species occurrence records from GBIF.', icon: LeafIcon, accent: 'topic-icon--green' },
+  { href: '/map', label: 'Forests & land', body: 'Forest cover, land use and protected areas.', icon: TreeIcon, accent: 'topic-icon--green' },
+  { href: '/map', label: 'Agriculture', body: 'Growing conditions and agricultural land.', icon: SproutIcon, accent: 'topic-icon--amber' },
   { href: '/marine', label: 'Marine', body: 'Bay of Bengal wave and sea-surface forecasts.', icon: AnchorWaveIcon, accent: 'topic-icon--blue' },
   { href: '/emissions', label: 'Emissions', body: 'Emissions inventory by sector and area.', icon: EmissionsIcon, accent: 'topic-icon--amber' },
 ] as const;
