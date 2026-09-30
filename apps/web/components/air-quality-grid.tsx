@@ -54,11 +54,10 @@ export default async function AirQualityGrid() {
           {isLive ? 'No district PM2.5 summaries are available yet.' : 'Air-quality data is temporarily unavailable.'}
         </div>
       ) : (
-        <div className="data-table" role="table" aria-label="District air quality ranking">
+        <div className="data-table aqi-table" role="table" aria-label="District air quality ranking">
           <div className="data-table-row data-table-head" role="row">
             <span role="columnheader">#</span>
             <span role="columnheader">District</span>
-            <span role="columnheader">Division</span>
             <span role="columnheader">PM2.5 µg/m³</span>
             <span role="columnheader">Category</span>
           </div>
@@ -68,7 +67,6 @@ export default async function AirQualityGrid() {
               <div key={d.id} className="data-table-row" role="row">
                 <span role="cell" className="muted">{i + 1}</span>
                 <span role="cell"><strong>{d.name}</strong></span>
-                <span role="cell" className="muted">{d.division?.name ?? '—'}</span>
                 <span role="cell"><strong>{d.avgPm25_30d.toFixed(0)}</strong></span>
                 <span role="cell">
                   <mark className={`tag aqi-badge ${aqi.css}`}>

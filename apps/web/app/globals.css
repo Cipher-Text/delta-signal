@@ -4180,6 +4180,11 @@ a.dashboard-secondary-stat:hover {
   }
 }
 
+/* ── Air quality table — # / District / PM2.5 / Category, overrides the shared 4-col widths ── */
+.aqi-table .data-table-row {
+  grid-template-columns: 0.3fr 1.4fr 0.7fr 2fr;
+}
+
 /* ── Air quality table legend (badge itself styled near the aqi color classes) ── */
 .aqi-legend {
   display: flex;
@@ -4215,12 +4220,14 @@ a.dashboard-secondary-stat:hover {
    ═══════════════════════════════════════════════════════════════ */
 
 .stat-tile-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
 .stat-tile {
+  flex: 0 0 auto;
+  min-width: 140px;
   background: var(--surface-2);
   border-radius: 10px;
   padding: 16px 18px;
