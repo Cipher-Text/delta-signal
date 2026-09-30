@@ -53,6 +53,7 @@ async function loadActiveAlerts(): Promise<number | null> {
 
 interface RiverStatus {
   sentence: string;
+  shortSentence: string;
   forecastTime: string | null;
 }
 
@@ -88,13 +89,19 @@ async function loadRiverStatus(): Promise<RiverStatus | null> {
         : elevatedCount > 0
           ? `River discharge at monitored stations shows ${elevatedCount} station${elevatedCount > 1 ? 's' : ''} elevated above the historical reference.`
           : `River discharge at monitored stations is at the historical reference (${averageRatio.toFixed(1)}×).`;
+    const shortSentence =
+      highCount > 0
+        ? `River discharge is showing a high signal at ${highCount} station${highCount > 1 ? 's' : ''}.`
+        : elevatedCount > 0
+          ? `River discharge is elevated at ${elevatedCount} station${elevatedCount > 1 ? 's' : ''}.`
+          : 'River discharge at the historical reference.';
 
     const forecastTime = forecasts
       .map((f) => f.forecastDate)
       .sort()
       .at(-1) ?? null;
 
-    return { sentence, forecastTime };
+    return { sentence, shortSentence, forecastTime };
   } catch {
     return null;
   }
@@ -146,6 +153,12 @@ export default async function HeroSection() {
   const observedLabel = weather?.observedAt
     ? `Observed · ${new Date(weather.observedAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} BST (UTC+6)`
     : null;
+  const observedShortLabel = weather?.observedAt
+    ? `Observed · ${new Date(weather.observedAt).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit' })} BST`
+    : null;
+  const footerDateLabel = weather?.observedAt
+    ? new Date(weather.observedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null;
   const checkedLabel = river?.forecastTime
     ? new Date(river.forecastTime).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit' })
     : null;
@@ -182,44 +195,65 @@ export default async function HeroSection() {
           <aside className="hero-now-card" aria-label="Right now">
             <div className="hero-now-header">
               <h2>Right now</h2>
-              {observedLabel && <span className="hero-now-observed">{observedLabel}</span>}
+              {observedLabel && <span className="hero-now-observed hero-now-observed-full">{observedLabel}</span>}
+              {observedShortLabel && <span className="hero-now-observed hero-now-observed-short">{observedShortLabel}</span>}
             </div>
 
             {weather && (
-              <div className="hero-now-rows">
-                <div className="hero-now-row">
-                  <span className="hero-now-icon hero-now-icon--hot"><ThermometerIcon /></span>
-                  <div className="hero-now-row-text">
-                    <span className="hero-now-row-label">Hottest district</span>
-                    <strong className="hero-now-row-name">{weather.hottest.district}</strong>
+              <>
+                <div className="hero-now-rows hero-now-rows-full">
+                  <div className="hero-now-row">
+                    <span className="hero-now-icon hero-now-icon--hot"><ThermometerIcon /></span>
+                    <div className="hero-now-row-text">
+                      <span className="hero-now-row-label">Hottest district</span>
+                      <strong className="hero-now-row-name">{weather.hottest.district}</strong>
+                    </div>
+                    <div className="hero-now-row-value">
+                      <strong>{weather.hottest.temp.toFixed(1)}</strong> <span>°C</span>
+                    </div>
                   </div>
-                  <div className="hero-now-row-value">
-                    <strong>{weather.hottest.temp.toFixed(1)}</strong> <span>°C</span>
+
+                  <div className="hero-now-row">
+                    <span className="hero-now-icon hero-now-icon--cool"><ThermometerIcon /></span>
+                    <div className="hero-now-row-text">
+                      <span className="hero-now-row-label">Coolest district</span>
+                      <strong className="hero-now-row-name">{weather.coolest.district}</strong>
+                    </div>
+                    <div className="hero-now-row-value">
+                      <strong>{weather.coolest.temp.toFixed(1)}</strong> <span>°C</span>
+                    </div>
+                  </div>
+
+                  <div className="hero-now-row">
+                    <span className="hero-now-icon hero-now-icon--rain"><DropletIcon /></span>
+                    <div className="hero-now-row-text">
+                      <span className="hero-now-row-label">Rain reported</span>
+                      <strong className="hero-now-row-name">Across the country</strong>
+                    </div>
+                    <div className="hero-now-row-value">
+                      <strong>{weather.rainingCount}</strong> <span>districts</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="hero-now-row">
-                  <span className="hero-now-icon hero-now-icon--cool"><ThermometerIcon /></span>
-                  <div className="hero-now-row-text">
-                    <span className="hero-now-row-label">Coolest district</span>
-                    <strong className="hero-now-row-name">{weather.coolest.district}</strong>
+                <div className="hero-now-tiles hero-now-rows-short">
+                  <div className="stat-tile hero-now-tile">
+                    <span>Hottest</span>
+                    <strong>{weather.hottest.temp.toFixed(1)}°</strong>
+                    <small>{weather.hottest.district}</small>
                   </div>
-                  <div className="hero-now-row-value">
-                    <strong>{weather.coolest.temp.toFixed(1)}</strong> <span>°C</span>
+                  <div className="stat-tile hero-now-tile">
+                    <span>Coolest</span>
+                    <strong>{weather.coolest.temp.toFixed(1)}°</strong>
+                    <small>{weather.coolest.district}</small>
                   </div>
-                </div>
-
-                <div className="hero-now-row">
-                  <span className="hero-now-icon hero-now-icon--rain"><DropletIcon /></span>
-                  <div className="hero-now-row-text">
-                    <span className="hero-now-row-label">Rain reported</span>
-                    <strong className="hero-now-row-name">Across the country</strong>
-                  </div>
-                  <div className="hero-now-row-value">
-                    <strong>{weather.rainingCount}</strong> <span>districts</span>
+                  <div className="stat-tile hero-now-tile">
+                    <span>Rain in</span>
+                    <strong>{weather.rainingCount}</strong>
+                    <small>districts</small>
                   </div>
                 </div>
-              </div>
+              </>
             )}
 
             {(activeAlerts !== null || river) && (
@@ -236,18 +270,26 @@ export default async function HeroSection() {
                         : 'No active alerts'}
                   </strong>
                   {river && (
-                    <p>
-                      {river.sentence}
-                      {checkedLabel ? ` Forecast · GloFAS · checked ${checkedLabel}` : ' Forecast · GloFAS'}
-                    </p>
+                    <>
+                      <p className="hero-now-rows-full">
+                        {river.sentence}
+                        {checkedLabel ? ` Forecast · GloFAS · checked ${checkedLabel}` : ' Forecast · GloFAS'}
+                      </p>
+                      <p className="hero-now-rows-short">
+                        {river.shortSentence} Forecast · GloFAS
+                      </p>
+                    </>
                   )}
                 </div>
               </div>
             )}
 
-            <div className="hero-now-footer">
+            <div className="hero-now-footer hero-now-rows-full">
               <span>Source: Open-Meteo · Coverage: Bangladesh</span>
               <Link href="/map">All conditions →</Link>
+            </div>
+            <div className="hero-now-footer hero-now-rows-short">
+              <span>Source: Open-Meteo{footerDateLabel ? ` · ${footerDateLabel}` : ''}</span>
             </div>
           </aside>
         )}
