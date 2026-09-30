@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { routes, type DivisionWithClimate } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 
@@ -27,15 +28,15 @@ export default async function NationalClimateBand() {
   const climateNote = !isLive
     ? 'The division climate service is temporarily unavailable.'
     : latestClimateUpdate
-      ? `Updated ${new Date(latestClimateUpdate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} from OpenMeteo. Rolling summaries, not live conditions.`
-      : 'Rolling summaries from OpenMeteo; update time unavailable.';
+      ? `30-day rolling summary, not live conditions · Updated ${new Date(latestClimateUpdate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · Source: Open-Meteo`
+      : '30-day rolling summary, not live conditions · Source: Open-Meteo';
 
   return (
     <section className="climate-band public-section" aria-label="National climate overview by division">
       <div className="climate-band-header">
         <div>
-          <p className="eyebrow">30-Day Rolling Average · All 8 Divisions</p>
-          <h2>National Environmental Conditions</h2>
+          <p className="eyebrow">All 8 divisions</p>
+          <h2>Conditions across the divisions</h2>
         </div>
         <p className="climate-band-note">{climateNote}</p>
       </div>
@@ -75,6 +76,10 @@ export default async function NationalClimateBand() {
           );
         })}
       </div>}
+
+      <Link href="/map" className="button ghost climate-band-cta">
+        Open the full map →
+      </Link>
     </section>
   );
 }

@@ -57,11 +57,8 @@ export default async function DatasetPreview() {
     >
       <div className="panel-header">
         <div>
-          <h2>Dataset catalog</h2>
-          <p>
-            Public summaries stay open. Downloads, exports, API keys, and
-            contributions require sign in.
-          </p>
+          <h2>Open datasets</h2>
+          <p>Preview any dataset. Public datasets download without an account.</p>
         </div>
         <Link className="button ghost" href="/data">
           Browse all datasets
@@ -71,9 +68,9 @@ export default async function DatasetPreview() {
       <div className="data-table" role="table" aria-label="Dataset access summary">
         <div className="data-table-row data-table-head" role="row">
           <span role="columnheader">Dataset</span>
-          <span role="columnheader">Category</span>
-          <span role="columnheader">Public access</span>
-          <span role="columnheader">Advanced</span>
+          <span role="columnheader">Data type</span>
+          <span role="columnheader">Access</span>
+          <span role="columnheader">Actions</span>
         </div>
 
         {!isLive && <div className="empty-state" role="status">The dataset catalog is temporarily unavailable.</div>}
@@ -83,10 +80,10 @@ export default async function DatasetPreview() {
             <span role="cell">{row.name}</span>
             <span role="cell">{row.category}</span>
             <span role="cell">
-              <mark className="tag success">Preview</mark>
+              <mark className={`tag ${row.accessVariant}`}>{row.accessLabel}</mark>
             </span>
             <span role="cell">
-              <mark className={`tag ${row.accessVariant}`}>{row.accessLabel}</mark>
+              <mark className="tag success">Preview</mark>
             </span>
           </div>
         ))}

@@ -3,10 +3,10 @@ import ThemeToggle from './theme-toggle';
 import { getTheme } from '../lib/theme';
 
 const NAV_LINKS = [
-  { href: '/#dashboard', label: 'Overview' },
+  { href: '/#topics', label: 'Explore' },
   { href: '/map', label: 'Map' },
-  { href: '/#civic', label: 'Reports & Alerts' },
-  { href: '/#data', label: 'Data' },
+  { href: '/data', label: 'Data' },
+  { href: '/reports', label: 'Reports' },
 ] as const;
 
 export default async function PublicNav() {

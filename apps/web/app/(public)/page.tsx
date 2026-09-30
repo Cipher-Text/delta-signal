@@ -1,44 +1,48 @@
 import EmergencyBanner from '../../components/emergency-banner';
-import FloodRiskStrip from '../../components/flood-risk-strip';
 import HeroSection from '../../components/hero-section';
-import LiveWeatherStrip from '../../components/live-weather-strip';
+import RightNowSection from '../../components/right-now-section';
 import NationalClimateBand from '../../components/national-climate-band';
-import MetricsSection from '../../components/metrics-section';
-import CivicScienceSection from '../../components/civic-science-section';
 import AirQualityGrid from '../../components/air-quality-grid';
+import BiodiversitySection from '../../components/biodiversity-section';
+import TopicsGrid from '../../components/topics-grid';
 import DatasetPreview from '../../components/dataset-preview';
 import PersonaFooter from '../../components/persona-footer';
+import DataSourcesSection from '../../components/data-sources-section';
 import PublicNav from '../../components/public-nav';
 
 export default function HomePage() {
   return (
     <main>
       <PublicNav />
-      {/* Safety alerts — both conditional (null when nothing active) */}
+      {/* Emergency alerts — conditional, null when nothing active */}
       <EmergencyBanner />
-      <FloodRiskStrip />
 
-      {/* Hero — compact heading + live stats bar + CTA buttons */}
+      {/* Hero — headline, CTAs, disclaimer */}
       <HeroSection />
 
-      {/* Live weather strip — hottest/coolest/rain right now across 64 districts */}
-      <LiveWeatherStrip />
+      {/* Right now — hottest/coolest/rain, active alerts, river discharge ratio */}
+      <RightNowSection />
 
       {/* 8-division climate snapshot — 30-day rolling averages */}
       <NationalClimateBand />
 
-      {/* Platform counts — anchored at #dashboard */}
-      <MetricsSection />
-
-      {/* Civic activity & science — tabbed: Reports / Alerts / Biodiversity / Restoration */}
-      <CivicScienceSection />
-
-      {/* District air quality ranking (PM2.5) + dataset catalog */}
+      {/* District air quality ranking (PM2.5, US EPA 2024 scale) */}
       <AirQualityGrid />
+
+      {/* GBIF occurrence/taxa counts + top recorded taxa */}
+      <BiodiversitySection />
+
+      {/* Topic cards linking into the map/data/biodiversity/marine/emissions pages */}
+      <TopicsGrid />
+
+      {/* Dataset catalog preview */}
       <DatasetPreview />
 
       {/* Persona CTAs — Citizen / Researcher / NGO */}
       <PersonaFooter />
+
+      {/* Source attribution */}
+      <DataSourcesSection />
     </main>
   );
 }
