@@ -421,7 +421,8 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-right: auto;
 }
 
 .public-nav nav a {
@@ -466,6 +467,21 @@ a {
   color: var(--foreground);
 }
 
+.theme-toggle--compact {
+  padding: 7px;
+  border: none;
+  background: transparent;
+}
+
+.theme-toggle--compact .theme-toggle-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
 .theme-toggle svg {
   width: 16px;
   height: 16px;
@@ -499,7 +515,20 @@ a {
   margin-top: 20px;
 }
 
+.public-hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr);
+  align-items: start;
+  gap: clamp(28px, 5vw, 64px);
+}
+
 .public-hero-copy { min-width: 0; }
+
+@media (max-width: 900px) {
+  .public-hero-layout {
+    grid-template-columns: 1fr;
+  }
+}
 
 .public-hero-copy .eyebrow {
   color: var(--primary);
@@ -3722,10 +3751,9 @@ a.dashboard-secondary-stat:hover {
 
 .climate-band-header {
   display: flex;
-  align-items: flex-end;
+  align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 28px;
   flex-wrap: wrap;
 }
 
@@ -3733,151 +3761,300 @@ a.dashboard-secondary-stat:hover {
   font-size: 1.5rem;
   font-weight: 800;
   color: var(--foreground);
-  margin-top: 4px;
 }
+
+.climate-band-cta {
+  color: var(--primary-dark);
+  font-weight: 650;
+  font-size: 0.86rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.climate-band-cta:hover { text-decoration: underline; }
 
 .climate-band-note {
+  margin: 6px 0 22px;
   font-size: 0.78rem;
   color: var(--muted);
-  text-align: right;
-  max-width: 220px;
 }
 
-.division-grid {
+.division-conditions {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+  gap: 20px;
+  align-items: start;
 }
 
 @media (max-width: 900px) {
-  .division-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 500px) {
-  .division-grid {
+  .division-conditions {
     grid-template-columns: 1fr;
   }
 }
 
-.division-card {
-  background: var(--surface);
+.division-tilemap-card,
+.division-table-card {
   border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: var(--shadow-soft);
-  /* Subtle left-accent inherits AQI colour class border when applied to card */
-}
-
-/* When AQI class is on the card, give a top colour bar via outline or border-top */
-.division-card.aqi-good      { border-top: 3px solid var(--success); }
-.division-card.aqi-moderate  { border-top: 3px solid var(--warning); }
-.division-card.aqi-sensitive { border-top: 3px solid var(--aqi-sensitive); }
-.division-card.aqi-unhealthy { border-top: 3px solid var(--danger); }
-.division-card.aqi-hazardous { border-top: 3px solid var(--aqi-hazardous); }
-.division-card.aqi-none      { border-top: 3px solid var(--border); }
-
-/* Reset AQI background override on card — badges carry the colour */
-.division-card.aqi-good,
-.division-card.aqi-moderate,
-.division-card.aqi-sensitive,
-.division-card.aqi-unhealthy,
-.division-card.aqi-hazardous,
-.division-card.aqi-none {
+  border-radius: 14px;
   background: var(--surface);
-  color: var(--foreground);
+  box-shadow: var(--shadow-soft);
+  padding: 20px;
 }
 
-.division-card-top {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.division-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--foreground);
-}
-
-.division-bn {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-
-.division-card-temp {
-  font-size: 1.75rem;
-  font-weight: 800;
-  color: var(--primary-dark);
-  line-height: 1;
-}
-
-.division-card-aqi {
+.division-tilemap-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.division-pm25 {
-  font-size: 0.72rem;
-  color: var(--muted);
-}
-
-.division-card-footer {
-  display: flex;
+  justify-content: space-between;
   gap: 12px;
-  font-size: 0.75rem;
-  color: var(--muted);
   flex-wrap: wrap;
-  border-top: 1px solid var(--border);
-  padding-top: 8px;
-  margin-top: auto;
+  margin-bottom: 16px;
 }
 
-.climate-band-cta {
+.metric-toggle {
   display: inline-flex;
-  margin-top: 20px;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 9px;
+  background: var(--surface-2);
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   RIGHT NOW SECTION
-   Live weather / alerts / river-discharge snapshot — stat tiles
-   reuse the .metric card look from the metrics grid
-   ═══════════════════════════════════════════════════════════════ */
-
-.right-now {
-  padding: 0 20px;
-  max-width: 1100px;
-  margin-left: auto;
-  margin-right: auto;
+.metric-toggle button {
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  padding: 7px 12px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.rightnow-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 14px;
+.metric-toggle button.is-active {
+  background: var(--surface);
+  color: var(--foreground);
+  box-shadow: var(--shadow-soft);
 }
 
-.metric-link {
-  text-decoration: none;
-  color: inherit;
-  transition: border-color 160ms ease;
-}
-
-.metric-link:hover {
-  border-color: var(--border-strong);
-}
-
-.rightnow-footnote {
-  margin-top: 14px;
+.division-tilemap-caption {
   font-size: 0.76rem;
   color: var(--muted);
 }
+
+.division-tilemap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .division-tilemap-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.division-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
+  padding: 14px;
+  border-radius: 10px;
+  color: var(--foreground);
+}
+
+.division-tile-name { font-weight: 700; font-size: 0.9rem; }
+
+.division-tile-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.division-tile-value small {
+  margin-left: 3px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.division-tile--level-0 { background: var(--surface-2); }
+.division-tile-value--none { font-size: 0.82rem; font-weight: 650; color: var(--muted); }
+
+.division-tile--level-1 { background: color-mix(in srgb, var(--data) 14%, var(--surface)); }
+.division-tile--level-2 { background: color-mix(in srgb, var(--data) 38%, var(--surface)); }
+.division-tile--level-3 { background: color-mix(in srgb, var(--data) 68%, var(--surface)); color: #fff; }
+.division-tile--level-4 { background: color-mix(in srgb, var(--data) 100%, black 18%); color: #fff; }
+
+.division-tilemap-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.division-tilemap-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.division-tilemap-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.division-tilemap-legend i {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+}
+
+.division-tilemap-note {
+  font-size: 0.72rem;
+  color: var(--muted-soft);
+}
+
+.division-table-footnote {
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: var(--muted-soft);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HERO "RIGHT NOW" CARD
+   Status card in the hero's right column — weather / alerts / river
+   ═══════════════════════════════════════════════════════════════ */
+
+.hero-now-card {
+  min-width: 0;
+  display: grid;
+  gap: 16px;
+  padding: 24px 26px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  align-self: start;
+}
+
+.hero-now-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.hero-now-header h2 {
+  font-size: 1.15rem;
+  letter-spacing: -0.015em;
+}
+
+.hero-now-observed {
+  font-size: 0.76rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.hero-now-rows {
+  display: grid;
+}
+
+.hero-now-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+}
+
+.hero-now-row + .hero-now-row {
+  border-top: 1px solid var(--border);
+}
+
+.hero-now-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.hero-now-icon svg { width: 19px; height: 19px; }
+
+.hero-now-icon--hot  { background: var(--warning-soft); color: var(--warning); }
+.hero-now-icon--cool { background: var(--data-soft); color: var(--data); }
+.hero-now-icon--rain { background: var(--data-soft); color: var(--data); }
+
+.hero-now-row-text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.hero-now-row-label { font-size: 0.76rem; color: var(--muted); }
+.hero-now-row-name { font-size: 0.95rem; }
+
+.hero-now-row-value {
+  flex-shrink: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.hero-now-row-value strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.hero-now-row-value span { font-size: 0.82rem; color: var(--muted); }
+
+.hero-now-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--surface-2);
+}
+
+.hero-now-alert.is-warning { background: var(--warning-soft); }
+
+.hero-now-alert-icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  color: var(--success);
+}
+
+.hero-now-alert.is-warning .hero-now-alert-icon { color: var(--warning); }
+.hero-now-alert-icon svg { width: 20px; height: 20px; }
+
+.hero-now-alert strong { display: block; font-size: 0.92rem; }
+.hero-now-alert p { margin-top: 4px; font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+.hero-now-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.hero-now-footer a {
+  color: var(--primary-dark);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.hero-now-footer a:hover { text-decoration: underline; }
 
 /* ═══════════════════════════════════════════════════════════════
    AIR QUALITY GRID

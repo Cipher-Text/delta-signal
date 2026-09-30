@@ -47,7 +47,7 @@ const META: Record<Step, { label: string; icon: React.ReactNode }> = {
   },
 };
 
-export default function ThemeToggle({ theme }: { theme: Theme | undefined }) {
+export default function ThemeToggle({ theme, compact }: { theme: Theme | undefined; compact?: boolean }) {
   const [current, setCurrent] = useState<Step>(theme ?? 'auto');
   const [, startTransition] = useTransition();
 
@@ -73,7 +73,12 @@ export default function ThemeToggle({ theme }: { theme: Theme | undefined }) {
   const nextLabel = META[ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]].label;
 
   return (
-    <button type="button" className="theme-toggle" onClick={handleClick} title={`${meta.label} — click for ${nextLabel}`}>
+    <button
+      type="button"
+      className={`theme-toggle${compact ? ' theme-toggle--compact' : ''}`}
+      onClick={handleClick}
+      title={`${meta.label} — click for ${nextLabel}`}
+    >
       {meta.icon}
       <span className="theme-toggle-label">{meta.label}</span>
     </button>

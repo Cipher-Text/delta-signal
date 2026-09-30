@@ -6,6 +6,7 @@ const NAV_LINKS = [
   { href: '/#topics', label: 'Explore' },
   { href: '/map', label: 'Map' },
   { href: '/data', label: 'Data' },
+  { href: '/observations', label: 'Research' },
   { href: '/reports', label: 'Reports' },
 ] as const;
 
@@ -27,12 +28,9 @@ export default async function PublicNav() {
       </nav>
 
       <div className="nav-actions">
-        <ThemeToggle theme={theme} />
+        <ThemeToggle theme={theme} compact />
         <Link className="button ghost" href="/login">
           Sign in
-        </Link>
-        <Link className="button" href="/register">
-          Register
         </Link>
       </div>
     </header>

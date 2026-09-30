@@ -1,6 +1,5 @@
 import EmergencyBanner from '../../components/emergency-banner';
 import HeroSection from '../../components/hero-section';
-import RightNowSection from '../../components/right-now-section';
 import NationalClimateBand from '../../components/national-climate-band';
 import AirQualityGrid from '../../components/air-quality-grid';
 import BiodiversitySection from '../../components/biodiversity-section';
@@ -17,11 +16,8 @@ export default function HomePage() {
       {/* Emergency alerts — conditional, null when nothing active */}
       <EmergencyBanner />
 
-      {/* Hero — headline, CTAs, disclaimer */}
+      {/* Hero — headline, CTAs, disclaimer, and the "Right now" status card */}
       <HeroSection />
-
-      {/* Right now — hottest/coolest/rain, active alerts, river discharge ratio */}
-      <RightNowSection />
 
       {/* 8-division climate snapshot — 30-day rolling averages */}
       <NationalClimateBand />
