@@ -387,7 +387,8 @@ a {
 .public-nav {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 40;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -443,6 +444,58 @@ a {
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+}
+
+.mobile-menu { display: none; }
+
+.mobile-menu-trigger {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.mobile-menu-trigger:hover { background: var(--surface-2); }
+.mobile-menu-trigger svg { width: 21px; height: 21px; }
+
+.mobile-menu-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 30;
+  margin-top: 8px;
+  min-width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.mobile-menu-panel a {
+  padding: 10px 12px;
+  border-radius: 7px;
+  color: var(--foreground);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.mobile-menu-panel a:hover { background: var(--surface-2); }
+
+.mobile-menu-signin {
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  padding-top: 10px !important;
+  color: var(--primary-dark) !important;
 }
 
 /* ── Theme toggle (auto → light → dark) ── */
@@ -544,6 +597,22 @@ a {
   color: var(--muted);
   font-size: clamp(1rem, 1.3vw, 1.12rem);
   line-height: 1.65;
+}
+
+.hero-description-short { display: none; }
+
+@media (max-width: 640px) {
+  .hero-description-full { display: none; }
+  .hero-description-short { display: block; }
+
+  .public-hero .button-row {
+    flex-direction: column;
+  }
+
+  .public-hero .button-row .button {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 .public-hero .button-row { margin-top: 24px; }
@@ -4422,24 +4491,10 @@ a.dashboard-secondary-stat:hover {
 }
 
 @media (max-width: 720px) {
-  .public-nav {
-    flex-wrap: wrap;
-    gap: 10px 16px;
-  }
-
-  .public-nav nav {
-    order: 3;
-    width: 100%;
-    justify-content: flex-start;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    scrollbar-width: none;
-  }
-
-  .public-nav nav::-webkit-scrollbar { display: none; }
-  .public-nav nav a { flex-shrink: 0; }
+  .public-nav nav { display: none; }
+  .nav-signin { display: none; }
+  .mobile-menu { display: block; position: relative; }
   .nav-actions { margin-left: auto; gap: 6px; }
-  .nav-actions .button { padding: 0.62rem 0.75rem; }
 
   .public-hero {
     margin-top: 12px;

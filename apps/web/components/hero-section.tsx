@@ -156,9 +156,12 @@ export default async function HeroSection() {
         <div className="public-hero-copy">
           <p className="eyebrow">Bangladesh · Environmental data</p>
           <h1>Understand Bangladesh’s environment, place by place.</h1>
-          <p className="public-hero-description">
+          <p className="public-hero-description hero-description-full">
             Weather, rivers, air quality and biodiversity for every division and district —
             with the source and update time on every number.
+          </p>
+          <p className="public-hero-description hero-description-short">
+            Weather, rivers, air quality and biodiversity for every district — with the source on every number.
           </p>
 
           <div className="button-row">

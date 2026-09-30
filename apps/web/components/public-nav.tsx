@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import ThemeToggle from './theme-toggle';
+import MobileMenu from './mobile-menu';
 import { getTheme } from '../lib/theme';
 
 const NAV_LINKS = [
@@ -29,9 +30,10 @@ export default async function PublicNav() {
 
       <div className="nav-actions">
         <ThemeToggle theme={theme} compact />
-        <Link className="button ghost" href="/login">
+        <Link className="button ghost nav-signin" href="/login">
           Sign in
         </Link>
+        <MobileMenu links={NAV_LINKS} />
       </div>
     </header>
   );
