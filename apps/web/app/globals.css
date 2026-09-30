@@ -602,6 +602,9 @@ a {
 .hero-now-observed-short { display: none; }
 .hero-now-rows-short { display: none; }
 .hero-now-footer.hero-now-rows-short { display: none; }
+.climate-band-title-short { display: none; }
+.climate-band-note-short { display: none; }
+.climate-band-cta-short { display: none; }
 
 @media (max-width: 640px) {
   .hero-description-full { display: none; }
@@ -624,6 +627,17 @@ a {
   .hero-now-rows-short { display: grid; }
   .hero-now-alert p.hero-now-rows-short { display: block; }
   .hero-now-footer.hero-now-rows-short { display: flex; }
+
+  .climate-band-title-full { display: none; }
+  .climate-band-title-short { display: block; }
+  .climate-band-note-full { display: none; }
+  .climate-band-note-short { display: block; }
+  .climate-band-cta-full { display: none; }
+  .division-table-card.climate-band-cta-full { display: none; }
+  .climate-band-cta-short { display: inline-block; margin-top: 14px; }
+
+  .metric-toggle { width: 100%; }
+  .metric-toggle button { flex: 1; }
 }
 
 .hero-now-tiles {
@@ -3956,10 +3970,13 @@ a.dashboard-secondary-stat:hover {
   gap: 10px;
 }
 
-@media (max-width: 560px) {
+@media (max-width: 420px) {
   .division-tilemap-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
   }
+  .division-tile { padding: 10px 8px; }
+  .division-tile-name { font-size: 0.8rem; }
+  .division-tile-value { font-size: 1.3rem; }
 }
 
 .division-tile {
@@ -3972,7 +3989,7 @@ a.dashboard-secondary-stat:hover {
   color: var(--foreground);
 }
 
-.division-tile-name { font-weight: 700; font-size: 0.9rem; }
+.division-tile-name { display: block; font-weight: 700; font-size: 0.9rem; overflow-wrap: break-word; }
 
 .division-tile-value {
   font-size: 1.6rem;

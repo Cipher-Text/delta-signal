@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import type { DivisionWithClimate } from '@delta-signal/contracts';
 
 // Approximate NW→NE, W→E, SW→S geographic layout (not to scale) — matches the design's tile map.
@@ -94,9 +95,13 @@ export default function DivisionConditionsPanel({ divisions }: { divisions: Divi
           </div>
           <span className="division-tilemap-note">Division tile map: positions approximate, not to scale.</span>
         </div>
+
+        <Link href="/map" className="climate-band-cta climate-band-cta-short">
+          Open the full map →
+        </Link>
       </div>
 
-      <div className="division-table-card">
+      <div className="division-table-card climate-band-cta-full">
         <div className="data-table" role="table" aria-label="Division conditions">
           <div className="data-table-row data-table-head" role="row">
             <span role="columnheader">Division</span>

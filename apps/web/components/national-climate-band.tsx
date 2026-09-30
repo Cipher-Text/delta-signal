@@ -23,16 +23,23 @@ export default async function NationalClimateBand() {
     : latestClimateUpdate
       ? `30-day rolling summary, not live conditions · Updated ${new Date(latestClimateUpdate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })} · Source: Open-Meteo`
       : '30-day rolling summary, not live conditions · Source: Open-Meteo';
+  const climateNoteShort = !isLive
+    ? 'Temporarily unavailable.'
+    : '30-day rolling summary · Open-Meteo';
 
   return (
     <section className="climate-band public-section" aria-label="National climate overview by division">
       <div className="climate-band-header">
-        <h2>Conditions across the divisions</h2>
-        <Link href="/map" className="climate-band-cta">
+        <div>
+          <h2 className="climate-band-title-full">Conditions across the divisions</h2>
+          <h2 className="climate-band-title-short">Divisions</h2>
+        </div>
+        <Link href="/map" className="climate-band-cta climate-band-cta-full">
           Open the full map →
         </Link>
       </div>
-      <p className="climate-band-note">{climateNote}</p>
+      <p className="climate-band-note climate-band-note-full">{climateNote}</p>
+      <p className="climate-band-note climate-band-note-short">{climateNoteShort}</p>
 
       {!isLive || !hasClimateData ? (
         <div className="empty-state" role="status">
