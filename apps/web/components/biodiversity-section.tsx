@@ -9,9 +9,9 @@ import { apiGet } from '../lib/api';
 
 interface TopSpecies {
   id: string;
-  canonicalName: string;
-  vernacularName: string | null;
-  family: string | null;
+  name: string;
+  latin: string;
+  isFamilyRank: boolean;
   occurrenceCount: number;
 }
 
@@ -31,13 +31,18 @@ async function loadBiodiversity(): Promise<BiodiversityStats | null> {
     return {
       speciesTotal: speciesPage.total,
       occurrenceTotal: occurrencePage.total,
-      topSpecies: topPage.data.map((s) => ({
-        id: s.id,
-        canonicalName: s.canonicalName,
-        vernacularName: s.vernacularName,
-        family: s.family,
-        occurrenceCount: s._count.occurrences,
-      })),
+      topSpecies: topPage.data.map((s) => {
+        // A canonical name with no space is a family-rank record (e.g. "Soricidae"),
+        // not a genus+species binomial — the vernacular name is a group name like "Shrews".
+        const isFamilyRank = !s.canonicalName.includes(' ');
+        return {
+          id: s.id,
+          name: s.vernacularName ?? s.canonicalName,
+          latin: s.canonicalName,
+          isFamilyRank,
+          occurrenceCount: s._count.occurrences,
+        };
+      }),
     };
   } catch {
     return null;
@@ -48,11 +53,12 @@ export default async function BiodiversitySection() {
   const stats = await loadBiodiversity();
 
   return (
-    <section className="biodiversity-section public-section" aria-label="Biodiversity records">
-      <div className="section-intro">
-        <p className="eyebrow">Synced daily from GBIF</p>
-        <h2>Biodiversity records</h2>
-        <p>Occurrence records for Bangladesh.</p>
+    <div className="env-card biodiversity-card">
+      <div className="env-card-header">
+        <div>
+          <h2>Biodiversity records</h2>
+          <p>Occurrence records for Bangladesh · Synced daily from GBIF</p>
+        </div>
       </div>
 
       {!stats ? (
@@ -61,12 +67,12 @@ export default async function BiodiversitySection() {
         <>
           <div className="rightnow-grid biodiversity-stats">
             <article className="metric">
-              <span>Occurrence records</span>
               <strong>{stats.occurrenceTotal.toLocaleString()}</strong>
+              <span>occurrence records</span>
             </article>
             <article className="metric">
-              <span>Taxa recorded</span>
               <strong>{stats.speciesTotal.toLocaleString()}</strong>
+              <span>taxa recorded</span>
             </article>
           </div>
 
@@ -74,11 +80,17 @@ export default async function BiodiversitySection() {
             <div className="biodiversity-taxa">
               <p className="biodiversity-taxa-label">Most recorded taxa</p>
               <ul>
-                {stats.topSpecies.map((s) => (
+                {stats.topSpecies.map((s, i) => (
                   <li key={s.id}>
-                    <span className="biodiversity-taxon-name">{s.vernacularName ?? s.canonicalName}</span>
-                    <span className="biodiversity-taxon-latin">{s.canonicalName}</span>
-                    {s.family && <span className="biodiversity-taxon-family">{s.family}</span>}
+                    <span className="biodiversity-taxon-rank">{i + 1}</span>
+                    <span className="biodiversity-taxon-text">
+                      <span className="biodiversity-taxon-name">
+                        {s.name}
+                        {s.isFamilyRank && <span className="tag muted">Family</span>}
+                      </span>
+                      <span className="biodiversity-taxon-latin">{s.latin}</span>
+                    </span>
+                    <strong className="biodiversity-taxon-count">{s.occurrenceCount.toLocaleString()}</strong>
                   </li>
                 ))}
               </ul>
@@ -90,9 +102,9 @@ export default async function BiodiversitySection() {
         </>
       )}
 
-      <Link href="/biodiversity" className="button ghost">
-        Explore species →
-      </Link>
-    </section>
+      <div className="env-card-footer">
+        <Link href="/biodiversity">Explore species →</Link>
+      </div>
+    </div>
   );
 }

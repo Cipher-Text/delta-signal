@@ -3,17 +3,13 @@ import { routes, type DistrictWithClimate } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
 
 // US EPA PM2.5 breakpoints (2024 revision)
-function aqiClass(pm25: number): {
-  label: string;
-  css: string;
-  advice: string;
-} {
-  if (pm25 <= 9.0)   return { label: 'Good',                          css: 'aqi-good',           advice: 'Air is clean' };
-  if (pm25 <= 35.4)  return { label: 'Moderate',                      css: 'aqi-moderate',       advice: 'Acceptable' };
-  if (pm25 <= 55.4)  return { label: 'Unhealthy for sensitive groups', css: 'aqi-sensitive',      advice: 'Sensitive groups: limit outdoors' };
-  if (pm25 <= 125.4) return { label: 'Unhealthy',                     css: 'aqi-unhealthy',      advice: 'Reduce outdoor exertion' };
-  if (pm25 <= 225.4) return { label: 'Very unhealthy',                css: 'aqi-very-unhealthy', advice: 'Avoid outdoor exertion' };
-  return               { label: 'Hazardous',                          css: 'aqi-hazardous',      advice: 'Stay indoors' };
+function aqiClass(pm25: number): { label: string; css: string } {
+  if (pm25 <= 9.0)   return { label: 'Good',                          css: 'aqi-good' };
+  if (pm25 <= 35.4)  return { label: 'Moderate',                      css: 'aqi-moderate' };
+  if (pm25 <= 55.4)  return { label: 'Unhealthy for sensitive groups', css: 'aqi-sensitive' };
+  if (pm25 <= 125.4) return { label: 'Unhealthy',                     css: 'aqi-unhealthy' };
+  if (pm25 <= 225.4) return { label: 'Very unhealthy',                css: 'aqi-very-unhealthy' };
+  return               { label: 'Hazardous',                          css: 'aqi-hazardous' };
 }
 
 export default async function AirQualityGrid() {
@@ -29,77 +25,86 @@ export default async function AirQualityGrid() {
     .filter((d): d is DistrictWithClimate & { avgPm25_30d: number } => d.avgPm25_30d != null)
     .sort((a, b) => b.avgPm25_30d - a.avgPm25_30d);
 
-  const topDistricts = withAqi.slice(0, 5);
+  const topDistricts = withAqi.slice(0, 6);
+
+  const latestUpdate = districts
+    .map((d) => d.climateUpdatedAt)
+    .filter((v): v is string => Boolean(v))
+    .sort()
+    .at(-1);
+  const updatedLabel = latestUpdate
+    ? new Date(latestUpdate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+    : null;
 
   return (
-    <section className="aqi-section public-section" aria-label="Air quality ranking by district">
-      <div className="aqi-section-header">
+    <div className="env-card aqi-card">
+      <div className="env-card-header">
         <div>
-          <p className="eyebrow">Modeled · 30-day average PM2.5</p>
           <h2>Air quality</h2>
-          <p className="aqi-summary">
-            {!isLive
-              ? 'Air-quality data is temporarily unavailable.'
-              : withAqi.length === 0
-                ? 'No district air-quality summaries are available yet.'
-                : 'Districts with the highest fine particulate matter (PM2.5)'}
-          </p>
+          <p>Districts with the highest fine particulate matter (PM2.5)</p>
+        </div>
+        <div className="env-card-badges">
+          <span className="badge-outline">Modeled</span>
+          {updatedLabel && <span className="badge-soft">Updated {updatedLabel}</span>}
         </div>
       </div>
 
-      {withAqi.length > 0 && <div className="aqi-ranking">
+      {!isLive || topDistricts.length === 0 ? (
+        <div className="empty-state" role="status">
+          {isLive ? 'No district PM2.5 summaries are available yet.' : 'Air-quality data is temporarily unavailable.'}
+        </div>
+      ) : (
+        <div className="data-table" role="table" aria-label="District air quality ranking">
+          <div className="data-table-row data-table-head" role="row">
+            <span role="columnheader">#</span>
+            <span role="columnheader">District</span>
+            <span role="columnheader">Division</span>
+            <span role="columnheader">PM2.5 µg/m³</span>
+            <span role="columnheader">Category</span>
+          </div>
           {topDistricts.map((d, i) => {
-          const aqi = aqiClass(d.avgPm25_30d);
-          const barWidth = Math.min(100, (d.avgPm25_30d / 250) * 100);
-          return (
-            <div key={d.id} className={`aqi-row ${aqi.css}-border`} aria-label={`${d.name}: ${d.avgPm25_30d.toFixed(0)} µg/m³, ${aqi.label}`}>
-              <span className="aqi-rank">#{i + 1}</span>
-              <div className="aqi-row-main">
-                <div className="aqi-row-top">
-                  <strong className="aqi-district-name">{d.name}</strong>
-                  {d.division?.name && (
-                    <span className="aqi-division">{d.division.name}</span>
-                  )}
-                  <span className={`aqi-badge ${aqi.css}`}>{aqi.label}</span>
-                </div>
-                <div className="aqi-bar-track" title={aqi.advice}>
-                  <div
-                    className={`aqi-bar-fill ${aqi.css}-fill`}
-                    style={{ width: `${barWidth}%` }}
-                  />
-                </div>
-                <span className="aqi-value">{d.avgPm25_30d.toFixed(0)} µg/m³</span>
+            const aqi = aqiClass(d.avgPm25_30d);
+            return (
+              <div key={d.id} className="data-table-row" role="row">
+                <span role="cell">{i + 1}</span>
+                <span role="cell"><strong>{d.name}</strong></span>
+                <span role="cell">{d.division?.name ?? '—'}</span>
+                <span role="cell">{d.avgPm25_30d.toFixed(0)}</span>
+                <span role="cell">
+                  <mark className={`tag aqi-badge ${aqi.css}`}>
+                    <span className="aqi-badge-dot" />
+                    {aqi.label}
+                  </mark>
+                </span>
               </div>
-            </div>
-          );
-        })}
-      </div>}
-      {withAqi.length === 0 && <div className="empty-state" role="status">{isLive ? 'No district PM2.5 summaries are available yet.' : 'Air-quality data is temporarily unavailable.'}</div>}
-
-      <div className="aqi-footer">
-        <div className="aqi-legend">
-          {([
-            ['aqi-good', 'Good 0–9.0'],
-            ['aqi-moderate', 'Moderate 9.1–35.4'],
-            ['aqi-sensitive', 'Sensitive groups 35.5–55.4'],
-            ['aqi-unhealthy', 'Unhealthy 55.5–125.4'],
-            ['aqi-very-unhealthy', 'Very unhealthy 125.5–225.4'],
-            ['aqi-hazardous', 'Hazardous 225.5+'],
-          ] as [string, string][]).map(([cls, label]) => (
-            <span key={cls} className="aqi-legend-item">
-              <span className={`aqi-swatch ${cls}-fill`} />
-              {label}
-            </span>
-          ))}
+            );
+          })}
         </div>
-        <p className="aqi-legend-note">
-          Scale: US EPA PM2.5 (2024) · Sensitive groups: children, older adults, people with respiratory conditions
-        </p>
-      </div>
+      )}
 
-      <Link href="/locations" className="button ghost aqi-cta">
-        All 64 districts →
-      </Link>
-    </section>
+      <div className="aqi-legend">
+        {([
+          ['aqi-good', 'Good 0–9.0'],
+          ['aqi-moderate', 'Moderate 9.1–35.4'],
+          ['aqi-sensitive', 'Sensitive groups 35.5–55.4'],
+          ['aqi-unhealthy', 'Unhealthy 55.5–125.4'],
+          ['aqi-very-unhealthy', 'Very unhealthy 125.5–225.4'],
+          ['aqi-hazardous', 'Hazardous 225.5+'],
+        ] as [string, string][]).map(([cls, label]) => (
+          <span key={cls} className="aqi-legend-item">
+            <span className={`aqi-swatch ${cls}-fill`} />
+            {label}
+          </span>
+        ))}
+      </div>
+      <p className="aqi-legend-note">
+        Scale: US EPA PM2.5 (2024) · Sensitive groups: children, older adults, people with respiratory conditions
+      </p>
+
+      <div className="env-card-footer">
+        <Link href="/locations">All 64 districts →</Link>
+        <Link href="/data">Download data</Link>
+      </div>
+    </div>
   );
 }

@@ -22,11 +22,11 @@ export default function HomePage() {
       {/* 8-division climate snapshot — 30-day rolling averages */}
       <NationalClimateBand />
 
-      {/* District air quality ranking (PM2.5, US EPA 2024 scale) */}
-      <AirQualityGrid />
-
-      {/* GBIF occurrence/taxa counts + top recorded taxa */}
-      <BiodiversitySection />
+      {/* District air quality ranking + GBIF occurrence/taxa counts — paired cards */}
+      <section className="public-section env-snapshot" aria-label="Air quality and biodiversity">
+        <AirQualityGrid />
+        <BiodiversitySection />
+      </section>
 
       {/* Topic cards linking into the map/data/biodiversity/marine/emissions pages */}
       <TopicsGrid />
