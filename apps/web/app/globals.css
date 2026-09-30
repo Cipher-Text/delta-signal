@@ -4781,152 +4781,97 @@ a.dashboard-secondary-stat:hover {
    ═══════════════════════════════════════════════════════════════ */
 
 .persona-footer {
-  background: var(--hero-ink);
-  padding: 60px 20px;
-  margin-top: 40px;
+  padding: 40px 20px;
 }
 
 .persona-footer-header {
-  text-align: center;
-  margin-bottom: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
 }
 
 .persona-footer-header h2 {
-  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-size: 1.6rem;
   font-weight: 800;
-  color: #fff;
-  margin-top: 8px;
-  line-height: 1.2;
+  color: var(--foreground);
 }
 
-.persona-footer-sub {
-  margin-top: 10px;
-  font-size: 0.92rem;
-  color: rgba(255,255,255,0.6);
-  max-width: 540px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.6;
-}
-
-.persona-footer-header .persona-primary-cta {
-  margin-top: 20px;
-}
-
-.persona-cta-link {
-  margin-top: auto;
-  padding-top: 4px;
-  color: rgba(255,255,255,0.85);
-  font-size: 0.86rem;
-  font-weight: 650;
-  text-decoration: none;
-}
-
-.persona-cta-link:hover {
-  color: #fff;
-  text-decoration: underline;
+.persona-footer-header p {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: var(--muted);
 }
 
 .persona-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
-  max-width: 1100px;
-  margin: 0 auto;
 }
 
 @media (max-width: 860px) {
+  .persona-footer-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
   .persona-grid {
     grid-template-columns: 1fr;
-    max-width: 480px;
   }
 }
 
 .persona-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  padding: 28px 24px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  transition: background 0.2s, border-color 0.2s;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-soft);
+  padding: 24px;
 }
 
-.persona-card:hover {
-  background: rgba(255,255,255,0.1);
-  border-color: rgba(255,255,255,0.22);
+.persona-card-kicker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-dark);
 }
 
-.persona-icon {
-  font-size: 2rem;
-  line-height: 1;
-}
+.persona-card-kicker svg { width: 17px; height: 17px; }
 
-.persona-role-tag {
-  display: inline-block;
-  font-size: 0.68rem;
+.persona-card-kicker span {
+  font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 3px 9px;
-  border-radius: 99px;
-  border: 1px solid;
-  align-self: flex-start;
+  letter-spacing: 0.08em;
 }
-
-/* Per-persona accent colours */
-.persona-citizen .persona-role-tag    { color: #6ee7b7; border-color: #6ee7b7; }
-.persona-researcher .persona-role-tag { color: #93c5fd; border-color: #93c5fd; }
-.persona-ngo .persona-role-tag        { color: #fcd34d; border-color: #fcd34d; }
 
 .persona-headline {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--foreground);
   line-height: 1.3;
   margin: 0;
 }
 
 .persona-body {
-  font-size: 0.84rem;
-  color: rgba(255,255,255,0.6);
+  font-size: 0.86rem;
+  color: var(--muted);
   line-height: 1.6;
   flex: 1;
 }
 
-.persona-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
+.persona-cta-link {
+  margin-top: auto;
+  padding-top: 4px;
+  color: var(--primary-dark);
+  font-size: 0.86rem;
+  font-weight: 650;
+  text-decoration: none;
 }
 
-.persona-primary-cta {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-  text-align: center;
-  justify-content: center;
-}
-
-/* Darkening on hover is inherited from .button:hover's brightness filter —
-   var(--primary-dark) is intentionally the brighter tone in dark mode, so
-   using it here would lighten instead of darken. */
-
-/* Override ghost on dark background */
-.persona-ghost-cta {
-  color: rgba(255,255,255,0.7);
-  border-color: rgba(255,255,255,0.25);
-  text-align: center;
-  justify-content: center;
-}
-
-.persona-ghost-cta:hover {
-  color: #fff;
-  border-color: rgba(255,255,255,0.6);
-  background: rgba(255,255,255,0.08);
-}
+.persona-cta-link:hover { text-decoration: underline; }
 
 /* ── Location breadcrumb ── */
 .location-breadcrumb {
