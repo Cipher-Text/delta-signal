@@ -66,10 +66,10 @@ export default async function AirQualityGrid() {
             const aqi = aqiClass(d.avgPm25_30d);
             return (
               <div key={d.id} className="data-table-row" role="row">
-                <span role="cell">{i + 1}</span>
+                <span role="cell" className="muted">{i + 1}</span>
                 <span role="cell"><strong>{d.name}</strong></span>
-                <span role="cell">{d.division?.name ?? '—'}</span>
-                <span role="cell">{d.avgPm25_30d.toFixed(0)}</span>
+                <span role="cell" className="muted">{d.division?.name ?? '—'}</span>
+                <span role="cell"><strong>{d.avgPm25_30d.toFixed(0)}</strong></span>
                 <span role="cell">
                   <mark className={`tag aqi-badge ${aqi.css}`}>
                     <span className="aqi-badge-dot" />

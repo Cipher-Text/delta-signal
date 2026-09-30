@@ -36,10 +36,10 @@
   --success-soft: #e5f4eb;
   --aqi-sensitive: #c2540a;
   --aqi-sensitive-soft: #ffedd5;
-  --aqi-very-unhealthy: #9f1239;
-  --aqi-very-unhealthy-soft: #ffe4e6;
-  --aqi-hazardous: #7c3aed;
-  --aqi-hazardous-soft: #ede9fe;
+  --aqi-very-unhealthy: #7c3aed;
+  --aqi-very-unhealthy-soft: #ede9fe;
+  --aqi-hazardous: #4c0519;
+  --aqi-hazardous-soft: #ffe4e6;
   --shadow: 0 16px 40px rgba(18, 48, 38, 0.07);
   --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -82,10 +82,10 @@
     --success-soft: #1c3828;
     --aqi-sensitive: #ff9f4d;
     --aqi-sensitive-soft: #3a2410;
-    --aqi-very-unhealthy: #fb7185;
-    --aqi-very-unhealthy-soft: #3a1520;
-    --aqi-hazardous: #b794f6;
-    --aqi-hazardous-soft: #2e2350;
+    --aqi-very-unhealthy: #b794f6;
+    --aqi-very-unhealthy-soft: #2e2350;
+    --aqi-hazardous: #fda4af;
+    --aqi-hazardous-soft: #3f0d17;
     --shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
     --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.2);
   }
@@ -128,10 +128,10 @@
   --success-soft: #1c3828;
   --aqi-sensitive: #ff9f4d;
   --aqi-sensitive-soft: #3a2410;
-  --aqi-very-unhealthy: #fb7185;
-  --aqi-very-unhealthy-soft: #3a1520;
-  --aqi-hazardous: #b794f6;
-  --aqi-hazardous-soft: #2e2350;
+  --aqi-very-unhealthy: #b794f6;
+  --aqi-very-unhealthy-soft: #2e2350;
+  --aqi-hazardous: #fda4af;
+  --aqi-hazardous-soft: #3f0d17;
   --shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
   --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
@@ -4213,6 +4213,32 @@ a.dashboard-secondary-stat:hover {
 /* ═══════════════════════════════════════════════════════════════
    BIODIVERSITY SECTION
    ═══════════════════════════════════════════════════════════════ */
+
+.stat-tile-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.stat-tile {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.stat-tile strong {
+  display: block;
+  font-size: 1.9rem;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-tile span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
 
 .biodiversity-stats {
   margin-bottom: 20px;

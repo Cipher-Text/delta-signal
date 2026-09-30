@@ -65,12 +65,12 @@ export default async function BiodiversitySection() {
         <div className="empty-state" role="status">Biodiversity data is temporarily unavailable.</div>
       ) : (
         <>
-          <div className="rightnow-grid biodiversity-stats">
-            <article className="metric">
+          <div className="stat-tile-row biodiversity-stats">
+            <article className="stat-tile">
               <strong>{stats.occurrenceTotal.toLocaleString()}</strong>
               <span>occurrence records</span>
             </article>
-            <article className="metric">
+            <article className="stat-tile">
               <strong>{stats.speciesTotal.toLocaleString()}</strong>
               <span>taxa recorded</span>
             </article>
