@@ -5331,3 +5331,97 @@ a.dashboard-secondary-stat:hover {
     padding: 10px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PUBLIC FOOTER
+   Always-dark band, independent of the light/dark theme toggle —
+   extends past .public-shell's own side + bottom padding.
+   ═══════════════════════════════════════════════════════════════ */
+
+.public-footer-band {
+  margin: 48px calc(-1 * clamp(18px, 4vw, 56px)) -80px;
+  padding: 48px clamp(18px, 4vw, 56px) 40px;
+  background: #14171a;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.public-footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.public-footer-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.public-footer-brand {
+  max-width: 360px;
+}
+
+.public-footer-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.public-footer-logo img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+}
+
+.public-footer-brand p {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.public-footer-columns {
+  display: flex;
+  gap: 56px;
+  flex-wrap: wrap;
+}
+
+.public-footer-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.public-footer-column strong {
+  color: #fff;
+  font-size: 0.92rem;
+  margin-bottom: 2px;
+}
+
+.public-footer-column a {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.public-footer-column a:hover {
+  color: #fff;
+}
+
+.public-footer-bottom {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 640px) {
+  .public-footer-top {
+    flex-direction: column;
+  }
+}
