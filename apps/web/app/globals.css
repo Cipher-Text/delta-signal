@@ -3975,15 +3975,6 @@ a.dashboard-secondary-stat:hover {
   gap: 10px;
 }
 
-@media (max-width: 420px) {
-  .division-tilemap-grid {
-    gap: 6px;
-  }
-  .division-tile { padding: 10px 8px; }
-  .division-tile-name { font-size: 0.8rem; }
-  .division-tile-value { font-size: 1.3rem; }
-}
-
 .division-tile {
   display: flex;
   flex-direction: column;
@@ -3994,7 +3985,7 @@ a.dashboard-secondary-stat:hover {
   color: var(--foreground);
 }
 
-.division-tile-name { display: block; font-weight: 700; font-size: 0.9rem; overflow-wrap: break-word; }
+.division-tile-name { display: block; font-weight: 700; font-size: 0.9rem; overflow-wrap: break-word; hyphens: auto; }
 
 .division-tile-value {
   font-size: 1.6rem;
@@ -4006,6 +3997,15 @@ a.dashboard-secondary-stat:hover {
   margin-left: 3px;
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+@media (max-width: 420px) {
+  .division-tilemap-grid {
+    gap: 6px;
+  }
+  .division-tile { padding: 8px 6px; }
+  .division-tile-name { font-size: 0.7rem; }
+  .division-tile-value { font-size: 1.3rem; }
 }
 
 .division-tile--level-0 { background: var(--surface-2); }
