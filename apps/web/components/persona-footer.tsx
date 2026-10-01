@@ -33,6 +33,7 @@ const PERSONAS = [
     role: 'Citizens',
     icon: UserIcon,
     headline: 'Report what you see',
+    shortCaption: 'Citizens · reviewed before publishing',
     body: 'Flag pollution, water contamination or illegal dumping in your district. Reports are reviewed before they appear on the public map.',
     cta: { label: 'Submit a report →', href: '/reports' },
   },
@@ -40,6 +41,7 @@ const PERSONAS = [
     role: 'Researchers',
     icon: FlaskIcon,
     headline: 'Access research-grade data',
+    shortCaption: 'Researchers',
     body: 'Download climate summaries, flood forecasts, biodiversity records and reviewed citizen reports.',
     cta: { label: 'Request data access →', href: '/register' },
   },
@@ -47,6 +49,7 @@ const PERSONAS = [
     role: 'NGOs & agencies',
     icon: BuildingIcon,
     headline: 'Publish restoration projects',
+    shortCaption: 'NGOs & agencies',
     body: 'List campaigns, track restoration milestones and contribute verified environmental records.',
     cta: { label: 'Register your organisation →', href: '/register' },
   },
@@ -60,7 +63,7 @@ export default function PersonaFooter() {
           <h2>Take part</h2>
           <p>Delta Signal is free and open. An account lets you contribute and download.</p>
         </div>
-        <Link href="/register" className="button">
+        <Link href="/register" className="button persona-cta-desktop">
           Create a free account
         </Link>
       </div>
@@ -75,6 +78,7 @@ export default function PersonaFooter() {
                 <span>{p.role.toUpperCase()}</span>
               </div>
               <h3 className="persona-headline">{p.headline}</h3>
+              <span className="persona-caption-short">{p.shortCaption}</span>
               <p className="persona-body">{p.body}</p>
               <Link href={p.cta.href} className="persona-cta-link">
                 {p.cta.label}
@@ -83,6 +87,10 @@ export default function PersonaFooter() {
           );
         })}
       </div>
+
+      <Link href="/register" className="button ghost persona-cta-mobile">
+        Create a free account
+      </Link>
     </section>
   );
 }

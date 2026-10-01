@@ -643,6 +643,9 @@ a {
 
   .metric-toggle { width: 100%; }
   .metric-toggle button { flex: 1; }
+
+  #data { display: none; }
+  .data-sources-section { display: none; }
 }
 
 .hero-now-tiles {
@@ -4761,6 +4764,34 @@ a.dashboard-secondary-stat:hover {
 }
 
 .persona-cta-link:hover { text-decoration: underline; }
+
+.persona-caption-short { display: none; }
+.persona-cta-mobile { display: none; }
+
+@media (max-width: 640px) {
+  .persona-footer-header p { display: none; }
+
+  .persona-card { padding: 18px; gap: 4px; }
+  .persona-card-kicker,
+  .persona-body,
+  .persona-cta-link,
+  .persona-cta-desktop {
+    display: none;
+  }
+
+  .persona-caption-short {
+    display: block;
+    color: var(--muted);
+    font-size: 0.86rem;
+  }
+
+  .persona-cta-mobile {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+    width: 100%;
+  }
+}
 
 /* ── Location breadcrumb ── */
 .location-breadcrumb {
