@@ -181,7 +181,7 @@ export default async function HeroSection() {
             <Link className="button" href="/map">
               Explore the map <span aria-hidden="true">↗</span>
             </Link>
-            <Link className="button ghost" href="/data">
+            <Link className="button ghost hero-browse-datasets" href="/data">
               Browse datasets
             </Link>
           </div>

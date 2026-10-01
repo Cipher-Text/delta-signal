@@ -619,6 +619,8 @@ a {
     justify-content: center;
   }
 
+  .hero-browse-datasets { display: none; }
+
   .hero-now-observed-full { display: none; }
   .hero-now-observed-short { display: inline; }
   .hero-now-rows-full { display: none; }
@@ -1445,9 +1447,9 @@ a {
   }
 
   .public-nav {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-items: start;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .public-brand,
