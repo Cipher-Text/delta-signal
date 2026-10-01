@@ -1,23 +1,10 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { setThemeAction } from '../lib/theme-actions';
 import type { Theme } from '../lib/theme';
 
-type Step = Theme | 'auto';
-
-const ORDER: Step[] = ['auto', 'light', 'dark'];
-
-const META: Record<Step, { label: string; icon: React.ReactNode }> = {
-  auto: {
-    label: 'Theme: Auto',
-    icon: (
-      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-        <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.6" />
-        <path d="M10 3a7 7 0 0 1 0 14z" fill="currentColor" />
-      </svg>
-    ),
-  },
+const META: Record<Theme, { label: string; icon: React.ReactNode }> = {
   light: {
     label: 'Theme: Light',
     icon: (
@@ -48,19 +35,23 @@ const META: Record<Step, { label: string; icon: React.ReactNode }> = {
 };
 
 export default function ThemeToggle({ theme, compact }: { theme: Theme | undefined; compact?: boolean }) {
-  const [current, setCurrent] = useState<Step>(theme ?? 'auto');
+  const [current, setCurrent] = useState<Theme>(theme ?? 'dark');
   const [, startTransition] = useTransition();
 
+  useEffect(() => {
+    // No explicit cookie yet — reflect the system preference until the user picks one.
+    if (theme) return;
+    if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+      setCurrent('light');
+    }
+  }, [theme]);
+
   function handleClick() {
-    const next = ORDER[(ORDER.indexOf(current) + 1) % ORDER.length];
+    const next: Theme = current === 'dark' ? 'light' : 'dark';
     setCurrent(next);
 
     // Flip the token set immediately — don't wait on the round trip that persists it.
-    if (next === 'auto') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
-      document.documentElement.setAttribute('data-theme', next);
-    }
+    document.documentElement.setAttribute('data-theme', next);
 
     startTransition(() => {
       const formData = new FormData();
@@ -70,7 +61,7 @@ export default function ThemeToggle({ theme, compact }: { theme: Theme | undefin
   }
 
   const meta = META[current];
-  const nextLabel = META[ORDER[(ORDER.indexOf(current) + 1) % ORDER.length]].label;
+  const nextLabel = META[current === 'dark' ? 'light' : 'dark'].label;
 
   return (
     <button
