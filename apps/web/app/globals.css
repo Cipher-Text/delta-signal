@@ -5286,6 +5286,8 @@ a.dashboard-secondary-stat:hover {
   line-height: 1.6;
 }
 
+.public-footer-desc-short { display: none; }
+
 .public-footer-columns {
   display: flex;
   gap: 56px;
@@ -5326,4 +5328,18 @@ a.dashboard-secondary-stat:hover {
   .public-footer-top {
     flex-direction: column;
   }
+
+  .public-footer-desc-full { display: none; }
+  .public-footer-desc-short { display: block; }
+
+  .public-footer-column--explore { display: none; }
+
+  .public-footer-column--about {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .public-footer-column--about strong { display: none; }
+  .public-footer-column--about a { text-decoration: underline; }
 }
