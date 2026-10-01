@@ -4492,10 +4492,25 @@ a.dashboard-secondary-stat:hover {
 
 @media (max-width: 860px) {
   .topics-grid { grid-template-columns: repeat(2, 1fr); }
-}
 
-@media (max-width: 480px) {
-  .topics-grid { grid-template-columns: 1fr; }
+  #topics .section-intro p { display: none; }
+
+  #topics .topic-icon,
+  #topics .topic-body {
+    display: none;
+  }
+
+  #topics .topic-card {
+    display: flex;
+    align-items: center;
+    min-height: 92px;
+    padding: 20px;
+  }
+
+  #topics .topic-card strong {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
 }
 
 .topic-card {
