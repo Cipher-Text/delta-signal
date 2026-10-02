@@ -2,6 +2,10 @@
 
 Audit date: 2026-09-02
 
+> Historical audit snapshot. The location pages changed on 2026-09-19, and
+> other collection work may have changed these findings since the audit. Verify
+> the current route and API behavior before treating a listed gap as open.
+
 Scope: `apps/web` routes and the public-read API contracts they consume. Admin routes, dashboards, profile/settings, authentication screens, and detail-only pages are excluded as standalone list pages, although collection sections embedded in detail pages are noted.
 
 Follow-up note: division, district, upazila, and union pages received a shared continuous non-tabbed UX revision on 2026-09-19. Revalidate location-directory recommendations when this audit is next refreshed.

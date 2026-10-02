@@ -1,5 +1,9 @@
 # Social Content Capability Matrix
 
+> Assessment snapshot dated 2026-09-19. Treat its readiness ratings as
+> recommendations from that date; current implemented capabilities are in
+> `docs/architecture/modules.md` and `docs/api/backend-api-links.md`.
+
 Ratings: **A** ready with current data; **B** ready with small additional work; **C** requires new aggregation/analytics; **D** not recommended with current data.
 
 | Source/domain | Opportunity | Granularity / freshness | History / forecast | Quality concerns | Visualization | Attribution / disclaimer | Rating / auto-generation safety |

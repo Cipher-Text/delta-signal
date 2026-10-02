@@ -1,5 +1,10 @@
 # Social Content Admin UX
 
+> Planning snapshot. Some items below describe an earlier proposed navigation
+> and MVP; the current Admin Console flow is implemented. For current routes
+> and capabilities, see `docs/architecture/modules.md` and
+> `docs/api/backend-api-links.md`.
+
 ## IA recommendation
 
 Add a top-level **Social Content** section between Moderation and Administration in `AdminNav`, visible to MODERATOR and ADMIN once the permission is granted. Use these pages:

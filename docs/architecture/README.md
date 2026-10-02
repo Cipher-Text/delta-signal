@@ -56,7 +56,8 @@ apps/api/src/
 ├── locations/climate/     # ✓ union-level climate pipeline, daily cron, 30d rolling averages
 ├── ingestion/             # ✓ provider job tracking for scheduled external-data syncs
 ├── notifications/         # ✓ AlertSubscription, email delivery via BullMQ email queue
-└── social-content/         # ✓ reviewed source-backed drafts + deterministic card rendering
+├── social-content/         # ✓ reviewed source-backed drafts + deterministic card rendering
+└── social-publishing/      # ✓ connected Facebook Page + queued human-triggered publishing
 ```
 
 Legend: ✓ Implemented
@@ -79,7 +80,7 @@ Legend: ✓ Implemented
 | Permissions | `permissions` | DB-backed permission model; fine-grained role grants managed by `PermissionsGuard` |
 | Analytics dashboards | `analytics`, `apps/web` | Role-scoped aggregated stats for admin, moderator, government, researcher, org admin; rendered at `/dashboard` with shared responsive dashboard primitives |
 | Admin console | `apps/admin` | Moderation, user management, alert creation, dataset publishing, organization membership management, ingestion monitoring |
-| Social content | `social-content`, `apps/admin` | Human-reviewed environmental card drafts, deterministic SVG rendering, approval, download, and manual publication marking |
+| Social content | `social-content`, `social-publishing`, `apps/admin` | Human-reviewed environmental card drafts, deterministic SVG rendering, approval, download, manual publication marking, and queued Facebook Page publishing |
 
 Advanced domains (climate forecasting, carbon accounting, research publications, structured surveys, satellite remote sensing) are planned for Phase 7 — see `docs/roadmap.md` and `docs/architecture/feature-map.md`.
 

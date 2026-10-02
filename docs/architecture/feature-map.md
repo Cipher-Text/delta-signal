@@ -18,8 +18,8 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | Database schema and migrations | `packages/database` | **Done** |
 | Audit trail (`AuditEvent` on all mutations) | `common` | **Done** |
 | Security headers, rate limiting, JWT secret validation | `common` | **Done** |
-| Automated tests (auth, RBAC, env validation, reports, observations, restoration, notifications, gamification, media) | `apps/api` | **Done** — 153 tests in 11 spec files |
-| CI pipeline | `.github/workflows/ci.yml` | **Done** — awaits git remote |
+| Automated API tests | `apps/api` | **Done** — unit coverage across 16 spec files and e2e coverage across 4 spec files; `apps/web` and `apps/admin` have no test suites |
+| CI pipeline | `.github/workflows/ci.yml` | **Done** — runs on pull requests and pushes to `main`, including production dependency audit |
 | Production Dockerfiles | `infrastructure/docker` | **Done** |
 
 ---
@@ -97,6 +97,14 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | National GHG emissions (World Bank Climate Change API) | `emissions` | **Done** — `NationalEmissionReading` model; 4 GHG indicators (Total GHG, CO₂, CH₄, N₂O); weekly scheduler; `/emissions` frontend page |
 | Climate forecasting and ML predictions | `data-worker` | *Planned* (Phase 7) |
 | Carbon footprint accounting | — | *Planned* (Phase 7) |
+
+## Social Content
+
+| Feature | Module / App | Status |
+| --- | --- | --- |
+| Reviewed social cards, source snapshots, deterministic rendering, approval/download | `social-content`, `apps/admin` | **Done** |
+| On-demand nationwide post suggestions | `social-content`, `apps/admin` | **Done** — suggestions are not persisted or scheduled |
+| Human-triggered Facebook Page publishing | `social-publishing`, `apps/admin` | **Done** — requires configured platform credentials; Instagram is not implemented |
 
 ---
 

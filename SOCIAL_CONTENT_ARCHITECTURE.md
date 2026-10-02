@@ -1,5 +1,10 @@
 # Social Content Architecture
 
+> Design proposal retained for editorial and data-safety rationale. It predates
+> the implemented workflow and social publishing integration; use
+> `docs/architecture/modules.md` and `docs/api/backend-api-links.md` for current
+> behavior and supported operations.
+
 ## Design principles
 
 The feature is an editorial projection of existing environmental data, not a new data authority. It must preserve source traceability, use deterministic templates, keep AI (if introduced later) limited to copy suggestions, and make approval explicit. No Meta integration belongs in the first implementation.

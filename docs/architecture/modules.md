@@ -6,7 +6,7 @@ Global prefix is `/api/v1` (see `packages/contracts/src/index.ts` for the canoni
 
 Legend: ✓ Implemented | ~ Stub only | ✗ Not started
 
-Registered in `app.module.ts`: `database`, `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `biodiversity`, `observations`, `restoration`, `media`, `ingestion`, `weather`, `flood`, `marine`, `radiation`, `emissions`, `companies`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `gamification`, `community`. `SeedService` is also registered directly in `AppModule` (not its own module) and seeds dev users + a seed organization on first boot.
+Registered in `app.module.ts`: `database`, `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `biodiversity`, `observations`, `restoration`, `media`, `ingestion`, `weather`, `flood`, `marine`, `radiation`, `emissions`, `companies`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `gamification`, `community`, `social-content`, and `social-publishing`. `SeedService` is also registered directly in `AppModule` (not its own module) and seeds dev users + a seed organization on first boot.
 
 ## database ✓
 
@@ -372,7 +372,7 @@ Status: implemented service + read controller. `WeatherScheduler`, `Biodiversity
 
 ## social-content ✓
 
-Owns the Phase 1 human-reviewed social-card workflow plus live nationwide ranking suggestions. It reads existing weather, air-quality, forecast, river-discharge, alert, verified-report, biodiversity, and district records; it does not ingest new environmental data or publish to Meta platforms.
+Owns the human-reviewed social-card workflow plus live nationwide ranking suggestions. It reads existing weather, air-quality, forecast, river-discharge, alert, verified-report, biodiversity, and district records; publishing is handled by the adjacent `social-publishing` module.
 
 | Method | Path | Access |
 | --- | --- | --- |
@@ -389,9 +389,21 @@ Owns the Phase 1 human-reviewed social-card workflow plus live nationwide rankin
 
 Supported draft types include district-level `CURRENT_WEATHER`, `WEATHER_FORECAST`, `RIVER_SIGNAL`, `ENVIRONMENTAL_ALERT`, and `BIODIVERSITY_OBSERVATION`, plus nationwide ranking types for rain, modeled air quality, heat, rivers, alerts, verified community signals, and biodiversity. The national suggestion resolver ranks existing records for daily, weekly, or monthly review windows and returns coverage/freshness metadata; it is currently live/on-demand and not persisted. `SocialPostDraft` stores the source snapshot and source timestamp. `SocialRenderedAsset` stores the content hash, dimensions, render version, and S3/MinIO object URL. The renderer emits deterministic SVG in 1080×1350 (4:5) or 1080×1080 (1:1). Approval requires a rendered asset; editing resets a draft to `DRAFT`. All mutations write social `AuditEvent` actions.
 
+## social-publishing ✓
+
+Connects a Facebook Page and queues an explicitly requested publish action for an approved social draft. Publishing uses the `social-publish` BullMQ queue, rasterizes rendered SVG to PNG, and records each outcome in `SocialPublication`. Facebook credentials and encrypted token storage must be configured. Instagram publishing and automatic/scheduled posting are not implemented.
+
+| Method | Path | Access |
+| --- | --- | --- |
+| GET | `/social-content/platforms` | Admin (`social_content.manage`) |
+| GET | `/social-content/platforms/facebook/connect` | Admin (`social_content.manage`) |
+| GET | `/social-content/platforms/facebook/callback` | OAuth state |
+| DELETE | `/social-content/platforms/:id` | Admin (`social_content.manage`) |
+| POST | `/social-content/drafts/:draftId/publish` | Admin (`social_content.publish`) |
+
 ## permissions ✓
 
-Owns the DB-backed permission model: `Permission` (key, description) and `RolePermission` (role → permission join). Seeds 17 named permissions and default grants for all non-ADMIN roles on first boot. Social-content permissions are granted to MODERATOR for create/edit/render/download and to ADMIN for the full workflow. (`emissions.manage` and `emissions.report` were removed in 2026-09-02 when the emissions module was converted to API ingestion.)
+Owns the DB-backed permission model: `Permission` (key, description) and `RolePermission` (role → permission join). Seeds 18 named permissions and default grants for all non-ADMIN roles on first boot. Social-content permissions are granted to MODERATOR for create/edit/render/download and to ADMIN for the full workflow, including publish. (`emissions.manage` and `emissions.report` were removed in 2026-09-02 when the emissions module was converted to API ingestion.)
 
 | Method | Path | Access |
 | --- | --- | --- |
@@ -401,7 +413,7 @@ Owns the DB-backed permission model: `Permission` (key, description) and `RolePe
 
 `PermissionsService.getPermissionsForRole(role)` is the runtime path; results are cached per role for 5 minutes. `ADMIN` always receives every permission regardless of DB state. Grant and revoke each write `PERMISSION_GRANT` / `PERMISSION_REVOKE` audit events.
 
-Named permissions (17): existing report, alert, restoration, observation, organization, and user permissions plus `social_content.create`, `social_content.edit`, `social_content.render`, `social_content.approve`, `social_content.download`, and `social_content.manage`.
+Named permissions (18): existing report, alert, restoration, observation, organization, and user permissions plus `social_content.create`, `social_content.edit`, `social_content.render`, `social_content.approve`, `social_content.download`, `social_content.manage`, and `social_content.publish`.
 
 ## analytics ✓
 
@@ -506,4 +518,4 @@ These accounts exist only for local development and should not be created in pro
 
 ## Coverage note
 
-`app.module.ts` registers 28 modules: `database` plus 27 feature modules (`companies` added 2026-09-02). All are fully implemented except `ingestion` (job tracking and read endpoints only — no retry queue, no manual trigger endpoint; recurring cron jobs serve as the retry mechanism). BullMQ queues (`email`, `gamification`) are wired via `BullModule.forRootAsync` in `AppModule`. Advanced domains not yet represented by a module — structured surveys, carbon accounting, research publications, satellite/remote sensing ingestion, forest registry — are planned for Phase 7 or Phase 8. See `docs/roadmap.md` and `docs/architecture/feature-map.md`.
+`app.module.ts` registers the modules listed above. The `ingestion` module currently provides job tracking and read endpoints; it has no retry queue or manual trigger endpoint, so recurring cron jobs serve as the retry mechanism. BullMQ queues for email, gamification, and social publishing are wired through `BullModule.forRootAsync` in `AppModule`. Advanced domains not represented by a module — such as structured surveys, carbon accounting, satellite/remote sensing ingestion, and forest registry — remain planned. See `docs/roadmap.md` and `docs/architecture/feature-map.md`.

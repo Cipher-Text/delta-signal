@@ -2,6 +2,12 @@
 
 Audit date: 2026-09-19. Scope: repository state in `apps/api`, `apps/admin`, `apps/web`, `packages/database`, `packages/shared`, and `packages/contracts`.
 
+> Historical planning snapshot. It predates the social-content implementation
+> and its later publishing integration. Do not use its statements about missing
+> social modules, permissions, or publishing support as current status. See
+> `docs/architecture/modules.md` and `docs/api/backend-api-links.md` for the
+> implemented feature.
+
 ## Executive finding
 
 Delta Signal already has enough structured, source-labelled data for a human-reviewed social-content workflow. The strongest inputs are district weather/air quality, weather forecasts, station flood-discharge data, existing alerts, GBIF occurrences, verified citizen reports, and national emissions. The repository has no social-content module, no deterministic image renderer, no LLM client, no Meta integration, and no Admin Console chart/map widget to reuse directly.
@@ -79,7 +85,7 @@ Admin routes are under `apps/admin/app/(admin)` and use `AdminLayout`, `AdminNav
 
 The design system is in `apps/admin/app/globals.css`: dark sidebar, teal accent `#3d9fa8`, pale page background, surface cards, tabs, badges/tags, tables, forms, flash messages, and pagination. Existing moderation pages use status tabs and inline actions. New Social Content should use the same page header, tab bar, data-table, create-panel, badges, and server-action patterns.
 
-Backend authorization combines JWT, `RolesGuard`, `PermissionsGuard`, `@Roles`, and `@Permissions`. Shared permissions currently include `reports.moderate`, `alerts.manage`, `observations.verify`, `observations.delete`, `users.manage`, and others; there is no social-content permission. `ADMIN` bypasses permission checks. `AuditEvent` stores action, actor, entity type/id, JSON metadata, IP, and timestamp. Social mutations need new audit actions or a stable entity/action convention.
+At the time of this audit, backend authorization combined JWT, `RolesGuard`, `PermissionsGuard`, `@Roles`, and `@Permissions`, but social-content permissions and audit actions had not yet been added. `ADMIN` bypasses permission checks. `AuditEvent` stores action, actor, entity type/id, JSON metadata, IP, and timestamp. Social mutations therefore required new audit actions or a stable entity/action convention at that time.
 
 ## 6. Explicitly not found
 
@@ -89,4 +95,3 @@ Backend authorization combines JWT, `RolesGuard`, `PermissionsGuard`, `@Roles`, 
 - No deterministic server-side SVG/canvas/HTML-to-image renderer.
 - No Admin Console preview/download workflow for generated images.
 - No general AQI derivation, no evidence-based facility pollution measurements, no broad river flood-history baseline beyond stored forecast percentile/mean fields, and no arbitrary historical comparison endpoint.
-

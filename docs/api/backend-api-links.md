@@ -259,8 +259,13 @@ Provider job-tracking API for scheduled external syncs. Weather, GBIF, and Flood
 | POST | `/social-content/drafts/:id/archive` | `social_content.edit` | ✓ | Archive a draft |
 | GET | `/social-content/drafts/:id/download` | `social_content.download` | ✓ | Return approved asset URL and dimensions |
 | POST | `/social-content/drafts/:id/mark-published` | `social_content.approve` | ✓ | Record external manual publication |
+| GET | `/social-content/platforms` | Admin (`social_content.manage`) | ✓ | List connected publishing accounts |
+| GET | `/social-content/platforms/facebook/connect` | Admin (`social_content.manage`) | ✓ | Begin Facebook Page authorization |
+| GET | `/social-content/platforms/facebook/callback` | OAuth state | ✓ | Complete Facebook authorization and return to Admin Console |
+| DELETE | `/social-content/platforms/:id` | Admin (`social_content.manage`) | ✓ | Disconnect a publishing account |
+| POST | `/social-content/drafts/:draftId/publish` | Admin (`social_content.publish`) | ✓ | Queue publishing of an approved card to the connected Facebook Page |
 
-Meta/Facebook/Instagram publishing and persisted/scheduled rule evaluation are not implemented. National suggestions are currently generated on demand from existing data.
+Facebook Page publishing is available for approved cards when publishing credentials are configured. Instagram publishing and persisted/scheduled suggestion evaluation are not implemented. National suggestions are currently generated on demand from existing data.
 
 ## Metrics
 

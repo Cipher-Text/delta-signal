@@ -1,5 +1,11 @@
 # Implementation Roadmap
 
+> Historical social-content plan. Phase 1 is implemented and the repository
+> now includes social publishing integration. Current behavior is documented
+> in `docs/architecture/modules.md`, `docs/api/backend-api-links.md`, and
+> `docs/progress.md`; recommendations below are planning context, not a list of
+> outstanding implementation work.
+
 ## Editorial revision (2026-09-19)
 
 The implementation should follow the revised public series rather than expose all technically available datasets as equal poster types. The MVP content menu is:

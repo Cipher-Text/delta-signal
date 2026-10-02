@@ -118,7 +118,7 @@ Everything else public-facing uses `@Public()`. Dataset downloads and access req
 
 `PermissionsGuard` checks DB-backed permission grants for routes decorated with `@RequirePermissions(...)`. Results are cached per role for 5 minutes. `ADMIN` bypasses every check regardless of DB state.
 
-Named permissions seeded on first boot (17 total):
+Named permissions seeded on first boot (18 total):
 
 | Permission key | Purpose | Default role holders |
 | --- | --- | --- |
@@ -138,7 +138,8 @@ Named permissions seeded on first boot (17 total):
 | `social_content.render` | Render deterministic card assets | MODERATOR |
 | `social_content.approve` | Approve cards and record external publication | *(none — ADMIN only by default)* |
 | `social_content.download` | Download approved cards | MODERATOR |
-| `social_content.manage` | Manage future templates and rules | *(none — ADMIN bypasses guard)* |
+| `social_content.manage` | Connect and manage publishing platform accounts | *(none — ADMIN bypasses guard)* |
+| `social_content.publish` | Publish approved cards to connected platform accounts | *(none — ADMIN only by default)* |
 
 Admins can grant or revoke any permission from any role via `POST/DELETE /admin/permissions/roles` — audited, runtime-configurable, no redeploy needed.
 

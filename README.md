@@ -93,7 +93,7 @@ Detailed architecture: [docs/architecture/](docs/architecture/)
 ### Prerequisites
 
 - Node.js 20+, pnpm 9+
-- PostgreSQL 16 with PostGIS (or Docker)
+- PostgreSQL 16 with PostGIS
 - A `JWT_SECRET` of at least 32 characters
 
 ### Local development
@@ -123,7 +123,7 @@ openssl rand -base64 48
 ```bash
 pnpm dev            # Start all apps
 pnpm build          # Build all apps
-pnpm test           # Run all tests
+pnpm test           # Run configured test targets (web/admin scripts are placeholders)
 pnpm lint           # Lint all apps
 
 pnpm db:generate    # prisma generate
@@ -144,21 +144,13 @@ pnpm exec jest --coverage                       # Coverage report
 
 ## Documentation
 
-| Document | What it covers |
-|---|---|
-| [docs/project-brief.md](docs/project-brief.md) | Mission, vision, user personas, product areas |
-| [docs/business-logic.md](docs/business-logic.md) | Domain rules and the reasoning behind them |
-| [docs/access-model.md](docs/access-model.md) | What is public, login-gated, and role-gated |
-| [docs/dashboard.md](docs/dashboard.md) | Public board, role-scoped dashboard, UI conventions, and verification |
-| [docs/DESIGN.md](docs/DESIGN.md) | Design system for the public and authenticated experiences in `apps/web` |
-| [docs/roles-and-permissions.md](docs/roles-and-permissions.md) | Role matrix and permission gates |
-| [docs/flows.md](docs/flows.md) | Key user and system flows |
-| [docs/roadmap.md](docs/roadmap.md) | Phase-by-phase delivery history and plan |
-| [docs/progress.md](docs/progress.md) | Detailed implementation changelog |
-| [docs/architecture/data-model.md](docs/architecture/data-model.md) | Schema, models, and field reference |
-| [docs/architecture/modules.md](docs/architecture/modules.md) | API module map and endpoints |
-| [EXISTING_DATA_AND_FEATURE_AUDIT.md](EXISTING_DATA_AND_FEATURE_AUDIT.md) | Social-content feature audit and current data capabilities |
-| [SOCIAL_CONTENT_ARCHITECTURE.md](SOCIAL_CONTENT_ARCHITECTURE.md) | Social-content domain and rendering architecture |
-| [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md) | Social-content implementation phases and MVP boundaries |
-| [docs/integrations/](docs/integrations/) | OpenMeteo, GBIF, and other provider docs |
-| [docs/decisions/](docs/decisions/) | Architecture decision records |
+Start with the [documentation index](docs/README.md), which distinguishes
+maintained references from historical plans. The current API surface is in
+[the route catalog](docs/api/backend-api-links.md); the current schema is in
+[the data model reference](docs/architecture/data-model.md). Dated
+implementation details live in [the progress log](docs/progress.md).
+
+The root-level social-content audit, architecture, UX, and implementation
+roadmap files are retained as planning snapshots. They overlap and some
+recommendations predate the shipped feature; use the current module and API
+references linked from the [documentation index](docs/README.md) for behavior.
