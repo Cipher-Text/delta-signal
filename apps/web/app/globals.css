@@ -1,15 +1,41 @@
 /* ── Design tokens ── */
 :root {
   color-scheme: light;
-  --background: #f7f9f8;
-  --foreground: #17201d;
-  --muted: #5f6f68;
-  --muted-soft: #87948f;
-  --surface: #ffffff;
-  --surface-2: #f1f5f3;
-  --surface-elevated: #ffffff;
-  --border: #dde5e1;
-  --border-strong: #cbd7d1;
+  /* Canonical tokens (docs/DESIGN.md §59). Legacy names below alias these. */
+  --ds-bg: #f7f9f8;
+  --ds-surface: #ffffff;
+  --ds-surface-2: #f1f5f3;
+  --ds-surface-elevated: #ffffff;
+  --ds-text: #17201d;
+  --ds-text-2: #5f6f68;
+  --ds-muted: #87948f;
+  --ds-border: #dde5e1;
+  --ds-border-strong: #cbd7d1;
+  --ds-primary: #147a57;
+  --ds-on-primary: #ffffff;
+  --ds-link: #147a57;
+  --ds-link-hover: #0d5f4a;
+  --ds-accent-text: #0d5f4a;
+  --ds-brand-mark: #178a63;
+  --ds-brand-panel: #0d5f4a;
+  --ds-focus: rgba(23, 138, 99, 0.28);
+  --ds-status-normal-bg: #e4f3ea;
+  --ds-status-normal-text: #1f6b45;
+  --ds-status-watch-bg: #fbf1d6;
+  --ds-status-watch-text: #6e5109;
+  --ds-status-warning-bg: #fce8d5;
+  --ds-status-warning-text: #8a4510;
+  --ds-status-critical-bg: #fbe3e3;
+  --ds-status-critical-text: #b23a3a;
+  --background: var(--ds-bg);
+  --foreground: var(--ds-text);
+  --muted: var(--ds-text-2);
+  --muted-soft: var(--ds-muted);
+  --surface: var(--ds-surface);
+  --surface-2: var(--ds-surface-2);
+  --surface-elevated: var(--ds-surface-elevated);
+  --border: var(--ds-border);
+  --border-strong: var(--ds-border-strong);
   --primary: #178a63;
   --primary-dark: #0d5f4a;
   --primary-soft: #e0f2eb;
@@ -48,15 +74,41 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --background: #101513;
-    --foreground: #f4f7f5;
-    --muted: #aab7b1;
-    --muted-soft: #78857f;
-    --surface: #171d1a;
-    --surface-2: #1d2521;
-    --surface-elevated: #222b27;
-    --border: #2d3833;
-    --border-strong: #3b4942;
+    /* Canonical tokens (docs/DESIGN.md §59). Legacy names below alias these. */
+    --ds-bg: #101513;
+    --ds-surface: #171d1a;
+    --ds-surface-2: #1d2521;
+    --ds-surface-elevated: #222b27;
+    --ds-text: #f4f7f5;
+    --ds-text-2: #aab7b1;
+    --ds-muted: #78857f;
+    --ds-border: #2d3833;
+    --ds-border-strong: #3b4942;
+    --ds-primary: #147a57;
+    --ds-on-primary: #ffffff;
+    --ds-link: #4fbf8f;
+    --ds-link-hover: #7ad3ac;
+    --ds-accent-text: #4fbf8f;
+    --ds-brand-mark: #4fbf8f;
+    --ds-brand-panel: #14251e;
+    --ds-focus: rgba(79, 191, 143, 0.3);
+    --ds-status-normal-bg: #1a2e23;
+    --ds-status-normal-text: #5cc98f;
+    --ds-status-watch-bg: #352d14;
+    --ds-status-watch-text: #e9c766;
+    --ds-status-warning-bg: #3a2a1a;
+    --ds-status-warning-text: #f2b27a;
+    --ds-status-critical-bg: #3a1e1e;
+    --ds-status-critical-text: #f08a8a;
+    --background: var(--ds-bg);
+    --foreground: var(--ds-text);
+    --muted: var(--ds-text-2);
+    --muted-soft: var(--ds-muted);
+    --surface: var(--ds-surface);
+    --surface-2: var(--ds-surface-2);
+    --surface-elevated: var(--ds-surface-elevated);
+    --border: var(--ds-border);
+    --border-strong: var(--ds-border-strong);
     --primary: #39ad80;
     --primary-dark: #8bd7b6;
     --primary-soft: #1c382c;
@@ -94,15 +146,41 @@
 /* Explicit user choice via the theme toggle — wins over system preference in both directions. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --background: #101513;
-  --foreground: #f4f7f5;
-  --muted: #aab7b1;
-  --muted-soft: #78857f;
-  --surface: #171d1a;
-  --surface-2: #1d2521;
-  --surface-elevated: #222b27;
-  --border: #2d3833;
-  --border-strong: #3b4942;
+  /* Canonical tokens (docs/DESIGN.md §59). Legacy names below alias these. */
+  --ds-bg: #101513;
+  --ds-surface: #171d1a;
+  --ds-surface-2: #1d2521;
+  --ds-surface-elevated: #222b27;
+  --ds-text: #f4f7f5;
+  --ds-text-2: #aab7b1;
+  --ds-muted: #78857f;
+  --ds-border: #2d3833;
+  --ds-border-strong: #3b4942;
+  --ds-primary: #147a57;
+  --ds-on-primary: #ffffff;
+  --ds-link: #4fbf8f;
+  --ds-link-hover: #7ad3ac;
+  --ds-accent-text: #4fbf8f;
+  --ds-brand-mark: #4fbf8f;
+  --ds-brand-panel: #14251e;
+  --ds-focus: rgba(79, 191, 143, 0.3);
+  --ds-status-normal-bg: #1a2e23;
+  --ds-status-normal-text: #5cc98f;
+  --ds-status-watch-bg: #352d14;
+  --ds-status-watch-text: #e9c766;
+  --ds-status-warning-bg: #3a2a1a;
+  --ds-status-warning-text: #f2b27a;
+  --ds-status-critical-bg: #3a1e1e;
+  --ds-status-critical-text: #f08a8a;
+  --background: var(--ds-bg);
+  --foreground: var(--ds-text);
+  --muted: var(--ds-text-2);
+  --muted-soft: var(--ds-muted);
+  --surface: var(--ds-surface);
+  --surface-2: var(--ds-surface-2);
+  --surface-elevated: var(--ds-surface-elevated);
+  --border: var(--ds-border);
+  --border-strong: var(--ds-border-strong);
   --primary: #39ad80;
   --primary-dark: #8bd7b6;
   --primary-soft: #1c382c;
@@ -185,7 +263,7 @@ a {
 }
 
 :where(a, button, input, select, textarea):focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  outline: 3px solid var(--ds-focus);
   outline-offset: 2px;
 }
 
@@ -205,8 +283,8 @@ a {
   justify-content: center;
   border: 0;
   border-radius: 7px;
-  background: var(--primary);
-  color: white;
+  background: var(--ds-primary);
+  color: var(--ds-on-primary);
   padding: 0.7rem 0.9rem;
   font: inherit;
   font-weight: 700;
@@ -2324,7 +2402,7 @@ a {
 .pagination-pages { display: inline-flex; align-items: center; gap: 0.35rem; }
 .pagination-button { display: inline-flex; min-width: 40px; min-height: 40px; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 7px; background: var(--surface); color: var(--foreground); padding: 0.45rem 0.7rem; font-size: 0.86rem; font-weight: 700; text-decoration: none; }
 .pagination-button:hover, .pagination-button:focus-visible { border-color: var(--primary); color: var(--primary); }
-.pagination-button.active { border-color: var(--primary); background: var(--primary); color: #fff; }
+.pagination-button.active { border-color: var(--ds-primary); background: var(--ds-primary); color: var(--ds-on-primary); }
 .pagination-button.disabled { color: var(--muted); opacity: 0.55; }
 .pagination-ellipsis { color: var(--muted); padding: 0 0.15rem; }
 
