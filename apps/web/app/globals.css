@@ -3765,8 +3765,8 @@ a.dashboard-secondary-stat:hover {
   align-items: center;
   gap: 12px;
   padding: 10px 20px;
-  background: #7f1d1d;
-  color: #fef2f2;
+  background: color-mix(in srgb, var(--danger) 55%, black);
+  color: var(--hero-on-ink);
   font-size: 0.85rem;
   flex-wrap: wrap;
   position: sticky;
@@ -3806,7 +3806,7 @@ a.dashboard-secondary-stat:hover {
 
 .emergency-banner-link {
   flex-shrink: 0;
-  color: #fca5a5;
+  color: color-mix(in srgb, var(--hero-on-ink) 70%, var(--danger) 30%);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -3814,7 +3814,7 @@ a.dashboard-secondary-stat:hover {
 }
 
 .emergency-banner-link:hover {
-  color: #fff;
+  color: var(--hero-on-ink);
 }
 
 /* ═══════════════════════════════════════════════════════════════
