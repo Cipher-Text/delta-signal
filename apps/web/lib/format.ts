@@ -18,3 +18,30 @@ export function relativeTime(iso: string): string {
   const days = Math.round(hours / 24);
   return `${days}d ago`;
 }
+
+/** "1 role" / "2 roles" — plural-aware count with thousands separators (§10A). */
+export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count.toLocaleString()} ${count === 1 ? singular : plural}`;
+}
+
+/** ISO timestamp -> "16:00 BST (UTC+6)" in Asia/Dhaka (§10A). */
+export function dhakaTime(iso: string): string {
+  const time = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Dhaka',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(new Date(iso));
+  return `${time} BST (UTC+6)`;
+}
+
+/** ISO timestamp -> "30 Sep 2026, 16:00 BST (UTC+6)" in Asia/Dhaka (§10A). */
+export function dhakaDateTime(iso: string): string {
+  const date = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Dhaka',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(iso));
+  return `${date}, ${dhakaTime(iso)}`;
+}

@@ -21,39 +21,50 @@ function classifyFloodRisk(
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
+// Bangladesh has no DST, so a fixed UTC+6 offset is exact. "Today" / "this month"
+// must follow Dhaka calendar days regardless of the server's TZ.
+const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
+
+function dhakaCalendar(): Date {
+  return new Date(Date.now() + DHAKA_OFFSET_MS);
+}
+
+function fromDhakaCalendar(shifted: Date): Date {
+  return new Date(shifted.getTime() - DHAKA_OFFSET_MS);
+}
+
 function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
+  const d = dhakaCalendar();
+  d.setUTCHours(0, 0, 0, 0);
+  return fromDhakaCalendar(d);
 }
 
 function startOfMonth(): Date {
-  const d = new Date();
-  d.setDate(1);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  const d = dhakaCalendar();
+  d.setUTCDate(1);
+  d.setUTCHours(0, 0, 0, 0);
+  return fromDhakaCalendar(d);
 }
 
 function daysAgo(n: number): Date {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  const d = dhakaCalendar();
+  d.setUTCDate(d.getUTCDate() - n);
+  d.setUTCHours(0, 0, 0, 0);
+  return fromDhakaCalendar(d);
 }
 
 function monthsAgo(n: number): Date {
-  const d = new Date();
-  d.setMonth(d.getMonth() - n);
-  d.setDate(1);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  const d = dhakaCalendar();
+  d.setUTCMonth(d.getUTCMonth() - n, 1);
+  d.setUTCHours(0, 0, 0, 0);
+  return fromDhakaCalendar(d);
 }
 
-// Group an array of dates by YYYY-MM-DD label and return a trend array
+// Group an array of dates by Dhaka YYYY-MM-DD label and return a trend array
 function groupByDay(dates: Date[]): Array<{ day: string; count: number }> {
   const map = new Map<string, number>();
   for (const d of dates) {
-    const key = d.toISOString().slice(0, 10);
+    const key = new Date(d.getTime() + DHAKA_OFFSET_MS).toISOString().slice(0, 10);
     map.set(key, (map.get(key) ?? 0) + 1);
   }
   return Array.from(map.entries())
@@ -69,10 +80,19 @@ function thresholdStatus(waterLevel: number | null, warning: number | null, dang
 }
 
 const SOURCE_FRESHNESS_WINDOWS_MS: Record<string, number> = {
-  OpenMeteo: 48 * 60 * 60 * 1000,
+  OpenMeteo: 6 * 60 * 60 * 1000, // current-conditions cron runs every 15 min
   GBIF: 72 * 60 * 60 * 1000,
   'World Bank': 14 * 24 * 60 * 60 * 1000,
 };
+
+// Feeds that share the OpenMeteo/World Bank provider but have their own cadence.
+// Derived from the newest row each pipeline wrote, since IngestionJob is per-provider only.
+const FEED_FRESHNESS_WINDOWS_MS = {
+  Flood: 24 * 60 * 60 * 1000, // 6-hour cron
+  Marine: 48 * 60 * 60 * 1000, // daily cron
+  Radiation: 48 * 60 * 60 * 1000, // daily cron
+  Emissions: 14 * 24 * 60 * 60 * 1000, // weekly cron
+} as const;
 
 // ─── Service ──────────────────────────────────────────────────────────────────
 
@@ -80,7 +100,34 @@ const SOURCE_FRESHNESS_WINDOWS_MS: Record<string, number> = {
 export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async getDashboardMeta(providerNames = Object.keys(SOURCE_FRESHNESS_WINDOWS_MS)) {
+  private async getFeedSources(generatedAt: Date) {
+    const [flood, marine, radiation, emissions] = await Promise.all([
+      this.prisma.stationFloodForecast.aggregate({ _max: { createdAt: true } }),
+      this.prisma.marineForecast.aggregate({ _max: { createdAt: true } }),
+      this.prisma.satelliteRadiationReading.aggregate({ _max: { createdAt: true } }),
+      this.prisma.nationalEmissionReading.aggregate({ _max: { updatedAt: true } }),
+    ]);
+    const latest = {
+      Flood: flood._max.createdAt,
+      Marine: marine._max.createdAt,
+      Radiation: radiation._max.createdAt,
+      Emissions: emissions._max.updatedAt,
+    };
+    return (Object.keys(FEED_FRESHNESS_WINDOWS_MS) as Array<keyof typeof FEED_FRESHNESS_WINDOWS_MS>).map((name) => {
+      const last = latest[name];
+      const status = last
+        ? generatedAt.getTime() - last.getTime() <= FEED_FRESHNESS_WINDOWS_MS[name]
+          ? ('FRESH' as const)
+          : ('STALE' as const)
+        : ('UNKNOWN' as const);
+      return { name, status, lastSuccessfulSync: last?.toISOString() ?? null };
+    });
+  }
+
+  private async getDashboardMeta(
+    providerNames = Object.keys(SOURCE_FRESHNESS_WINDOWS_MS),
+    includeFeeds = false,
+  ) {
     const generatedAt = new Date();
     if (providerNames.length === 0) {
       return { generatedAt: generatedAt.toISOString(), sources: [] };
@@ -100,9 +147,10 @@ export class AnalyticsService {
       });
 
       const providerByName = new Map(providers.map((provider) => [provider.name, provider]));
+      const feeds = includeFeeds ? await this.getFeedSources(generatedAt) : [];
       return {
         generatedAt: generatedAt.toISOString(),
-        sources: providerNames.map((name) => {
+        sources: [...providerNames.map((name) => {
           const provider = providerByName.get(name);
           const lastSuccessfulJob = provider?.ingestionJobs.find((job) => job.status === 'SUCCEEDED');
           const lastSuccessfulSync = lastSuccessfulJob
@@ -119,7 +167,7 @@ export class AnalyticsService {
             status,
             lastSuccessfulSync: lastSuccessfulSync?.toISOString() ?? null,
           };
-        }),
+        }), ...feeds],
       };
     } catch {
       // Analytics remains available if provider/job metadata is unavailable.
@@ -203,7 +251,7 @@ export class AnalyticsService {
     ]);
 
     const totalUsers = usersByRole.reduce((s, r) => s + r._count.id, 0);
-    const meta = await this.getDashboardMeta();
+    const meta = await this.getDashboardMeta(undefined, true);
 
     return {
       meta,

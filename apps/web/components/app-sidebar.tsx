@@ -17,32 +17,34 @@ const DASHBOARD_ROLES = new Set([
   'ORGANIZATION_ADMIN',
 ]);
 
+// Groups and membership follow docs/DESIGN.md §32. The ADMINISTRATION group lives
+// in apps/admin, so it is intentionally not repeated here.
 const NAV_SECTIONS = [
-  {
-    label: 'Act',
-    links: [
-      { href: '/alerts', label: 'Alerts' },
-      { href: '/reports', label: 'Citizen Reports' },
-      { href: '/observations', label: 'Observations' },
-      { href: '/restoration', label: 'Restoration' },
-    ],
-  },
   {
     label: 'Environment',
     links: [
-      { href: '/locations', label: 'Locations' },
+      { href: '/observations', label: 'Observations' },
+      { href: '/alerts', label: 'Alerts' },
+      { href: '/biodiversity', label: 'Biodiversity' },
       { href: '/water-bodies', label: 'Water Bodies' },
       { href: '/marine', label: 'Marine' },
       { href: '/radiation', label: 'Radiation' },
       { href: '/emissions', label: 'Emissions' },
-      { href: '/biodiversity', label: 'Biodiversity' },
       { href: '/industrial-sites', label: 'Industry' },
+    ],
+  },
+  {
+    label: 'Data',
+    links: [
       { href: '/data', label: 'Data Hub' },
+      { href: '/locations', label: 'Locations' },
     ],
   },
   {
     label: 'Community',
     links: [
+      { href: '/reports', label: 'Citizen Reports' },
+      { href: '/restoration', label: 'Restoration' },
       { href: '/community', label: 'Community' },
       { href: '/organizations', label: 'Organizations' },
       { href: '/members', label: 'Members' },
@@ -148,7 +150,8 @@ export default function AppSidebar({ user, theme }: { user: CurrentUser | null; 
         {/* Nav links */}
         <nav aria-label="App navigation">
           {user && DASHBOARD_ROLES.has(user.role) && (
-            <div>
+            <div role="group" aria-label="Overview">
+              <span className="nav-label" aria-hidden="true">Overview</span>
               <Link
                 href="/dashboard"
                 className={isActive('/dashboard') ? 'active' : undefined}

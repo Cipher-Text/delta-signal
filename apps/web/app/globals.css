@@ -3562,7 +3562,7 @@ a.dashboard-secondary-stat:hover {
 
 .stat-card {
   position: relative;
-  min-height: 116px;
+  min-height: 96px;
   overflow: hidden;
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   border: 1px solid var(--border);
@@ -3939,7 +3939,9 @@ a.dashboard-secondary-stat:hover {
 .bar-fill-primary  { background: var(--primary); }
 
 .bar-value {
-  min-width: 44px;
+  min-width: 72px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
   text-align: right;
   font-weight: 600;
   font-size: 0.8rem;
@@ -5782,3 +5784,9 @@ a.dashboard-secondary-stat:hover {
 @media (max-width: 768px) {
   .sidebar nav a { padding: 11px 12px; }
 }
+
+/* ── Dashboard additions ── */
+.stat-card-note { margin-top: 4px; color: var(--muted); font-size: 0.72rem; }
+.dashboard-live-status small.dashboard-live-stale { color: var(--ds-status-warning-text); font-weight: 650; }
+.stat-card-muted .stat-card-value { color: var(--muted); }
+.bar-pct { margin-left: 6px; color: var(--muted); font-size: 0.7rem; font-weight: 500; }
