@@ -2,6 +2,8 @@
 
 > Canonical design specification for `apps/web`.
 >
+> **Version 2.1 · October 2026.** See §61 for what changed.
+>
 > This document applies to the public and authenticated experiences in `apps/web`:
 >
 > - Public website
@@ -17,6 +19,9 @@
 > `apps/web`, public and authenticated experiences may have different density
 > and layout, but must use the same foundations, components, environmental
 > semantics, and data-visualization language.
+>
+> Section numbers are stable. New sections added in v2 use letter suffixes
+> (e.g. §9A) so existing references stay valid.
 
 ---
 
@@ -69,6 +74,16 @@ It must NOT feel like:
 - a gaming interface
 - a futuristic command center
 - a collection of unrelated modules
+
+## 1.1 Language
+
+The interface language is **English only**.
+
+- All UI copy, labels, place names, and content are in English.
+- Do not add language switchers, Bengali place-name labels, or Bengali fonts.
+- If localization is introduced later, it requires a new section in this
+  document (typeface, line height, and layout rules for Bengali script) before
+  implementation.
 
 ---
 
@@ -172,6 +187,15 @@ Reuse established patterns.
 
 ---
 
+## 2.7 One Number, One Definition
+
+The same metric must show the same value everywhere it appears.
+
+Every count shown in the UI (species, records, districts, reports, users) must
+come from a single shared definition. See §41A.
+
+---
+
 # 3. Experience Architecture
 
 Delta Signal has ONE design system with multiple experience modes.
@@ -197,6 +221,28 @@ Characteristics:
 - larger typography
 - progressive disclosure
 - environmental imagery where appropriate
+
+Public pages must render their primary content on the server so search engines
+and link previews can read it. Client-side rendering is acceptable only for
+interactive enhancements.
+
+Every public page's server HTML must include:
+
+- the top navigation
+- exactly one `<h1>`
+- a page-specific `<title>` and meta description
+- all primary sections, in the same order they appear visually
+
+## 3.4 Markup Order and Responsive Structure
+
+- The HTML source order must match the visual reading order. Do not reorder
+  sections with CSS `order`, grid placement, or absolute positioning.
+- Build one responsive component per section. Do not render separate desktop
+  and mobile copies of the same content and hide one with CSS: hidden copies
+  are still read by search engines and can be read twice by assistive
+  technology.
+- Each statement appears once per page (e.g. the "not a government service"
+  line belongs in one place, plus the footer).
 
 Examples:
 
@@ -240,6 +286,10 @@ Characteristics:
 - analytical views
 - actionable states
 
+Workspace routes (including `/dashboard`) require sign-in. Signed-out visitors
+are redirected to sign-in and returned to the requested page afterwards.
+Public browsing belongs in the Public Experience, not the workspace.
+
 Examples:
 
 - Dashboard
@@ -271,6 +321,27 @@ Use:
 - clear branding
 - minimal distraction
 - strong form hierarchy
+
+Desktop split layout:
+
+- Brand panel (5 columns): Deep Delta surface, logo, one-sentence value
+  statement, up to three account benefits, independence/source line.
+- Form panel (7 columns): back link to the site, theme control, form centered
+  at about 400px wide, footer links (Privacy, Terms, Help).
+
+Mobile: compact header with logo and theme control, then the form. No brand
+panel.
+
+Form rules:
+
+- One primary button (e.g. "Sign in"); all other actions are links.
+- Visible labels above every field (§43).
+- Field errors appear directly below the field, with an icon and text.
+- Account-level errors (e.g. wrong credentials) appear above the form in an
+  alert region and must not reveal whether the email exists.
+- Password fields have a show/hide control with an accessible label.
+- "Forgot password?" sits next to the password label.
+- Only show third-party sign-in options that are actually enabled.
 
 ---
 
@@ -324,6 +395,9 @@ The frontend design system consists of four layers:
 
 Do not bypass these layers with page-specific styling unless necessary.
 
+All foundation values are implemented as design tokens (CSS custom
+properties). See §59.
+
 ---
 
 # 5. Theme
@@ -340,6 +414,32 @@ Dark mode should be fully supported, particularly for:
 - prolonged analytical use
 
 Avoid pure white and pure black as major backgrounds.
+
+## 5.1 Theme Behavior
+
+- On first visit, follow the operating system setting
+  (`prefers-color-scheme`).
+- Once the user chooses a theme, remember the choice and use it on every page.
+- Apply the theme before first paint to avoid a light-to-dark flash.
+- Theme switching swaps token values only. Components never contain
+  theme-specific hard-coded colors.
+
+## 5.2 Theme Control
+
+- Public pages: an icon button (moon in light mode, sun in dark mode) in the
+  top navigation, with an accessible label such as "Switch to dark theme".
+- Workspace: inside the user menu in the top utility bar. Do not use a
+  full-width sidebar button.
+- Authentication: icon button in the form panel header.
+- Never display the theme as plain text (e.g. "Theme: Dark").
+
+## 5.3 What Does Not Change Between Themes
+
+- Data color ramps on maps and charts (§21A). A value must look the same in
+  both themes.
+- Text placed on top of data-colored areas uses fixed on-ramp text colors, not
+  theme text tokens.
+- The site footer may remain dark in both themes.
 
 ---
 
@@ -369,7 +469,7 @@ Secondary Text:
 
 `#5F6F68`
 
-Muted Text:
+Muted:
 
 `#87948F`
 
@@ -380,6 +480,11 @@ Border:
 Strong Border:
 
 `#CBD7D1`
+
+**Muted is not a text color.** `#87948F` has about 3:1 contrast on the light
+background and fails WCAG AA for text. Use it only for disabled controls,
+decorative dividers, dotted badge borders, and non-essential icons.
+Metadata, captions, and timestamps use Secondary Text.
 
 ---
 
@@ -409,7 +514,7 @@ Secondary Text:
 
 `#AAB7B1`
 
-Muted Text:
+Muted:
 
 `#78857F`
 
@@ -420,6 +525,8 @@ Border:
 Strong Border:
 
 `#3B4942`
+
+Muted follows the same rule as light mode: not for readable text.
 
 ---
 
@@ -436,10 +543,41 @@ Primary brand color.
 
 Use for:
 
-- primary actions
-- active navigation
+- logo mark
+- active navigation indicators
 - selected controls
+- focus rings
 - brand emphasis
+
+White text on `#178A63` is about 4.3:1, below AA for normal text. Do not use it
+as a fill behind text or as text on light surfaces. Use Delta Green 600.
+
+---
+
+## Delta Green 600
+
+`#147A57`
+
+Use for:
+
+- filled primary buttons (white text, about 5.3:1)
+- link text on light surfaces
+- active navigation backgrounds with white text
+
+---
+
+## Delta Green Light (dark mode)
+
+`#4FBF8F`
+
+Use in dark mode for:
+
+- link text
+- logo mark
+- accent text and icons
+- focus rings
+
+Filled primary buttons keep Delta Green 600 in both themes.
 
 ---
 
@@ -450,9 +588,10 @@ Use for:
 Use for:
 
 - strong emphasis
-- dark brand surfaces
+- dark brand surfaces (e.g. authentication brand panel)
 - selected states
-- prominent headings where appropriate
+- eyebrow labels and accent text on light surfaces
+- link hover on light surfaces
 
 ---
 
@@ -507,6 +646,20 @@ Use sparingly for:
 
 These domain colors do NOT replace semantic alert colors.
 
+## 8.1 Domain Icon Tints
+
+Topic and category icons sit in a 40px tinted square. Each domain has a tint
+background and an icon color per theme:
+
+| Domain | Light bg | Light icon | Dark bg | Dark icon |
+|---|---|---|---|---|
+| Weather / Sky | `#E8F3FB` | `#2A7DB8` | `#1B2F3E` | `#8CC4EC` |
+| Water | `#E6F0F8` | `#1F6AA3` | `#1A2C3B` | `#7DB7E3` |
+| Biodiversity / Forest | `#E9F2EA` | `#3F7447` | `#1F2F22` | `#8CC495` |
+| Earth / Agriculture / Emissions | `#F4ECE3` | `#7D5A35` | `#33291E` | `#D1A77A` |
+| Heat | `#FCEEE2` | `#9A5A1E` | `#3A2A1E` | `#F0B488` |
+| Neutral (air, other) | `#EEF1F0` | `#4D5C56` | `#232C28` | `#AAB7B1` |
+
 ---
 
 # 9. Semantic Colors
@@ -546,6 +699,72 @@ Rules:
 Environmental classification must follow the methodology of the underlying
 source.
 
+## 9.1 Semantic Fill vs Semantic Text
+
+The values above are for **fills, dots, swatches, and borders**. Several fail
+contrast as text (Watch yellow is about 2.3:1 on white). For badges and status
+text, use tinted backgrounds with dedicated text colors:
+
+| State | Light bg | Light text | Dark bg | Dark text |
+|---|---|---|---|---|
+| Normal | `#E4F3EA` | `#1F6B45` | `#1A2E23` | `#5CC98F` |
+| Watch | `#FBF1D6` | `#6E5109` | `#352D14` | `#E9C766` |
+| Warning | `#FCE8D5` | `#8A4510` | `#3A2A1A` | `#F2B27A` |
+| Critical | `#FBE3E3` | `#B23A3A` | `#3A1E1E` | `#F08A8A` |
+
+Status badges also use a shape cue so meaning never depends on color alone
+(e.g. round dot for Normal/Watch, square for Warning and above).
+
+---
+
+# 9A. Domain Classification Scales
+
+Each environmental domain uses the official categories of its source
+methodology. Do not invent categories or force every domain into the five
+semantic levels.
+
+## Air quality (PM2.5)
+
+Use the US EPA PM2.5 breakpoints (2024 revision), in µg/m³, 24-hour basis:
+
+| Category | Range | Semantic mapping |
+|---|---|---|
+| Good | 0.0–9.0 | Normal |
+| Moderate | 9.1–35.4 | Watch |
+| Unhealthy for sensitive groups | 35.5–55.4 | Warning |
+| Unhealthy | 55.5–125.4 | Critical |
+| Very unhealthy | 125.5–225.4 | Critical (darker, `#8E3B8A`) |
+| Hazardous | 225.5+ | Critical (darkest, `#6B1F2A`) |
+
+Rules:
+
+- Always name the pollutant ("PM2.5"), the unit, and whether values are
+  observed or modeled.
+- Classify on the same value that is displayed. If values are rounded for
+  display, classify the rounded value, or display one decimal.
+- If Delta Signal later adopts the Bangladesh Department of Environment AQI,
+  replace this table rather than mixing scales.
+
+## UV index
+
+Use WHO categories: Low 0–2, Moderate 3–5, High 6–7, Very high 8–10,
+Extreme 11+.
+
+## River discharge
+
+Expressed as a ratio to a historical reference (e.g. 1.4×).
+
+- The reference (e.g. median, or a return-period threshold) must be named in
+  methodology.
+- Watch / Warning / Critical thresholds: **[to define — e.g. ≥ 1.5× / 2-year
+  return period / 5-year return period]**.
+- A ratio at or near 1.0× is normal and is never shown as an alert.
+
+## Temperature
+
+Show absolute values with units. Heat categories may be added only when a
+recognized heat-index methodology is adopted.
+
 ---
 
 # 10. Typography
@@ -558,9 +777,11 @@ Fallback:
 
 system-ui, sans-serif
 
+Load only the weights used (400, 500, 600, 700). No other typefaces.
+
 ## Public Hero
 
-40–48px
+40–48px desktop, 28–32px mobile
 
 Weight:
 
@@ -628,7 +849,16 @@ Line height:
 
 13–14px
 
-Use secondary or muted text.
+Use Secondary Text (not Muted, see §6).
+
+---
+
+## Navigation
+
+Sidebar items: 14–15px, weight 500.
+
+Sidebar group labels: 12px, weight 600, uppercase, letter-spacing 0.06em,
+Secondary Text.
 
 ---
 
@@ -664,6 +894,57 @@ Monospace typography should only be used for:
 - machine-readable values
 
 Do not use monospace merely to make the interface appear technical.
+
+---
+
+# 10A. Numbers, Units, Dates, and Times
+
+## Time zone
+
+- Store all timestamps in UTC.
+- Display in Bangladesh time (`Asia/Dhaka`, UTC+6).
+- Label as **"BST (UTC+6)"** on first use in a view and in source components.
+  "BST" alone is ambiguous (British Summer Time).
+
+## Date and time format
+
+| Use | Format | Example |
+|---|---|---|
+| Date | D Mon YYYY | 30 Sep 2026 |
+| Date in current year (compact) | D Mon | 30 Sep |
+| Time | 24-hour HH:MM | 16:00 |
+| Date and time | D Mon YYYY, HH:MM | 30 Sep 2026, 16:00 |
+| Recent (under 24 hours) | relative | 16 min ago |
+
+- Relative times always have the absolute time available (tooltip or
+  adjacent text).
+- Never display raw ISO strings (e.g. `2026-10-29T00:00:00.000Z`).
+- Forecast times say what they refer to: "Forecast for 29 Oct", not
+  "Forecast date".
+
+## Snapshot semantics
+
+A "Right now" or snapshot value must match its label:
+
+- "Hottest" and "Coolest" use today's maximum and minimum so far, not a single
+  hourly reading (a midnight reading is not "hottest").
+- If a single reading is shown, label it with its time (e.g. "Warmest at
+  00:00").
+
+## Counts and plurals
+
+Use correct singular and plural forms: "1 district", "10 districts". Use
+plural-aware formatting for every count.
+
+## Numbers and units
+
+- Thousands separators: 4,503.
+- A space between value and unit: 33.6 °C, 298 mm, 35 µg/m³.
+- Ratios: 1.4× (no space).
+- Use consistent decimals per metric: temperature 1, UV 1, rainfall 0,
+  PM2.5 0 or 1 (see §9A).
+- Periods are explicit: "30-day total", "30-day mean", "daily max". Never
+  just "30-day".
 
 ---
 
@@ -811,11 +1092,13 @@ not heavy shadows.
 
 Avoid floating-card-everywhere design.
 
+Do not use background gradients on pages, headers, or cards.
+
 ---
 
 # 17. Icons
 
-Use ONE primary icon family.
+Use ONE primary icon family: **[icon library — confirm, see §60]**.
 
 Style:
 
@@ -825,7 +1108,12 @@ Style:
 
 Do not mix unrelated icon libraries visually.
 
-Avoid emoji as permanent interface icons.
+**Never use emoji as interface icons** (e.g. 🌊 ⛈ 🔬 🌱).
+
+Icon sizes: 16px inline, 20px default, 24px emphasis.
+
+Decorative icons are hidden from assistive technology (`aria-hidden="true"`).
+Icon-only buttons require an accessible label.
 
 Domain icon concepts may represent:
 
@@ -848,7 +1136,7 @@ Domain icon concepts may represent:
 
 ## Primary
 
-Use Delta Green.
+Fill with Delta Green 600 (`#147A57`), white text.
 
 Reserved for the primary action within a context.
 
@@ -859,6 +1147,7 @@ Examples:
 - Save
 - Publish
 - Create dataset
+- Sign in
 
 Avoid multiple competing primary buttons in the same component.
 
@@ -866,7 +1155,7 @@ Avoid multiple competing primary buttons in the same component.
 
 ## Secondary
 
-Neutral surface with visible border.
+Neutral surface with visible strong border.
 
 ---
 
@@ -881,6 +1170,12 @@ Text or subtle ghost action.
 Use semantic critical styling.
 
 Never use brand green for destructive actions.
+
+---
+
+## Sizes
+
+40px default, 44px compact touch, 48px prominent (hero, auth, mobile primary).
 
 ---
 
@@ -952,6 +1247,13 @@ Additional counts belong in secondary summaries.
 Zero-value KPIs should be visually de-emphasized unless zero represents an
 important operational state.
 
+**On public pages, do not show counters that are zero.** Hide them until they
+are meaningful, or replace them with an invitation (e.g. "Be the first to
+report in your district").
+
+A KPI value must never contradict other content on the same page (e.g.
+"0 districts covered" next to district-level data).
+
 ---
 
 # 21. Data Visualization
@@ -993,7 +1295,61 @@ Grid lines should be subtle.
 
 Tooltips should expose exact values and timestamps.
 
-Observed and forecast values must be visually distinguishable.
+Observed and forecast values must be visually distinguishable (e.g. solid
+line for observed, dashed for forecast).
+
+Do not chart very small datasets (e.g. 3 users by role). Use numbers or a
+short list.
+
+---
+
+# 21A. Data Color Ramps
+
+Ramps are identical in light and dark themes (§5.3). Use 3–5 classed bins with
+a visible legend showing bin ranges and unit.
+
+## Sequential — water and rainfall
+
+| Bin | Fill | Text on fill |
+|---|---|---|
+| 1 (lowest) | `#E3EFF8` | `#16201C` |
+| 2 | `#B5D4EC` | `#16201C` |
+| 3 | `#1F6AA3` | `#FFFFFF` |
+| 4 (highest) | `#154A74` | `#FFFFFF` |
+
+## Sequential — temperature
+
+| Bin | Fill | Text on fill |
+|---|---|---|
+| 1 | `#F7E6D4` | `#16201C` |
+| 2 | `#EFC9A0` | `#16201C` |
+| 3 | `#D99A5B` | `#16201C` |
+
+## Sequential — UV and other atmospheric indices
+
+| Bin | Fill | Text on fill |
+|---|---|---|
+| 1 | `#ECE8F4` | `#16201C` |
+| 2 | `#CFC5E6` | `#16201C` |
+| 3 | `#9F8CCB` | `#16201C` |
+
+## Diverging — anomalies (vs reference)
+
+**[to define — blue-to-neutral-to-orange, colorblind-safe, centered on 0]**
+
+Rules:
+
+- **Bin edges are fixed per metric**, documented in methodology, and do not
+  change with each day's data. A color must mean the same value on every day.
+  Do not compute bins from quantiles of the current data.
+- Bin labels must not overlap: use "< 225", "225–249", "250–299", "≥ 300",
+  not "187–220" followed by "220–252".
+- Ramps must remain distinguishable for common color-vision deficiencies.
+- When the data range is narrow, say so in the legend caption (e.g. "Narrow
+  range: 28.5–29.1 °C").
+- Text on data-colored areas uses the "Text on fill" color, which meets
+  4.5:1.
+- Classified categories (AQ, UV) use their §9A scale colors, not these ramps.
 
 ---
 
@@ -1005,9 +1361,10 @@ They must follow a shared GIS design language.
 
 ## Basemap
 
-Use a visually quiet basemap.
+Use a visually quiet basemap: light gray in light theme, dark gray in dark
+theme. Environmental layers must remain visually dominant.
 
-Environmental layers must remain visually dominant.
+**Map library: [confirm, see §60].**
 
 ---
 
@@ -1046,6 +1403,9 @@ Common controls:
 
 Avoid scattering unrelated floating buttons around the map.
 
+Layer switching uses a segmented control or layer panel, with
+`aria-pressed` on the active option.
+
 ---
 
 ## Required Context
@@ -1054,6 +1414,7 @@ Thematic maps should provide where relevant:
 
 - legend
 - unit
+- period
 - source
 - update time
 - coverage
@@ -1074,6 +1435,14 @@ structured location summary
 Detail action:
 
 full location/data view
+
+---
+
+## Simplified Maps
+
+On summary surfaces (landing page, dashboard cards) a division tile map is
+acceptable when a full map is too heavy. It must be labeled as approximate and
+not to scale, and link to the full map.
 
 ---
 
@@ -1102,11 +1471,19 @@ Feni
 
 1.4× historical reference
 
-Forecast · Updated 10:30 BST
+Forecast for 2 Oct · Updated 10:30 BST (UTC+6)
 
 Source: Open-Meteo / GloFAS
 
-Avoid dramatic wording unless it comes from an authoritative classification.
+Rules:
+
+- An alert is shown only when a value meets the Watch threshold or above in
+  its §9A scale. Values at the reference level are not alerts.
+- The trigger threshold must be discoverable (e.g. "Shown when ≥ 1.5×
+  reference") in the alert detail or methodology.
+- Avoid dramatic wording unless it comes from an authoritative
+  classification.
+- Site-wide banners are reserved for Warning or Critical.
 
 ---
 
@@ -1125,10 +1502,24 @@ Delta Signal must distinguish:
 
 These states must not appear equivalent.
 
+Data-state badges use a text label plus a border style:
+
+| State | Badge border |
+|---|---|
+| Observed | solid |
+| Forecast | dashed |
+| Modeled / Estimated | dotted |
+| Citizen reported | solid, with "Citizen" label |
+| Verified | solid, with check icon |
+| Unverified / Unknown | dotted, Secondary Text |
+
 Citizen reports must not visually appear equivalent to authoritative
 observations without appropriate labeling.
 
 Forecasts must never appear to be historical observations.
+
+Data quality labels (e.g. "research-grade") must match the actual filter
+applied to the data.
 
 ---
 
@@ -1165,6 +1556,12 @@ Large tables should support where appropriate:
 
 Do not replace naturally tabular information with cards merely to make the page
 look modern.
+
+Use real `<table>` markup with `scope` on header cells.
+
+Column headers must describe the values in the column. Dataset tables use:
+Dataset · Category · Data type (Observed / Forecast / Modeled / Estimated,
+per §24) · Access · Actions.
 
 ---
 
@@ -1247,6 +1644,8 @@ INDICATOR
 
 WATER BODY
 
+Search inputs have a visible label or an accessible name.
+
 ---
 
 # 28. Source & Provenance
@@ -1259,7 +1658,7 @@ Source
 Open-Meteo
 
 Updated
-26 Sep 2026 · 10:30 BST
+26 Sep 2026 · 10:30 BST (UTC+6)
 
 Coverage
 Bangladesh
@@ -1278,6 +1677,46 @@ Where applicable expose:
 Source attribution should be discoverable without overwhelming the main
 visualization.
 
+## 28.1 Canonical Source Names
+
+Each source has one display name used everywhere (source components, dataset
+names, footers, methodology):
+
+| Source | Display name |
+|---|---|
+| Open-Meteo weather, climate, marine | Open-Meteo |
+| GloFAS river discharge (via Open-Meteo) | GloFAS · Copernicus |
+| GBIF occurrences | GBIF |
+| World Bank indicators | World Bank |
+| Air quality model | [confirm — e.g. CAMS via Open-Meteo] |
+
+Never ship a placeholder source. If the source is unknown, the data is not
+published.
+
+# 28A. Place and Taxon Names
+
+## Place names
+
+Use the official English spellings adopted by the Government of Bangladesh in
+2018, consistently across UI, data, and URLs:
+
+- Chattogram (not Chittagong / Chattagram)
+- Barishal (not Barisal)
+- Cumilla (not Comilla)
+- Jashore (not Jessore)
+- Bogura (not Bogra)
+
+Maintain one canonical place-name table (division, district, upazila) and
+derive all labels from it.
+
+## Taxon names
+
+- Show the common English name when available, with the scientific name in
+  italics beneath or beside it.
+- If no common name exists, show the scientific name in italics as the main
+  label.
+- Ranks above species (family, order) carry a rank badge (e.g. "Family").
+
 ---
 
 # 29. Public Landing Page
@@ -1293,17 +1732,17 @@ Its purpose is to answer:
 
 Recommended hierarchy:
 
-Hero
+Hero (headline, short description, primary + secondary action, search)
 
-→ Current environmental snapshot
+→ Current environmental snapshot ("Right now" card with timestamps and a
+compact alert status)
 
-→ Bangladesh map / important signals
+→ Bangladesh map / important signals (map or division tile map with layer
+switch, plus a division table)
 
-→ Environmental categories
+→ Key conditions / indicators (e.g. air quality, biodiversity)
 
-→ Key conditions / indicators
-
-→ Recent alerts
+→ Environmental categories ("Explore by topic")
 
 → Research and datasets
 
@@ -1311,7 +1750,11 @@ Hero
 
 → Platform sources / credibility
 
-Avoid turning the homepage into a collection of admin-style KPI cards.
+Rules:
+
+- No zero counters (§20).
+- No site-wide alert banner unless an alert at Warning or above exists (§23).
+- Avoid turning the homepage into a collection of admin-style KPI cards.
 
 ---
 
@@ -1327,11 +1770,15 @@ Data
 Research
 Reports
 
+Right side: search, theme control, Sign in (secondary button).
+
 Additional items should be carefully justified.
 
 Do not place every environmental domain directly in the top navigation.
 
 Use Explore/Data for domain discovery.
+
+The logo links to the home page.
 
 ---
 
@@ -1353,6 +1800,9 @@ Recommended sidebar width:
 Collapsed sidebar:
 
 64–72px
+
+The sidebar spans the full viewport height and scrolls independently if its
+content is taller than the screen.
 
 The main workspace should use remaining available width.
 
@@ -1379,6 +1829,7 @@ Water Bodies
 Marine
 Radiation
 Emissions
+Industry
 
 DATA
 
@@ -1388,17 +1839,24 @@ Locations
 COMMUNITY
 
 Citizen Reports
+Restoration
+Organizations
+Members
 
-ADMINISTRATION
+ADMINISTRATION (admin only)
 
 Users
-Organizations
-Audit / System
+Data sources
+Audit log
 
 Only show sections relevant to the user's role.
 
-The profile/account area belongs at the bottom of the sidebar or in the top
-utility bar.
+Active item: Delta Green 600 background with white text, or a Delta Green
+left indicator on a Secondary Surface background. Use one style
+consistently.
+
+The profile/account area belongs in the top utility bar user menu. The
+sidebar footer may show a compact collapse control only.
 
 ---
 
@@ -1413,17 +1871,19 @@ Short context/description
 Optional status
 Primary page action
 
-Top utility bar may contain:
+Top utility bar contains:
 
 - global search
 - notifications
 - help
-- theme
-- user menu
+- user menu (account, settings, theme, sign out)
 
 Do not use landing-page-sized titles in the workspace.
 
-Do not create large decorative header areas.
+Do not create large decorative header areas, eyebrow labels such as
+"WORKSPACE", or background gradients.
+
+Descriptions must be accurate: do not call data "real-time" unless it is.
 
 ---
 
@@ -1439,6 +1899,23 @@ Its purpose is to answer:
 3. What changed recently?
 4. What data/activity is available?
 5. What should I do next?
+
+---
+
+# 34A. Role-Based Dashboard Home
+
+All roles share the same shell and components. The dashboard content changes
+by role:
+
+| Role | Primary purpose | Shown first |
+|---|---|---|
+| Admin | Keep the platform healthy | Data source health, moderation queue, active alerts, stale datasets |
+| Citizen | Report and follow their area | Followed districts' conditions, my reports and review status, Submit report action |
+| Researcher | Get data | Saved datasets, access requests, recent downloads, new datasets |
+| Organization | Run projects | Our projects and milestones, team activity |
+
+New users see a short first-run checklist (e.g. "Follow your district",
+"Submit your first report") that disappears once completed or dismissed.
 
 ---
 
@@ -1485,6 +1962,22 @@ Platform statistics should not dominate the environmental dashboard.
 
 ---
 
+## 35.1 Data Source Health (required data)
+
+The admin dashboard depends on recorded ingestion runs. Every scheduled fetch
+(Open-Meteo, GloFAS, GBIF, World Bank, and others) must record:
+
+- source
+- start and finish time
+- status (success / partial / failed)
+- rows fetched
+- error summary
+
+This enables states such as "8 of 9 sources updated · GloFAS failed at
+14:00 · Retry".
+
+---
+
 # 36. Dashboard KPI Rules
 
 Maximum:
@@ -1505,6 +1998,12 @@ Observations
 1,284
 +42 this week
 
+Good (admin):
+
+Data sources healthy
+8 / 9
+GloFAS failed 14:00
+
 Potential secondary metric:
 
 Organizations
@@ -1514,6 +2013,11 @@ Poor primary KPI:
 
 Audit events today
 1
+
+Poor primary KPI:
+
+Total users
+3
 
 Administrative statistics belong in compact secondary sections unless directly
 relevant to the current user's role.
@@ -1544,11 +2048,17 @@ Example:
 
 | Role-specific secondary information |
 
+The Attention panel lists items that need action, each with a direct action
+(Retry, Review, View). When nothing needs attention it shows a compact healthy
+state (§39).
+
 Avoid arbitrary incomplete grids.
 
 ---
 
-# 38. Dashboard Empty States
+# 38. Empty States in Summaries
+
+This applies to dashboards **and** public summary pages.
 
 Never dedicate a large analytical panel to:
 
@@ -1570,7 +2080,7 @@ Good:
 
 ✓ No active alerts
 Bangladesh environmental feeds currently show no active platform alerts.
-Last checked 10:30 BST.
+Last checked 10:30 BST (UTC+6).
 
 Bad:
 
@@ -1581,7 +2091,7 @@ Empty states should preserve usefulness.
 
 ---
 
-# 39. Dashboard Healthy States
+# 39. Healthy States
 
 A healthy/zero state may itself be useful.
 
@@ -1593,9 +2103,12 @@ Examples:
 
 ✓ All scheduled data sources updated successfully
 
-Healthy states should be compact and reassuring.
+Healthy states should be compact and reassuring: one or two lines, with a
+check icon and a "last checked" time.
 
 Do not turn them into giant green success banners.
+
+Use a single shared component for healthy and empty states.
 
 ---
 
@@ -1610,6 +2123,7 @@ Examples:
 - report submitted
 - report verified
 - observation imported
+- data source failed / recovered
 - research added
 - organization updated
 - environmental alert created/resolved
@@ -1649,6 +2163,28 @@ Coverage often communicates platform value better than generic entity counts.
 
 ---
 
+# 41A. Metric Definitions
+
+Every metric displayed anywhere in `apps/web` is defined once and reused.
+
+For each metric, document:
+
+- name (e.g. "Taxa recorded")
+- exact definition (e.g. distinct accepted taxon keys of any rank, from GBIF
+  occurrences within Bangladesh)
+- filters applied (e.g. research-grade only, or all)
+- source and refresh schedule
+
+Rules:
+
+- UI labels must match the definition ("taxa" if higher ranks are included,
+  "species" only if limited to species rank).
+- Public pages and dashboards call the same function or endpoint for the same
+  metric.
+- A discrepancy between two surfaces is a bug.
+
+---
+
 # 42. Workspace Tables & Management Pages
 
 Management pages should prioritize:
@@ -1679,6 +2215,9 @@ Input height:
 44–48px touch contexts
 
 Validation should appear next to the relevant field.
+
+Invalid fields set `aria-invalid="true"` and reference their error text with
+`aria-describedby`.
 
 Long forms should be divided into meaningful sections.
 
@@ -1781,6 +2320,8 @@ Prioritize:
 
 Cards may become horizontally scrollable only where this improves usability.
 
+Primary actions on mobile are full width, 48px tall.
+
 ---
 
 # 49. Mobile Workspace
@@ -1815,9 +2356,14 @@ WCAG 2.2 AA
 
 Body-text contrast:
 
-minimum 4.5:1
+minimum 4.5:1 (including metadata and captions)
 
-Controls must have visible focus states.
+Large text (24px+, or 18.66px+ bold) and UI components:
+
+minimum 3:1
+
+Controls must have visible focus states (2px Delta Green outline with offset,
+or a 3px focus ring on inputs).
 
 Touch targets should be approximately:
 
@@ -1831,7 +2377,16 @@ red vs green.
 
 Charts should provide textual summaries where practical.
 
-Map information should have non-map alternatives where important.
+Map information should have non-map alternatives where important (e.g. a
+table beside the map).
+
+Content order for keyboard and screen-reader users follows the HTML source
+order, which must match the visual order (§3.4).
+
+Every new color pairing must be contrast-checked before use.
+
+Every link must lead to a page about its label. Temporary destinations (e.g.
+a topic card linking to the general map) must be tracked and replaced.
 
 ---
 
@@ -1861,6 +2416,8 @@ Avoid:
 - continuous pulsing
 - unnecessary animated counters
 - decorative motion
+
+Respect `prefers-reduced-motion`.
 
 ---
 
@@ -1897,8 +2454,11 @@ Avoid:
 - unnecessary jargon
 - marketing superlatives
 - ambiguous severity descriptions
+- overstated freshness ("real-time", "live") unless literally true
 
 Technical terminology is acceptable when the target audience requires it.
+
+Each page has a specific `<title>` (e.g. "Dashboard — Delta Signal").
 
 ---
 
@@ -1908,7 +2468,7 @@ Technical terminology is acceptable when the target audience requires it.
 - Preserve geographic context.
 - Show units consistently.
 - Show sources.
-- Show timestamps.
+- Show timestamps in BST (UTC+6).
 - Distinguish observations from forecasts.
 - Distinguish verified from citizen-reported information.
 - Use maps when geography matters.
@@ -1920,6 +2480,8 @@ Technical terminology is acceptable when the target audience requires it.
 - Group workspace navigation.
 - Design useful empty states.
 - Reuse shared components.
+- Use design tokens for every color and spacing value.
+- Define each metric once.
 - Optimize for both citizens and expert users through progressive disclosure.
 
 ---
@@ -1929,16 +2491,19 @@ Technical terminology is acceptable when the target audience requires it.
 - Don't make Delta Signal look like a generic admin template.
 - Don't create separate visual identities for public and workspace pages.
 - Don't make every database count a KPI.
+- Don't show zero counters on public pages.
 - Don't fill dashboards with empty cards.
 - Don't use neon dashboard aesthetics.
-- Don't use excessive gradients.
+- Don't use gradients.
 - Don't use excessive shadows.
 - Don't over-round every component.
 - Don't use red decoratively.
 - Don't use green to imply environmental health without evidence.
 - Don't hide provenance.
 - Don't mix icon styles.
+- Don't use emoji as icons.
 - Don't invent environmental severity.
+- Don't show an alert for values at the reference level.
 - Don't present forecasts as observations.
 - Don't present citizen reports as verified measurements.
 - Don't use charts when text or a number communicates the information better.
@@ -1946,6 +2511,13 @@ Technical terminology is acceptable when the target audience requires it.
 - Don't make the sidebar one long unstructured list.
 - Don't use huge public-style headings inside the workspace.
 - Don't use decorative imagery inside operational dashboards.
+- Don't use Muted color for readable text.
+- Don't display raw ISO timestamps.
+- Don't add languages other than English.
+- Don't reorder sections visually with CSS.
+- Don't render duplicate desktop and mobile copies of content.
+- Don't compute map legend bins from each day's data.
+- Don't ship placeholder sources or inconsistent place names.
 - Don't sacrifice clarity for visual novelty.
 
 ---
@@ -1959,12 +2531,14 @@ Before creating a new component:
 
 1. Search for an existing equivalent.
 2. Reuse or extend the existing component when appropriate.
-3. Use design tokens rather than page-specific values.
+3. Use design tokens (§59) rather than page-specific values.
 4. Determine whether the page belongs to PUBLIC, WORKSPACE, or AUTH.
 5. Apply the corresponding density/layout rules.
 6. Follow shared Data/GIS rules for maps and charts.
-7. Preserve accessibility.
-8. Preserve responsive behavior.
+7. Use the libraries named in §60.
+8. Preserve accessibility.
+9. Preserve responsive behavior.
+10. Verify both light and dark themes.
 
 AI agents must NOT:
 
@@ -1974,11 +2548,16 @@ AI agents must NOT:
 - introduce new card styles without justification
 - introduce another icon language
 - hard-code environmental status colors
+- hard-code hex values in components (use tokens)
 - create duplicate components because existing ones look slightly different
+- create new metric queries when a shared definition exists (§41A)
 - replace information architecture merely for visual novelty
 
 When an existing page conflicts with this document, prefer refactoring toward
 this design system rather than preserving inconsistent legacy styling.
+
+Credentials, API keys, and admin passwords never appear in code, prompts, or
+commits. Use environment variables and seeded local accounts.
 
 ---
 
@@ -2018,11 +2597,29 @@ For each page:
 
 9. Verify loading, empty, error, and populated states.
 
-10. Compare the page against adjacent Delta Signal pages for consistency.
+10. Verify light and dark themes.
+
+11. Compare the page against adjacent Delta Signal pages for consistency.
 
 Do not perform a superficial "make it prettier" pass.
 
 The objective is a coherent product system.
+
+## 57.1 Current Refactor Priorities
+
+0. Landing page: server-render nav, h1, and meta description; one responsive
+   component per section in visual order; remove duplicate markup (§3.1,
+   §3.4).
+1. Make `/dashboard` and other workspace routes sign-in only (§3.2).
+2. Rebuild the workspace shell: grouped sidebar, top utility bar (§31–33).
+3. Record data source ingestion runs (§35.1).
+4. Redesign the admin dashboard (§34A, §36–37).
+5. Shared empty/healthy state component (§38–39).
+6. Unify metric definitions (§41A).
+7. Citizen and researcher dashboard homes (§34A).
+8. Standardize management pages (§42).
+9. Notifications.
+10. Mobile workspace (§49).
 
 ---
 
@@ -2066,11 +2663,25 @@ WORKSPACE?
 
 ### Consistency
 
-Does it use established Delta Signal components?
+Does it use established Delta Signal components and tokens?
+
+### Numbers
+
+Does every number match the same metric shown elsewhere, with correct
+plurals and labels?
+
+### Structure
+
+Does the HTML contain the nav, one h1, and all sections in visual order, with
+no duplicated content?
 
 ### Empty State
 
 Does the page remain useful when data is absent?
+
+### Theme
+
+Does the page work in both light and dark themes?
 
 ### Responsive
 
@@ -2078,6 +2689,105 @@ Does the experience remain intentional on tablet and mobile?
 
 ### Accessibility
 
-Can the interface be understood without relying only on color?
+Can the interface be understood without relying only on color, and does all
+text meet contrast requirements?
 
 If several answers are "no", the page is not finished.
+
+---
+
+# 59. Design Tokens
+
+Implement foundation values as CSS custom properties on `:root`, with dark
+values under `[data-theme="dark"]`. Components reference tokens only.
+
+| Token | Light | Dark |
+|---|---|---|
+| `--ds-bg` | `#F7F9F8` | `#101513` |
+| `--ds-surface` | `#FFFFFF` | `#171D1A` |
+| `--ds-surface-2` | `#F1F5F3` | `#1D2521` |
+| `--ds-surface-elevated` | `#FFFFFF` | `#222B27` |
+| `--ds-text` | `#17201D` | `#F4F7F5` |
+| `--ds-text-2` | `#5F6F68` | `#AAB7B1` |
+| `--ds-muted` | `#87948F` | `#78857F` |
+| `--ds-border` | `#DDE5E1` | `#2D3833` |
+| `--ds-border-strong` | `#CBD7D1` | `#3B4942` |
+| `--ds-primary` (button fill) | `#147A57` | `#147A57` |
+| `--ds-on-primary` | `#FFFFFF` | `#FFFFFF` |
+| `--ds-link` | `#147A57` | `#4FBF8F` |
+| `--ds-link-hover` | `#0D5F4A` | `#7AD3AC` |
+| `--ds-accent-text` | `#0D5F4A` | `#4FBF8F` |
+| `--ds-brand-mark` | `#178A63` | `#4FBF8F` |
+| `--ds-brand-panel` | `#0D5F4A` | `#14251E` |
+| `--ds-focus` | `rgba(23,138,99,0.28)` | `rgba(79,191,143,0.30)` |
+| `--ds-status-normal-bg` / `-text` | `#E4F3EA` / `#1F6B45` | `#1A2E23` / `#5CC98F` |
+| `--ds-status-watch-bg` / `-text` | `#FBF1D6` / `#6E5109` | `#352D14` / `#E9C766` |
+| `--ds-status-warning-bg` / `-text` | `#FCE8D5` / `#8A4510` | `#3A2A1A` / `#F2B27A` |
+| `--ds-status-critical-bg` / `-text` | `#FBE3E3` / `#B23A3A` | `#3A1E1E` / `#F08A8A` |
+
+Semantic fills (§9), domain tints (§8.1), and data ramps (§21A) are also
+tokens, named `--ds-semantic-*`, `--ds-tint-*`, and `--ds-ramp-*`. Data ramps
+have one value for both themes.
+
+Spacing, radius, and type scale tokens follow §10, §11, and §15
+(e.g. `--ds-space-16`, `--ds-radius-card`, `--ds-text-body`).
+
+---
+
+# 60. Implementation Stack
+
+Fill in once and keep current. AI agents use only these.
+
+| Concern | Library / approach |
+|---|---|
+| Framework | [confirm] |
+| Styling | [confirm — e.g. CSS variables + Tailwind theme mapping] |
+| Component primitives | [confirm] |
+| Icons | [confirm — one outline icon library] |
+| Charts | [confirm] |
+| Maps | [confirm] |
+| Date/time formatting | [confirm — must support `Asia/Dhaka`] |
+
+---
+
+# 61. Changelog
+
+## 2.1 — October 2026
+
+- Public page server HTML requirements: nav, one h1, meta description (§3.1).
+- Markup order must match visual order; no duplicate desktop/mobile markup
+  (§3.4, §50).
+- Snapshot semantics and plural rules (§10A).
+- Fixed, non-overlapping map legend bins (§21A).
+- Dataset table columns (§25).
+- Canonical source names; no placeholder sources (§28.1).
+- Official place-name spellings and taxon name fallback (§28A).
+- Landing page structure added as refactor priority 0 (§57.1).
+
+## 2.0 — October 2026
+
+- Interface language set to English only (§1.1).
+- Theme behavior and theme control placement defined (§5.1–5.3).
+- Muted color restricted to non-text uses; metadata uses Secondary Text
+  (§6, §7, §10).
+- Added Delta Green 600 for buttons and links, and a dark-mode green
+  (§8, §18).
+- Added domain icon tints (§8.1) and semantic text colors (§9.1).
+- Added domain classification scales: PM2.5, UV, river discharge (§9A).
+- Added number, unit, date, and time formatting; BST defined as UTC+6
+  (§10A).
+- Added data color ramps (§21A).
+- Alert thresholds: no alerts at reference level; thresholds discoverable
+  (§23).
+- Data-state badge styles defined (§24).
+- Workspace routes require sign-in; public pages server-rendered (§3.1, §3.2).
+- Authentication layout and form rules expanded (§3.3).
+- Sidebar groups updated for all current modules; account moved to top bar
+  user menu (§32, §33).
+- Role-based dashboard home (§34A) and data source health requirement
+  (§35.1).
+- Empty-state rules now apply to public summaries too (§38); no zero counters
+  on public pages (§20, §29).
+- Metric definitions as a single source of truth (§2.7, §41A).
+- Design token names (§59) and implementation stack placeholders (§60).
+- Refactor priorities listed (§57.1).
