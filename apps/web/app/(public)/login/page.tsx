@@ -16,7 +16,7 @@ const SEED_USERS = [
 
 export default async function LoginPage(
   props: {
-    searchParams: Promise<{ error?: string; message?: string }>;
+    searchParams: Promise<{ error?: string; message?: string; next?: string }>;
   }
 ) {
   const searchParams = await props.searchParams;
@@ -55,6 +55,7 @@ export default async function LoginPage(
           <div className="auth-divider"><span>or</span></div>
 
           <form action={loginAction} className="auth-form">
+            {searchParams.next && <input type="hidden" name="next" value={searchParams.next} />}
             <div className="field">
               <label htmlFor="email">Email</label>
               <input id="email" name="email" type="email" required autoComplete="email" />

@@ -5,7 +5,14 @@ import { routes, type AuthResponse } from '@delta-signal/contracts';
 import { apiPost, ApiError } from './api';
 import { setSessionCookies, clearSessionCookies, getRefreshToken } from './session';
 
+/** Only same-origin relative paths are allowed, to prevent open redirects. */
+function safeNextPath(value: FormDataEntryValue | null): string {
+  const next = typeof value === 'string' ? value : '';
+  return next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '/dashboard';
+}
+
 export async function loginAction(formData: FormData) {
+  const next = safeNextPath(formData.get('next'));
   const email = String(formData.get('email') ?? '');
   const password = String(formData.get('password') ?? '');
 
@@ -14,11 +21,12 @@ export async function loginAction(formData: FormData) {
     tokens = await apiPost<AuthResponse>(routes.auth.login, { email, password });
   } catch (err) {
     const message = err instanceof ApiError ? err.message : 'Login failed';
-    redirect(`/login?error=${encodeURIComponent(message)}`);
+    const nextQuery = next === '/dashboard' ? '' : `&next=${encodeURIComponent(next)}`;
+    redirect(`/login?error=${encodeURIComponent(message)}${nextQuery}`);
   }
 
   await setSessionCookies(tokens.accessToken, tokens.refreshToken);
-  redirect('/dashboard');
+  redirect(next);
 }
 
 export async function registerAction(formData: FormData) {

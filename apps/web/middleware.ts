@@ -10,7 +10,36 @@ import {
 const API_BASE_URL = process.env.API_URL ?? 'http://localhost:3001';
 const isProd = process.env.NODE_ENV === 'production';
 
-const PROTECTED_PREFIXES = ['/profile', '/members', '/researcher-application'];
+/**
+ * Deny-by-default: every route requires a session unless it is listed here.
+ * Matching is exact or by path segment, so '/login' never matches '/login-foo'.
+ */
+const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/reset-password',
+  '/verify-email',
+  '/auth',
+  '/map',
+  '/methodology',
+  '/contact',
+  '/terms',
+  '/privacy',
+  '/data-deletion',
+];
+
+function isPublicPath(pathname: string): boolean {
+  return PUBLIC_PATHS.some((p) => pathname === p || (p !== '/' && pathname.startsWith(p + '/')));
+}
+
+function loginRedirect(req: NextRequest): NextResponse {
+  const url = new URL('/login', req.url);
+  const { pathname, search } = req.nextUrl;
+  url.searchParams.set('next', pathname + search);
+  return NextResponse.redirect(url);
+}
 
 /**
  * Decodes a JWT payload without verifying the signature — only used to check expiry.
@@ -35,7 +64,7 @@ function cookieOptions(maxAge: number) {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const isProtected = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
+  const isProtected = !isPublicPath(pathname);
 
   const accessToken = req.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   const refreshToken = req.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
@@ -45,7 +74,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (!refreshToken) {
-    if (isProtected) return NextResponse.redirect(new URL('/login', req.url));
+    if (isProtected) return loginRedirect(req);
     return NextResponse.next();
   }
 
@@ -65,7 +94,7 @@ export async function middleware(req: NextRequest) {
     return response;
   } catch {
     if (isProtected) {
-      const response = NextResponse.redirect(new URL('/login', req.url));
+      const response = loginRedirect(req);
       response.cookies.delete(ACCESS_TOKEN_COOKIE);
       response.cookies.delete(REFRESH_TOKEN_COOKIE);
       return response;
@@ -75,5 +104,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  // Paths containing a dot (robots.txt, sitemap.xml, logo.svg, icon.svg…) are static/metadata files.
+  matcher: ['/((?!_next/static|_next/image|.*\\..*).*)'],
 };
