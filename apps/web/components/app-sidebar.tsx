@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { logoutAction } from '../lib/auth-actions';
 import type { CurrentUser } from '../lib/current-user';
 import type { Theme } from '../lib/theme';
@@ -19,22 +19,32 @@ const DASHBOARD_ROLES = new Set([
 
 const NAV_SECTIONS = [
   {
-    label: 'Explore',
+    label: 'Act',
+    links: [
+      { href: '/alerts', label: 'Alerts' },
+      { href: '/reports', label: 'Citizen Reports' },
+      { href: '/observations', label: 'Observations' },
+      { href: '/restoration', label: 'Restoration' },
+    ],
+  },
+  {
+    label: 'Environment',
     links: [
       { href: '/locations', label: 'Locations' },
-      { href: '/data', label: 'Data Hub' },
-      { href: '/observations', label: 'Observations' },
-      { href: '/reports', label: 'Citizen Reports' },
-      { href: '/alerts', label: 'Alerts' },
-      { href: '/biodiversity', label: 'Biodiversity' },
       { href: '/water-bodies', label: 'Water Bodies' },
       { href: '/marine', label: 'Marine' },
       { href: '/radiation', label: 'Radiation' },
       { href: '/emissions', label: 'Emissions' },
+      { href: '/biodiversity', label: 'Biodiversity' },
       { href: '/industrial-sites', label: 'Industry' },
-      { href: '/restoration', label: 'Restoration' },
-      { href: '/organizations', label: 'Organizations' },
+      { href: '/data', label: 'Data Hub' },
+    ],
+  },
+  {
+    label: 'Community',
+    links: [
       { href: '/community', label: 'Community' },
+      { href: '/organizations', label: 'Organizations' },
       { href: '/members', label: 'Members' },
     ],
   },
@@ -69,17 +79,37 @@ export default function AppSidebar({ user, theme }: { user: CurrentUser | null; 
     setOpen(false);
   }
 
+  // Close the drawer on route change and Escape; lock page scroll while it is open.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   return (
     <>
       {/* Mobile top bar */}
       <div className="mobile-header">
-        <Link className="mobile-brand" href="/reports" onClick={close}>
+        <Link className="mobile-brand" href="/dashboard" onClick={close}>
           <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={36} height={36} />
           <span>Delta Signal</span>
         </Link>
         <button
           className="mobile-menu-btn"
           aria-label="Open navigation"
+          aria-expanded={open}
           onClick={() => setOpen(true)}
         >
           <span className="hamburger-icon" />
@@ -99,7 +129,7 @@ export default function AppSidebar({ user, theme }: { user: CurrentUser | null; 
       <aside className={`sidebar${open ? ' sidebar-open' : ''}`}>
         {/* Brand header */}
         <div className="sidebar-header">
-          <Link className="sidebar-brand" href="/reports" onClick={close}>
+          <Link className="sidebar-brand" href="/dashboard" onClick={close}>
             <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={38} height={38} />
             <div className="sidebar-brand-text">
               <strong>Delta Signal</strong>
@@ -117,27 +147,34 @@ export default function AppSidebar({ user, theme }: { user: CurrentUser | null; 
 
         {/* Nav links */}
         <nav aria-label="App navigation">
-          <div>
-            {user && DASHBOARD_ROLES.has(user.role) && (
+          {user && DASHBOARD_ROLES.has(user.role) && (
+            <div>
               <Link
                 href="/dashboard"
                 className={isActive('/dashboard') ? 'active' : undefined}
+                aria-current={isActive('/dashboard') ? 'page' : undefined}
                 onClick={close}
               >
                 Dashboard
               </Link>
-            )}
-            {NAV_SECTIONS.flatMap((section) => section.links).map((link) => (
+            </div>
+          )}
+          {NAV_SECTIONS.map((section) => (
+            <div key={section.label} role="group" aria-label={section.label}>
+              <span className="nav-label" aria-hidden="true">{section.label}</span>
+              {section.links.map((link) => (
                 <Link
                   key={link.href}
                   href={link.href}
                   className={isActive(link.href) ? 'active' : undefined}
+                  aria-current={isActive(link.href) ? 'page' : undefined}
                   onClick={close}
                 >
                   {link.label}
                 </Link>
               ))}
-          </div>
+            </div>
+          ))}
         </nav>
 
         {/* User footer */}
