@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { routes, type ResearcherApplication } from '@delta-signal/contracts';
 import PageHeader from '../../../components/page-header';
-import { getCurrentUser } from '../../../lib/current-user';
+import { requireUser } from '../../../lib/current-user';
 import { apiGetAuthed } from '../../../lib/api';
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
 import { submitResearcherApplicationAction } from '../../../lib/researcher-application-actions';
@@ -15,8 +15,7 @@ const PLATFORM_LABEL: Record<string, string> = { googleScholar: 'Google Scholar'
 
 export default async function ResearcherApplicationPage(props: { searchParams: Promise<{ error?: string; submitted?: string }> }) {
   const params = await props.searchParams;
-  const user = await getCurrentUser();
-  if (!user) redirect('/login');
+  const user = await requireUser();
   const token = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
   const application = await apiGetAuthed<ResearcherApplication | null>(routes.researcherApplications.mine, token).catch(() => null);
   if (user.role === 'RESEARCHER' && application?.status !== 'APPROVED') redirect('/dashboard');

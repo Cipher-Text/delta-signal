@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import { getCurrentUser } from '../../../lib/current-user';
+import { requireUser } from '../../../lib/current-user';
 import { apiGetAuthed } from '../../../lib/api';
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
 import {
@@ -29,11 +28,7 @@ const DASHBOARD_ROLES = new Set([
 ]);
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser();
-
-  if (!user) {
-    redirect('/login');
-  }
+  const user = await requireUser();
 
   if (!DASHBOARD_ROLES.has(user.role)) {
     return (
