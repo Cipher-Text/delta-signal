@@ -2740,13 +2740,13 @@ Fill in once and keep current. AI agents use only these.
 
 | Concern | Library / approach |
 |---|---|
-| Framework | [confirm] |
-| Styling | [confirm — e.g. CSS variables + Tailwind theme mapping] |
-| Component primitives | [confirm] |
-| Icons | [confirm — one outline icon library] |
-| Charts | [confirm] |
-| Maps | [confirm] |
-| Date/time formatting | [confirm — must support `Asia/Dhaka`] |
+| Framework | Next.js 15 (App Router, Server Components) — `apps/web`, `apps/admin`; NestJS — `apps/api` |
+| Styling | Hand-rolled global CSS per app (`globals.css`) with CSS custom-property design tokens (§59) for light/dark themes. No Tailwind, no CSS-in-JS. |
+| Component primitives | None — hand-rolled components built directly on the §59 tokens (no headless-UI/Radix layer) |
+| Icons | `lucide-react` — one outline icon family, tree-shakeable, no CSS framework dependency |
+| Charts | `recharts` — declarative, SVG-based, themeable via CSS variables/design tokens |
+| Maps | `leaflet` + `react-leaflet` (already in use in `apps/web`) |
+| Date/time formatting | Native `Intl.DateTimeFormat`, explicit `timeZone: 'Asia/Dhaka'` — no date library |
 
 ---
 

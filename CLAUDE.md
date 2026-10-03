@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+Follow `docs/DESIGN.md`. Workspace pages follow §3.2 and §31–42.
+
 ## Commands
 
 ```bash
