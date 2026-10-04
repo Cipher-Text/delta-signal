@@ -5790,3 +5790,18 @@ a.dashboard-secondary-stat:hover {
 .dashboard-live-status small.dashboard-live-stale { color: var(--ds-status-warning-text); font-weight: 650; }
 .stat-card-muted .stat-card-value { color: var(--muted); }
 .bar-pct { margin-left: 6px; color: var(--muted); font-size: 0.7rem; font-weight: 500; }
+
+/* ── Alerts page ── */
+.alert-card--critical, .alert-card--warning, .alert-card--watch, .alert-card--unknown {
+  border-left-width: 4px;
+}
+.alert-card--critical { background: var(--ds-status-critical-bg); border-left-color: var(--ds-semantic-critical); }
+.alert-card--warning { background: var(--ds-status-warning-bg); border-left-color: var(--ds-semantic-warning); }
+.alert-card--watch { background: var(--ds-status-watch-bg); border-left-color: var(--ds-semantic-watch); }
+.alert-card--unknown { border-left-color: var(--ds-semantic-info); }
+
+.filter-field { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.82rem; font-weight: 650; }
+.active-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+.filter-pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong); border-radius: 99px; padding: 4px 10px; font-size: 0.8rem; font-weight: 650; color: var(--foreground); text-decoration: none; background: var(--surface); }
+.filter-pill:hover { background: var(--surface-2); }
+.filter-clear { font-size: 0.8rem; font-weight: 650; color: var(--primary-dark); }

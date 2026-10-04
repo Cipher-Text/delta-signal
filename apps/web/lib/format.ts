@@ -35,13 +35,16 @@ export function dhakaTime(iso: string): string {
   return `${time} BST (UTC+6)`;
 }
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const DHAKA_OFFSET_MS = 6 * 60 * 60 * 1000;
+
+/** ISO timestamp -> "30 Sep 2026" in Asia/Dhaka. Fixed month names: ICU renders "Sept" in en-GB. */
+export function dhakaDate(iso: string): string {
+  const d = new Date(new Date(iso).getTime() + DHAKA_OFFSET_MS);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
 /** ISO timestamp -> "30 Sep 2026, 16:00 BST (UTC+6)" in Asia/Dhaka (§10A). */
 export function dhakaDateTime(iso: string): string {
-  const date = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Dhaka',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(iso));
-  return `${date}, ${dhakaTime(iso)}`;
+  return `${dhakaDate(iso)}, ${dhakaTime(iso)}`;
 }
