@@ -199,7 +199,8 @@ export class CompaniesService {
     const skip = (page - 1) * pageSize;
     const where = {
       ...(companyType ? { companyType } : {}),
-      ...(districtId ? { headquarterDistrictId: districtId } : {}),
+      // `none` selects companies with no recorded headquarters district.
+      ...(districtId ? { headquarterDistrictId: districtId === 'none' ? null : districtId } : {}),
       ...(isActive !== undefined ? { isActive } : {}),
     };
 

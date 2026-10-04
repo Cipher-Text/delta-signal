@@ -6753,3 +6753,46 @@ a.rad-row:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: -3
   .em-foot { display: none; }
   .em-foot-mobile { display: block; margin: var(--ds-space-16) 0 0; color: var(--ds-text-2); font-size: var(--ds-text-nav-group); line-height: 1.5; }
 }
+
+/* ── Industry (Web UI Reference): sites + companies tables ── */
+.dt-pill--neutral { background: var(--ds-surface-2); color: var(--ds-text); }
+.dt-sub { display: block; color: var(--ds-text-2); font-size: 0.8125rem; }
+
+.ind-comp { display: inline-flex; align-items: center; gap: 6px; height: 24px; box-sizing: border-box; padding: 0 10px; border: 1px solid transparent; border-radius: 999px; font-size: var(--ds-text-nav-group); font-weight: 600; white-space: nowrap; }
+.ind-comp i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.ind-comp--ok { background: var(--ds-status-normal-bg); color: var(--ds-status-normal-text); }
+.ind-comp--bad { background: var(--ds-status-critical-bg); color: var(--ds-status-critical-text); }
+.ind-comp--bad i { border-radius: 1px; }
+.ind-comp--review { background: var(--ds-status-watch-bg); color: var(--ds-status-watch-text); }
+.ind-comp--unknown { border: 1px dotted var(--ds-text-2); background: transparent; color: var(--ds-text-2); }
+
+.dt-row--site { grid-template-columns: 2.4fr 1fr 1fr 1.1fr 32px; min-height: 56px; }
+.dt-row--co { grid-template-columns: 2.4fr 1.1fr 1.1fr 0.7fr 32px; min-height: 52px; }
+.dt-row--site .dt-col-name, .dt-row--co .dt-col-name { display: flex; flex-direction: column; gap: 2px; }
+.dt-row--site .dt-col-sdistrict { display: flex; flex-direction: column; gap: 2px; }
+.dt-col-sites { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dt-col-sites small { display: none; }
+.dt-row--head .dt-col-sites { text-align: right; font-weight: 600; }
+
+@media (max-width: 768px) {
+  .dt-row--site {
+    grid-template-columns: minmax(0, 1fr) 24px;
+    grid-template-areas: "name chev" "meta chev" "tags chev";
+    min-height: 64px; padding: 10px 14px; row-gap: 4px; border-top: 0;
+  }
+  .dt-row--co {
+    grid-template-columns: minmax(0, 1fr) auto 24px;
+    grid-template-areas: "name sites chev" "meta sites chev";
+    min-height: 64px; padding: 10px 14px; column-gap: var(--ds-space-12); row-gap: 4px; border-top: 0;
+  }
+  .dt-row--site > .dt-col-type, .dt-row--site > .dt-col-sdistrict, .dt-row--site > .dt-col-comp,
+  .dt-row--co > .dt-col-type, .dt-row--co > .dt-col-hq { display: none; }
+  .dt-row--site > .dt-col-name, .dt-row--co > .dt-col-name { grid-area: name; padding: 0; }
+  .dt-row--site > .dt-col-name .dt-strong, .dt-row--co > .dt-col-name .dt-strong { font-size: var(--ds-text-nav); }
+  .dt-row--site > .dt-col-name .dt-sub { display: none; }
+  .dt-row--site > .dt-meta, .dt-row--co > .dt-meta { grid-area: meta; padding: 0; }
+  .dt-row--site > .dt-mobile-tags { grid-area: tags; display: flex; flex-wrap: wrap; gap: 6px; }
+  .dt-row--site > .dt-col-chev, .dt-row--co > .dt-col-chev { grid-area: chev; padding: 0; }
+  .dt-row--co > .dt-col-sites { grid-area: sites; display: flex; flex-direction: column; align-items: flex-end; padding: 0; font-size: 1rem; font-weight: 650; }
+  .dt-row--co > .dt-col-sites small { display: block; color: var(--ds-text-2); font-size: 0.6875rem; font-weight: 400; }
+}
