@@ -190,6 +190,7 @@ export const routes = {
     list: `${apiPrefix}/water-bodies`,
     detail: (id: string) => `${apiPrefix}/water-bodies/${id}`,
     stations: `${apiPrefix}/water-bodies/stations`,
+    subtypes: `${apiPrefix}/water-bodies/subtypes`,
   },
 
   emissions: {

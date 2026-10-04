@@ -35,12 +35,12 @@ type Query = { tab?: string; search?: string; districtId?: string; page?: string
 /** Common name first (when GBIF has one), scientific name in italics beneath; italic alone otherwise. */
 function SpeciesName({ species }: { species: Pick<Species, 'canonicalName' | 'vernacularName'> }) {
   return species.vernacularName ? (
-    <div className="bio-name">
+    <div className="dt-name">
       <strong>{species.vernacularName}</strong>
       <em>{species.canonicalName}</em>
     </div>
   ) : (
-    <div className="bio-name">
+    <div className="dt-name">
       <strong><em>{species.canonicalName}</em></strong>
     </div>
   );
@@ -97,15 +97,15 @@ export default async function BiodiversityPage(props: { searchParams: Promise<Qu
         title="Biodiversity"
         description={
           <>
-            <span className="bio-desc-long">Species and occurrence records for Bangladesh, synced daily from GBIF.</span>
-            <span className="bio-desc-short">GBIF records for Bangladesh · synced daily</span>
+            <span className="dt-desc-long">Species and occurrence records for Bangladesh, synced daily from GBIF.</span>
+            <span className="dt-desc-short">GBIF records for Bangladesh · synced daily</span>
           </>
         }
-        action={<Link className="bio-about" href="/methodology">About GBIF data →</Link>}
+        action={<Link className="dt-about" href="/methodology">About GBIF data →</Link>}
       />
 
-      <section className="bio-card">
-        <nav className="bio-tabs" aria-label="Record type">
+      <section className="dt-card">
+        <nav className="dt-tabs" aria-label="Record type">
           <Link href={tabHref('species')} aria-current={tab === 'species' ? 'page' : undefined}>
             Species <span>{speciesTotal.toLocaleString()}</span>
           </Link>
@@ -116,8 +116,8 @@ export default async function BiodiversityPage(props: { searchParams: Promise<Qu
 
         {tab === 'species' ? (
           <>
-            <form className="bio-toolbar" method="get" role="search">
-              <label className="bio-search">
+            <form className="dt-toolbar" method="get" role="search">
+              <label className="dt-search">
                 <NavIcon name="search" />
                 <input
                   type="search"
@@ -128,38 +128,38 @@ export default async function BiodiversityPage(props: { searchParams: Promise<Qu
                 />
               </label>
               <button type="submit" className="sr-only">Search</button>
-              <span className="bio-count">
+              <span className="dt-count">
                 {search ? `${speciesRes.total.toLocaleString()} matching “${search}”` : `${speciesTotal.toLocaleString()} species`}
               </span>
-              {search && <Link className="bio-reset" href="/biodiversity">Clear search</Link>}
+              {search && <Link className="dt-reset" href="/biodiversity">Clear search</Link>}
             </form>
 
-            <div className="bio-table" role="table" aria-label="Species">
-              <div className="bio-row bio-row--head bio-row--species" role="row">
+            <div className="dt-table" role="table" aria-label="Species">
+              <div className="dt-row dt-row--head dt-row--species" role="row">
                 <div role="columnheader">Species</div>
-                <div role="columnheader" className="bio-col-family">Family</div>
-                <div role="columnheader" className="bio-col-iucn">IUCN status</div>
-                <div role="columnheader" className="bio-col-num">Occurrences</div>
+                <div role="columnheader" className="dt-col-family">Family</div>
+                <div role="columnheader" className="dt-col-iucn">IUCN status</div>
+                <div role="columnheader" className="dt-col-num">Occurrences</div>
                 <div role="columnheader" aria-hidden="true" />
               </div>
               {speciesRes.data.map((s) => {
                 const iucn = s.iucnStatus ? IUCN[s.iucnStatus.toUpperCase()] : undefined;
                 return (
-                  <Link key={s.id} className="bio-row bio-row--species" role="row" href={`/biodiversity/species/${s.id}`}>
-                    <div role="cell" className="bio-col-name"><SpeciesName species={s} /></div>
-                    <div role="cell" className="bio-col-family">{s.family ?? '—'}</div>
-                    <div role="cell" className="bio-col-iucn">
+                  <Link key={s.id} className="dt-row dt-row--species" role="row" href={`/biodiversity/species/${s.id}`}>
+                    <div role="cell" className="dt-col-name"><SpeciesName species={s} /></div>
+                    <div role="cell" className="dt-col-family">{s.family ?? '—'}</div>
+                    <div role="cell" className="dt-col-iucn">
                       {s.iucnStatus ? (
-                        <span className="bio-iucn" title={iucn?.label ?? s.iucnStatus}>{iucn?.code ?? s.iucnStatus}</span>
+                        <span className="dt-iucn" title={iucn?.label ?? s.iucnStatus}>{iucn?.code ?? s.iucnStatus}</span>
                       ) : (
-                        <span className="bio-muted">Not available</span>
+                        <span className="dt-muted">Not available</span>
                       )}
                     </div>
-                    <div role="cell" className="bio-col-num">
+                    <div role="cell" className="dt-col-num">
                       {s._count.occurrences.toLocaleString()}<small> records</small>
                     </div>
-                    <div role="cell" className="bio-col-chev" aria-hidden="true"><NavIcon name="chevron" /></div>
-                    <div className="bio-meta">
+                    <div role="cell" className="dt-col-chev" aria-hidden="true"><NavIcon name="chevron" /></div>
+                    <div className="dt-meta">
                       {s.family ?? 'Family not recorded'}{iucn ? ` · IUCN ${iucn.code}` : ''}
                     </div>
                   </Link>
@@ -184,9 +184,9 @@ export default async function BiodiversityPage(props: { searchParams: Promise<Qu
           </>
         ) : (
           <>
-            <form className="bio-toolbar" method="get">
+            <form className="dt-toolbar" method="get">
               <input type="hidden" name="tab" value="occurrences" />
-              <label className="bio-district">
+              <label className="dt-district">
                 District
                 <AutoSubmitSelect name="districtId" className="select-field" defaultValue={districtId ?? ''}>
                   <option value="">All Bangladesh</option>
@@ -194,20 +194,20 @@ export default async function BiodiversityPage(props: { searchParams: Promise<Qu
                 </AutoSubmitSelect>
               </label>
               <noscript><button type="submit" className="button">Apply</button></noscript>
-              <span className="bio-count">
+              <span className="dt-count">
                 {districtId && districtName
                   ? `${occRes.total.toLocaleString()} ${occRes.total === 1 ? 'record' : 'records'} in ${districtName}`
                   : `${occurrenceTotal.toLocaleString()} records`}
               </span>
-              <span className="bio-sort">Newest observations first</span>
+              <span className="dt-sort">Newest observations first</span>
             </form>
 
-            <div className="bio-table" role="table" aria-label="Occurrence records">
-              <div className="bio-row bio-row--head bio-row--occ" role="row">
+            <div className="dt-table" role="table" aria-label="Occurrence records">
+              <div className="dt-row dt-row--head dt-row--occ" role="row">
                 <div role="columnheader">Species</div>
-                <div role="columnheader" className="bio-col-district">District</div>
-                <div role="columnheader" className="bio-col-observed">Observed</div>
-                <div role="columnheader" className="bio-col-basis">Basis of record</div>
+                <div role="columnheader" className="dt-col-district">District</div>
+                <div role="columnheader" className="dt-col-observed">Observed</div>
+                <div role="columnheader" className="dt-col-basis">Basis of record</div>
                 <div role="columnheader" aria-hidden="true" />
               </div>
               {occRes.data.map((o) => {
@@ -215,16 +215,16 @@ export default async function BiodiversityPage(props: { searchParams: Promise<Qu
                 const basis = o.basisOfRecord ? sentenceCase(o.basisOfRecord) : '—';
                 const division = o.district?.division?.name;
                 return (
-                  <Link key={o.id} className="bio-row bio-row--occ" role="row" href={`/biodiversity/species/${o.speciesId}`}>
-                    <div role="cell" className="bio-col-name"><SpeciesName species={o.species} /></div>
-                    <div role="cell" className="bio-col-district">
+                  <Link key={o.id} className="dt-row dt-row--occ" role="row" href={`/biodiversity/species/${o.speciesId}`}>
+                    <div role="cell" className="dt-col-name"><SpeciesName species={o.species} /></div>
+                    <div role="cell" className="dt-col-district">
                       <span>{o.district?.name ?? '—'}</span>
                       {division && <small>{division} division</small>}
                     </div>
-                    <div role="cell" className="bio-col-observed">{observed}</div>
-                    <div role="cell" className="bio-col-basis">{basis}</div>
-                    <div role="cell" className="bio-col-chev" aria-hidden="true"><NavIcon name="chevron" /></div>
-                    <div className="bio-meta">{[o.district?.name, observed, basis].filter(Boolean).join(' · ')}</div>
+                    <div role="cell" className="dt-col-observed">{observed}</div>
+                    <div role="cell" className="dt-col-basis">{basis}</div>
+                    <div role="cell" className="dt-col-chev" aria-hidden="true"><NavIcon name="chevron" /></div>
+                    <div className="dt-meta">{[o.district?.name, observed, basis].filter(Boolean).join(' · ')}</div>
                   </Link>
                 );
               })}
@@ -246,9 +246,9 @@ export default async function BiodiversityPage(props: { searchParams: Promise<Qu
           </>
         )}
 
-        <p className="bio-foot">{footnote}</p>
+        <p className="dt-foot">{footnote}</p>
       </section>
-      <p className="bio-foot-mobile">{footnote}</p>
+      <p className="dt-foot-mobile">{footnote}</p>
     </>
   );
 }
