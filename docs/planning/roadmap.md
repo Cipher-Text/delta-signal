@@ -15,7 +15,7 @@ Deliverables:
 - Role and access model ✓
 - Backend API catalog ✓
 - Business logic and flows ✓
-- Frontend static mocks (all 11 pages) ✓
+- Frontend static mocks (all 11 pages; removed 2026-10-04 after the shipped application superseded them) ✓
 - Initial app/package skeletons ✓
 
 Exit criteria met:

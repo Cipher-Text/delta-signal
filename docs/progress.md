@@ -53,7 +53,7 @@ Historical summary through 2026-09-17 (Dashboard freshness metadata — all role
 | --- | --- | --- |
 | Monorepo scaffold | Done | `apps`, `packages`, `docs`, `infrastructure`, Nx/pnpm config |
 | Documentation baseline | Done | Mission, vision, stack, roles, business logic, flows, API catalog, architecture |
-| Frontend mocks | Done | All 11 pages — nav linking, sidebar, design system, trust levels, feed, admin console, theme reference |
+| Frontend mocks | Done (retired 2026-10-04) | All 11 pages were completed; static files removed after the shipped app superseded them |
 | Public-first product model | Done | Public `/`, login-gated contribution/download/advanced access |
 | Public frontend — M1 | Done | Initial UI foundation and design system; current public pages are API-backed Server Components with explicit empty/error states |
 | Frontend live data — M13 | Done | Weather sidebar, full auth flow, citizen report + observation submission, live platform metrics, and (2026-08-19) every remaining static homepage component now wired to live data or an honest empty state — see "Public Weather Wiring", "Public Auth Flow Wiring", "Profile Page Mockup Fidelity", "Report Submission Form", "Observations Module", "Live Platform Metrics", and "Homepage Preview Sections Wired" below. All 7 tasks done — Milestone 13 is fully complete. |
@@ -753,7 +753,7 @@ Verified live in a real browser (not just curl, since Next.js Server Actions bou
 
 ## Profile Page Mockup Fidelity (built 2026-08-17)
 
-`/profile` was shipped quickly (previous entry) as a bare 4-field account card to verify the auth flow worked — it didn't match `mocks/frontend-design/profile.html` at all. Fixing that turned out to reveal a bigger structural gap: **every mocked page except the public homepage** (`data`, `observations`, `reports`, `alerts`, `biodiversity`, `restoration`, `community`, `profile`, `admin`) shares one unified sidebar "app shell" layout, completely different from the top-nav shell the homepage uses. `/profile` needed that shell introduced for the first time.
+`/profile` was shipped quickly (previous entry) as a bare 4-field account card to verify the auth flow worked — it didn't match the original profile mockup. Fixing that turned out to reveal a bigger structural gap: **every mocked page except the public homepage** (`data`, `observations`, `reports`, `alerts`, `biodiversity`, `restoration`, `community`, `profile`, `admin`) shares one unified sidebar "app shell" layout, completely different from the top-nav shell the homepage uses. `/profile` needed that shell introduced for the first time. The static mockups were retired on 2026-10-04; the shipped app is now the design reference.
 
 - **Routing restructured**: `/`, `/login`, `/register` moved into a new `app/(public)/` route group with its own layout (owns `<PublicNav/>` + the `public-shell` wrapper). Root `app/layout.tsx` is now bare (`html`/`body`/fonts only) so `/profile` — deliberately left outside the group — doesn't inherit the public top nav. Route groups don't affect URLs, so `/`, `/login`, `/register` still resolve exactly as before.
 - `components/app-sidebar.tsx` — new reusable sidebar (brand, sectioned nav — Overview/Explore/Account — active-link highlighting via an explicit `active` prop, since Server Components can't use the client-only `usePathname` hook). Intended to be reused by M7–M12's pages, not just `/profile`.
@@ -918,19 +918,9 @@ Verified live across both passes: with an empty DB, all sections correctly showe
 
 - `docs/planning/ingestion-plan.md` — gap analysis vs Java backends, priority APIs, NestJS ingestion design, what NOT to port
 
-### Frontend mocks
+### Frontend design references
 
-- `mocks/frontend-design/index.html`
-- `mocks/frontend-design/data.html`
-- `mocks/frontend-design/observations.html`
-- `mocks/frontend-design/reports.html`
-- `mocks/frontend-design/alerts.html`
-- `mocks/frontend-design/biodiversity.html`
-- `mocks/frontend-design/restoration.html`
-- `mocks/frontend-design/community.html`
-- `mocks/frontend-design/profile.html`
-- `mocks/frontend-design/admin.html`
-- `mocks/frontend-design/theme.html`
+The original static HTML mockups were removed on 2026-10-04 because they no longer represented the shipped application. Use `apps/web/app/` and the shared components in `apps/web/components/` as the current implementation reference. Historical entries above describe the mockups as they existed when the pages were built.
 
 ### Shared packages
 
