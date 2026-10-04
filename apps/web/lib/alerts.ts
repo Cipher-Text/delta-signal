@@ -19,8 +19,12 @@ export const ALERT_TYPES = [
 /** Alerts without a hazard type are shown as "General". */
 export const hazardLabel = (type: string | null | undefined) => (type ? titleCase(type) : 'General');
 
-/** Display names follow DESIGN.md §28A; the seed data still uses the older spellings. */
-const CANONICAL_DIVISION: Record<string, string> = { Barisal: 'Barishal', Chattagram: 'Chattogram' };
+/** Display names (divisions and districts) follow DESIGN.md §28A; the seed data still uses the older spellings. */
+const CANONICAL_DIVISION: Record<string, string> = {
+  Barisal: 'Barishal',
+  Chattagram: 'Chattogram',
+  Coxsbazar: "Cox's Bazar",
+};
 export const canonicalDivision = (name: string) => CANONICAL_DIVISION[name] ?? name;
 
 /** Approximate division layout (CSS grid-area: row-start / col-start / row-end / col-end). */

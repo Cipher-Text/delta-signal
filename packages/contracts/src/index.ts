@@ -183,6 +183,7 @@ export const routes = {
 
   marine: {
     forecast: `${apiPrefix}/marine/forecast`,
+    forecastDays: `${apiPrefix}/marine/forecast-days`,
     forecastByDistrict: (districtId: string) => `${apiPrefix}/marine/forecast/${districtId}`,
   },
 

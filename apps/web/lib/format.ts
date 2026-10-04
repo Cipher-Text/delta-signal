@@ -53,3 +53,18 @@ export function dhakaDateTime(iso: string): string {
 export function dhakaDateTimeShort(iso: string): string {
   return dhakaDateTime(iso).replace(' BST (UTC+6)', '');
 }
+
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+/** Calendar-date strings (YYYY-MM-DD) -> "Mon", "5 Oct" and "Monday 5 Oct 2026". No timezone maths: they are plain dates. */
+export function calendarDay(isoDate: string) {
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const weekday = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
+  const short = `${d} ${MONTHS[m - 1]}`;
+  return { weekdayShort: weekday.slice(0, 3), short, long: `${weekday} ${short} ${y}` };
+}
+
+/** Today's calendar date in Asia/Dhaka as YYYY-MM-DD. */
+export function dhakaToday(): string {
+  return new Date(Date.now() + DHAKA_OFFSET_MS).toISOString().slice(0, 10);
+}
