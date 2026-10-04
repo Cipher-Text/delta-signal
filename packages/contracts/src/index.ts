@@ -393,6 +393,7 @@ export interface DivisionWithClimate extends DivisionSummary {
   avgPm10_30d: number | null;
   avgUvIndex30d: number | null;
   climateUpdatedAt: string | null;
+  _count?: { districts: number };
 }
 
 export interface DistrictSummary {

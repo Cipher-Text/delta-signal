@@ -1351,6 +1351,22 @@ Rules:
   4.5:1.
 - Classified categories (AQ, UV) use their §9A scale colors, not these ramps.
 
+## Fixed bins — Locations 30-day layers
+
+Edges for the Locations map (30-day division values). They are fixed and do not
+follow the day's data; classify the value as displayed (rounded).
+
+| Layer | Bins | Colors |
+|---|---|---|
+| Temperature (°C, mean) | < 22 · 22–27.9 · ≥ 28 | Sequential — temperature |
+| Rainfall (mm, 30-day total) | < 200 · 200–249 · 250–299 · ≥ 300 | Sequential — water and rainfall |
+| PM2.5 (µg/m³, mean) | < 20 · 20–34 · ≥ 35 | Neutral earth ramp (`--ds-ramp-pm-*`) |
+| UV index (mean) | WHO bands: Low < 3 · Moderate 3–5.9 · High 6–7.9 · Very high 8–10.9 · Extreme ≥ 11 | Status scale (§9.1), not a ramp |
+
+PM2.5 bins are concentration bands, not health categories: air quality
+categories (§9A) are defined on 24-hour values and are never applied to 30-day
+means. When all divisions fall in one bin, say so in the legend caption.
+
 ---
 
 # 22. Maps
