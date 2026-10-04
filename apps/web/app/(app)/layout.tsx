@@ -1,6 +1,7 @@
 import { requireUser } from '../../lib/current-user';
 import { getTheme } from '../../lib/theme';
-import AppSidebar from '../../components/app-sidebar';
+import { getSidebarCollapsed } from '../../lib/sidebar';
+import AppShell from '../../components/app-shell';
 
 export default async function AppLayout({
   children,
@@ -9,11 +10,10 @@ export default async function AppLayout({
 }) {
   // Middleware only checks token expiry; this validates the session against the API,
   // so every (app) route is signed-in-only even with a forged or revoked cookie.
-  const [user, theme] = await Promise.all([requireUser(), getTheme()]);
+  const [user, theme, collapsed] = await Promise.all([requireUser(), getTheme(), getSidebarCollapsed()]);
   return (
-    <div className="app-shell">
-      <AppSidebar user={user} theme={theme} />
-      <main className="main">{children}</main>
-    </div>
+    <AppShell user={user} theme={theme} initialCollapsed={collapsed}>
+      {children}
+    </AppShell>
   );
 }

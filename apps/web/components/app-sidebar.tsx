@@ -2,11 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { logoutAction } from '../lib/auth-actions';
 import type { CurrentUser } from '../lib/current-user';
-import type { Theme } from '../lib/theme';
-import ThemeToggle from './theme-toggle';
+import NavIcon from './nav-icons';
 
 const DASHBOARD_ROLES = new Set([
   'CITIZEN',
@@ -17,186 +14,118 @@ const DASHBOARD_ROLES = new Set([
   'ORGANIZATION_ADMIN',
 ]);
 
+type NavLink = { href: string; label: string; icon: string };
+
 // Groups and membership follow docs/DESIGN.md §32. The ADMINISTRATION group lives
 // in apps/admin, so it is intentionally not repeated here.
-const NAV_SECTIONS = [
+const NAV_SECTIONS: readonly { label: string; links: readonly NavLink[] }[] = [
   {
     label: 'Environment',
     links: [
-      { href: '/observations', label: 'Observations' },
-      { href: '/alerts', label: 'Alerts' },
-      { href: '/biodiversity', label: 'Biodiversity' },
-      { href: '/water-bodies', label: 'Water Bodies' },
-      { href: '/marine', label: 'Marine' },
-      { href: '/radiation', label: 'Radiation' },
-      { href: '/emissions', label: 'Emissions' },
-      { href: '/industrial-sites', label: 'Industry' },
+      { href: '/observations', label: 'Observations', icon: 'observations' },
+      { href: '/alerts', label: 'Alerts', icon: 'alerts' },
+      { href: '/biodiversity', label: 'Biodiversity', icon: 'biodiversity' },
+      { href: '/water-bodies', label: 'Water Bodies', icon: 'water-bodies' },
+      { href: '/marine', label: 'Marine', icon: 'marine' },
+      { href: '/radiation', label: 'Radiation', icon: 'radiation' },
+      { href: '/emissions', label: 'Emissions', icon: 'emissions' },
+      { href: '/industrial-sites', label: 'Industry', icon: 'industrial-sites' },
     ],
   },
   {
     label: 'Data',
     links: [
-      { href: '/data', label: 'Data Hub' },
-      { href: '/locations', label: 'Locations' },
+      { href: '/data', label: 'Data Hub', icon: 'data' },
+      { href: '/locations', label: 'Locations', icon: 'locations' },
     ],
   },
   {
     label: 'Community',
     links: [
-      { href: '/reports', label: 'Citizen Reports' },
-      { href: '/restoration', label: 'Restoration' },
-      { href: '/community', label: 'Community' },
-      { href: '/organizations', label: 'Organizations' },
-      { href: '/members', label: 'Members' },
+      { href: '/reports', label: 'Citizen Reports', icon: 'reports' },
+      { href: '/restoration', label: 'Restoration', icon: 'restoration' },
+      { href: '/community', label: 'Community', icon: 'community' },
+      { href: '/organizations', label: 'Organizations', icon: 'organizations' },
+      { href: '/members', label: 'Members', icon: 'members' },
     ],
   },
-] as const;
+];
 
-const ROLE_SHORT: Record<string, string> = {
-  CITIZEN: 'Citizen',
-  RESEARCHER: 'Researcher',
-  ORGANIZATION_ADMIN: 'Org Admin',
-  GOVERNMENT: 'Government',
-  MODERATOR: 'Moderator',
-  ADMIN: 'Admin',
-};
-
-function initials(displayName: string): string {
-  const parts = displayName.trim().split(/\s+/);
-  const first = parts[0]?.[0] ?? '';
-  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
-  return (first + last).toUpperCase();
+interface AppSidebarProps {
+  user: CurrentUser;
+  collapsed: boolean;
+  /** Mobile drawer state. */
+  open: boolean;
+  onClose: () => void;
+  onToggleCollapsed: () => void;
 }
 
-export default function AppSidebar({ user, theme }: { user: CurrentUser | null; theme: Theme | undefined }) {
+export default function AppSidebar({ user, collapsed, open, onClose, onToggleCollapsed }: AppSidebarProps) {
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
 
   function isActive(href: string) {
-    if (href === '/') return pathname === '/';
     return pathname === href || pathname.startsWith(href + '/');
   }
 
-  function close() {
-    setOpen(false);
+  function renderLink(link: NavLink) {
+    const active = isActive(link.href);
+    return (
+      <Link
+        key={link.href}
+        href={link.href}
+        className={active ? 'active' : undefined}
+        aria-current={active ? 'page' : undefined}
+        title={collapsed ? link.label : undefined}
+        onClick={onClose}
+      >
+        <NavIcon name={link.icon} />
+        <span className="nav-text">{link.label}</span>
+      </Link>
+    );
   }
 
-  // Close the drawer on route change and Escape; lock page scroll while it is open.
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
-    };
-  }, [open]);
-
   return (
-    <>
-      {/* Mobile top bar */}
-      <div className="mobile-header">
-        <Link className="mobile-brand" href="/dashboard" onClick={close}>
-          <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={36} height={36} />
-          <span>Delta Signal</span>
+    <aside className={`sidebar${open ? ' sidebar-open' : ''}`} aria-label="Sidebar">
+      <div className="sidebar-header">
+        <Link className="sidebar-brand" href="/dashboard" onClick={onClose} title="Delta Signal — Dashboard">
+          <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={34} height={34} />
+          <div className="sidebar-brand-text">
+            <strong>Delta Signal</strong>
+            <span>Environmental intelligence</span>
+          </div>
         </Link>
-        <button
-          className="mobile-menu-btn"
-          aria-label="Open navigation"
-          aria-expanded={open}
-          onClick={() => setOpen(true)}
-        >
-          <span className="hamburger-icon" />
+        <button className="sidebar-close-btn" type="button" aria-label="Close navigation" onClick={onClose}>
+          <NavIcon name="close" />
         </button>
       </div>
 
-      {/* Backdrop */}
-      {open && (
-        <div
-          className="sidebar-overlay"
-          onClick={close}
-          aria-hidden="true"
-        />
-      )}
+      <nav aria-label="App navigation">
+        {DASHBOARD_ROLES.has(user.role) && (
+          <div role="group" aria-label="Overview">
+            <span className="nav-label" aria-hidden="true">Overview</span>
+            {renderLink({ href: '/dashboard', label: 'Dashboard', icon: 'dashboard' })}
+          </div>
+        )}
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.label} role="group" aria-label={section.label}>
+            <span className="nav-label" aria-hidden="true">{section.label}</span>
+            {section.links.map(renderLink)}
+          </div>
+        ))}
+      </nav>
 
-      {/* Sidebar */}
-      <aside className={`sidebar${open ? ' sidebar-open' : ''}`}>
-        {/* Brand header */}
-        <div className="sidebar-header">
-          <Link className="sidebar-brand" href="/dashboard" onClick={close}>
-            <img src="/logo.svg" className="brand-mark" alt="Delta Signal" width={38} height={38} />
-            <div className="sidebar-brand-text">
-              <strong>Delta Signal</strong>
-              <span>Environmental intelligence</span>
-            </div>
-          </Link>
-          <button
-            className="sidebar-close-btn"
-            aria-label="Close navigation"
-            onClick={close}
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Nav links */}
-        <nav aria-label="App navigation">
-          {user && DASHBOARD_ROLES.has(user.role) && (
-            <div role="group" aria-label="Overview">
-              <span className="nav-label" aria-hidden="true">Overview</span>
-              <Link
-                href="/dashboard"
-                className={isActive('/dashboard') ? 'active' : undefined}
-                aria-current={isActive('/dashboard') ? 'page' : undefined}
-                onClick={close}
-              >
-                Dashboard
-              </Link>
-            </div>
-          )}
-          {NAV_SECTIONS.map((section) => (
-            <div key={section.label} role="group" aria-label={section.label}>
-              <span className="nav-label" aria-hidden="true">{section.label}</span>
-              {section.links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={isActive(link.href) ? 'active' : undefined}
-                  aria-current={isActive(link.href) ? 'page' : undefined}
-                  onClick={close}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          ))}
-        </nav>
-
-        {/* User footer */}
-        <div className="sidebar-footer">
-          <ThemeToggle theme={theme} />
-          {user ? <Link className="sidebar-user sidebar-profile-link" href="/profile" onClick={close}>
-            <div className="sidebar-avatar" aria-hidden="true">
-              {user.profile?.avatarUrl ? <img src={user.profile.avatarUrl} alt="" /> : initials(user.displayName)}
-            </div>
-            <div className="sidebar-user-info">
-              <strong>{user.displayName}</strong>
-              <span>{ROLE_SHORT[user.role] ?? user.role}</span>
-            </div>
-          </Link> : <Link className="sidebar-user sidebar-profile-link" href="/login" onClick={close}>Sign in to contribute</Link>}
-          {user && <form action={logoutAction}>
-            <button className="sidebar-logout-btn" type="submit">Sign out</button>
-          </form>}
-        </div>
-      </aside>
-    </>
+      <div className="sidebar-footer">
+        <button
+          className="sidebar-collapse-btn"
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-pressed={collapsed}
+          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <NavIcon name="collapse" />
+          <span className="nav-text">{collapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
+        </button>
+      </div>
+    </aside>
   );
 }
