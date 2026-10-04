@@ -48,3 +48,8 @@ export function dhakaDate(iso: string): string {
 export function dhakaDateTime(iso: string): string {
   return `${dhakaDate(iso)}, ${dhakaTime(iso)}`;
 }
+
+/** ISO timestamp -> "30 Sep 2026, 16:00" in Asia/Dhaka, for views that already say times are BST. */
+export function dhakaDateTimeShort(iso: string): string {
+  return dhakaDateTime(iso).replace(' BST (UTC+6)', '');
+}

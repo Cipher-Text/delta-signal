@@ -522,6 +522,13 @@ export interface Alert {
   expiresAt: string | null;
   createdAt: string;
   district: DistrictSummary | null;
+  /** Extra areas the alert covers beyond its primary district. */
+  areas?: Array<{
+    id: string;
+    district: { id: string; name: string } | null;
+    upazila: { id: string; name: string } | null;
+    union: { id: string; name: string } | null;
+  }>;
 }
 
 export interface CreateAlertRequest {

@@ -34,7 +34,7 @@ const SEVERITY_LEVEL: Record<string, StatusLevel> = {
   EMERGENCY: 'critical',
   WARNING: 'warning',
   WATCH: 'watch',
-  INFO: 'unknown',
+  INFO: 'info',
 };
 
 const titleCase = (value: string) => value.charAt(0) + value.slice(1).toLowerCase();
