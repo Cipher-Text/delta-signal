@@ -28,14 +28,13 @@ export default async function LocationsPage() {
       <div className="division-grid">
         {divisions.map((div) => {
           const aqi = aqiClass(div.avgPm25_30d);
-          const temp = div.avgTemp30d != null ? `${div.avgTemp30d.toFixed(1)}°C` : '—';
+          const temp = div.avgTemp30d != null ? `${div.avgTemp30d.toFixed(1)} °C` : '—';
 
           return (
             <Link
               key={div.id}
               href={`/locations/divisions/${div.id}`}
-              className={`division-card ${aqi.css}`}
-              style={{ textDecoration: 'none' }}
+              className="division-card"
             >
               <div className="division-card-top">
                 <span className="division-name">{div.name}</span>
@@ -50,7 +49,7 @@ export default async function LocationsPage() {
               </div>
               <div className="division-card-footer">
                 {div.totalPrecip30d != null && (
-                  <span title="Total precipitation last 30 days">{div.totalPrecip30d.toFixed(0)}mm rain</span>
+                  <span title="Total precipitation last 30 days">{div.totalPrecip30d.toFixed(0)} mm rain</span>
                 )}
                 {div.avgUvIndex30d != null && (
                   <span title="30-day average UV index">UV {div.avgUvIndex30d.toFixed(1)}</span>

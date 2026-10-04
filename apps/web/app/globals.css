@@ -5821,3 +5821,62 @@ a.dashboard-secondary-stat:hover {
   .user-menu-id { display: none; }
   .app-shell .main { padding: 16px; }
 }
+
+/* ── Locations: division cards ──
+   Layout restored after 3c6e5e4 removed it. Status colour lives on the PM2.5
+   badge only (.aqi-badge + .aqi-*), never on the card wrapper (DESIGN.md §9.1, §19). */
+.division-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--ds-space-16);
+}
+
+@media (max-width: 900px) {
+  .division-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 500px) {
+  .division-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+.division-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-12);
+  padding: var(--ds-space-16);
+  border: 1px solid var(--ds-border);
+  border-radius: var(--ds-radius-card);
+  background: var(--ds-surface);
+  box-shadow: var(--shadow-soft);
+  color: var(--ds-text);
+  text-decoration: none;
+}
+
+.division-card:hover { border-color: var(--ds-border-strong); }
+.division-card:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: 2px; }
+
+.division-card-top { display: flex; align-items: baseline; gap: var(--ds-space-8); }
+.division-name { font-weight: 700; font-size: var(--ds-text-nav); color: var(--ds-text); }
+.division-bn { font-size: var(--ds-text-meta); color: var(--ds-text-2); }
+
+.division-card-temp {
+  font-size: var(--ds-text-kpi-compact);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ds-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.division-card-aqi { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-8); }
+.division-pm25 { font-size: var(--ds-text-nav-group); color: var(--ds-text-2); }
+
+.division-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-12);
+  margin-top: auto;
+  padding-top: var(--ds-space-8);
+  border-top: 1px solid var(--ds-border);
+  font-size: var(--ds-text-nav-group);
+  color: var(--ds-text-2);
+}
