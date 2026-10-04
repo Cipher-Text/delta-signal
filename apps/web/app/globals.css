@@ -6260,3 +6260,100 @@ a.dashboard-secondary-stat:hover {
   .alert-item-top { flex-wrap: wrap; }
   .alert-item-place { margin-left: 0; width: 100%; text-align: left; }
 }
+
+/* ── Pagination: card variant (Web UI Reference) ── */
+.pagination-controls { display: inline-flex; align-items: center; gap: 6px; }
+.list-pagination--card { justify-content: space-between; margin: 0; padding: var(--ds-space-12) var(--ds-space-16); border-top: 1px solid var(--ds-border); }
+.list-pagination--card .pagination-summary { color: var(--ds-text-2); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+.list-pagination--card .pagination-button { min-width: 36px; min-height: 36px; padding: 0 10px; border-color: var(--ds-border-strong); border-radius: var(--ds-radius-control); color: var(--ds-text); font-size: var(--ds-text-meta); font-weight: 500; }
+.list-pagination--card .pagination-button.disabled { border-color: var(--ds-border); color: var(--ds-muted); opacity: 1; }
+.list-pagination--card .pagination-button.active { border-color: transparent; }
+
+/* ── Biodiversity (Web UI Reference) ── */
+.bio-about { font-size: 0.8125rem; font-weight: 500; text-decoration: none; white-space: nowrap; }
+.bio-desc-short { display: none; }
+
+.bio-card { margin-top: var(--ds-space-20); overflow: hidden; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-card); background: var(--ds-surface); }
+
+.bio-tabs { display: flex; gap: 4px; margin: 4px var(--ds-space-16) 0; border-bottom: 1px solid var(--ds-border); }
+.bio-tabs a { display: flex; align-items: center; gap: var(--ds-space-8); height: 48px; box-sizing: border-box; margin-bottom: -1px; padding: 0 14px; border-bottom: 2px solid transparent; color: var(--ds-text-2); font-size: var(--ds-text-nav); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.bio-tabs a:hover { color: var(--ds-text); }
+.bio-tabs a[aria-current="page"] { border-bottom-color: var(--ds-brand-mark); color: var(--ds-text); }
+.bio-tabs a span { padding: 1px 8px; border-radius: 999px; background: var(--ds-surface-2); color: var(--ds-text-2); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+
+.bio-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-12); padding: var(--ds-space-16); }
+.bio-search { display: flex; flex: 1; align-items: center; gap: var(--ds-space-8); max-width: 420px; height: 40px; box-sizing: border-box; padding: 0 var(--ds-space-12); border: 1px solid var(--ds-border-strong); border-radius: var(--ds-radius-control); background: var(--ds-surface); color: var(--ds-text-2); }
+.bio-search:focus-within { border-color: var(--ds-brand-mark); box-shadow: 0 0 0 3px var(--ds-focus); }
+.bio-search input { flex: 1; min-width: 0; border: 0; outline: none; background: transparent; color: var(--ds-text); font: inherit; font-size: var(--ds-text-nav); }
+.bio-search input::-webkit-search-cancel-button { display: none; }
+.bio-count { color: var(--ds-text-2); font-size: var(--ds-text-meta); font-variant-numeric: tabular-nums; }
+.bio-reset { font-size: var(--ds-text-meta); font-weight: 500; }
+.bio-sort { margin-left: auto; color: var(--ds-text-2); font-size: 0.8125rem; }
+.bio-district { display: flex; align-items: center; gap: var(--ds-space-8); color: var(--ds-text-2); font-size: var(--ds-text-meta); font-weight: 500; }
+.bio-district .select-field { height: 40px; padding-top: 0; padding-bottom: 0; border-color: var(--ds-border-strong); border-radius: var(--ds-radius-control); color: var(--ds-text); font-size: var(--ds-text-nav); }
+
+.bio-table { display: flex; flex-direction: column; font-size: var(--ds-text-meta); }
+.bio-row { display: grid; align-items: center; min-height: 56px; border-bottom: 1px solid var(--ds-border); color: var(--ds-text); text-decoration: none; }
+.bio-row--species { grid-template-columns: 2.2fr 1.4fr 1.2fr 1fr 32px; }
+.bio-row--occ { grid-template-columns: 2fr 1.4fr 1fr 1.2fr 32px; }
+a.bio-row:hover { background: var(--ds-surface-2); color: var(--ds-text); }
+a.bio-row:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: -3px; }
+.bio-row--head { min-height: 44px; height: 44px; background: var(--ds-surface-2); color: var(--ds-text-2); font-size: 0.8125rem; font-weight: 600; }
+.bio-row > div { padding: 0 var(--ds-space-12); min-width: 0; }
+.bio-row > .bio-col-name { padding: var(--ds-space-8) var(--ds-space-12) var(--ds-space-8) var(--ds-space-16); }
+.bio-row--head > div:first-child { padding-left: var(--ds-space-16); }
+.bio-col-num { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+.bio-col-num small { display: none; }
+.bio-col-chev { display: flex; justify-content: center; color: var(--ds-text-2); }
+.bio-col-chev svg { transform: rotate(-90deg); }
+.bio-meta { display: none; }
+
+.bio-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.bio-name strong { font-size: var(--ds-text-meta); font-weight: 600; color: var(--ds-text); overflow-wrap: anywhere; }
+.bio-name em { color: var(--ds-text-2); font-size: 0.8125rem; font-style: italic; }
+.bio-name strong em { color: var(--ds-text); font-size: inherit; }
+.bio-iucn { display: inline-block; padding: 2px var(--ds-space-8); border-radius: 999px; background: var(--ds-surface-2); color: var(--ds-text-2); font-size: var(--ds-text-nav-group); font-weight: 600; }
+.bio-muted { color: var(--ds-text-2); }
+.bio-col-district { display: flex; flex-direction: column; gap: 2px; }
+.bio-col-district small { color: var(--ds-text-2); font-size: 0.8125rem; }
+.bio-col-observed { font-variant-numeric: tabular-nums; }
+
+.bio-card .empty-state, .bio-card .ds-state { margin: var(--ds-space-16); }
+.bio-foot { margin: 0; padding: 0 var(--ds-space-16) 14px; color: var(--ds-text-2); font-size: 0.8125rem; }
+.bio-foot-mobile { display: none; }
+
+@media (max-width: 768px) {
+  .bio-desc-long { display: none; }
+  .bio-desc-short { display: inline; }
+  .bio-about { display: none; }
+  .bio-tabs { margin: 0 var(--ds-space-8); overflow-x: auto; scrollbar-width: none; }
+  .bio-tabs::-webkit-scrollbar { display: none; }
+  .bio-tabs a { gap: 6px; padding: 0 10px; font-size: 0.875rem; }
+  .bio-tabs a span { padding: 1px 6px; font-size: 0.75rem; }
+  .bio-toolbar { padding: var(--ds-space-12); }
+  .bio-search { max-width: none; height: 44px; }
+  .bio-district { width: 100%; }
+  .bio-district .select-field { flex: 1; min-width: 0; height: 44px; }
+  .bio-sort { margin-left: auto; }
+  .bio-row--head { display: none; }
+  .bio-row--species, .bio-row--occ {
+    grid-template-columns: minmax(0, 1fr) auto 24px;
+    grid-template-areas: "name num chev" "meta num chev";
+    min-height: 64px;
+    padding: 10px 14px;
+    border-top: 0;
+    column-gap: var(--ds-space-12);
+  }
+  .bio-row > div { padding: 0; }
+  .bio-row > .bio-col-name { grid-area: name; padding: 0; }
+  .bio-row > .bio-col-num { grid-area: num; display: flex; flex-direction: column; align-items: flex-end; font-size: 1rem; font-weight: 650; }
+  .bio-row > .bio-col-num small { display: block; color: var(--ds-text-2); font-size: 0.6875rem; font-weight: 400; }
+  .bio-row > .bio-col-chev { grid-area: chev; }
+  .bio-row > .bio-meta { grid-area: meta; display: block; padding-top: 2px; color: var(--ds-text-2); font-size: 0.8125rem; }
+  .bio-col-family, .bio-col-iucn, .bio-col-district, .bio-col-observed, .bio-col-basis { display: none; }
+  .bio-name strong { font-size: var(--ds-text-nav); }
+  .list-pagination--card .pagination-pages { display: none; }
+  .list-pagination--card .pagination-button { min-width: 44px; min-height: 44px; }
+  .bio-foot { display: none; }
+  .bio-foot-mobile { display: block; margin: var(--ds-space-16) 0 0; color: var(--ds-text-2); font-size: var(--ds-text-nav-group); line-height: 1.5; }
+}
