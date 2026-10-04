@@ -199,8 +199,9 @@ export class DatasetsService implements OnModuleInit {
         break;
       }
       case 'GOVERNMENT':
-        if (!['GOVERNMENT_AGENCY', 'ADMIN'].includes(user.role)) {
-          throw new ForbiddenException('GOVERNMENT_AGENCY role or above required');
+        // The role enum value is GOVERNMENT (there is no GOVERNMENT_AGENCY role).
+        if (!['GOVERNMENT', 'ADMIN'].includes(user.role)) {
+          throw new ForbiddenException('GOVERNMENT role or above required');
         }
         break;
     }

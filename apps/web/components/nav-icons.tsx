@@ -26,6 +26,8 @@ const PATHS: Record<string, ReactNode> = {
   'chevron-right': <path d="M8 5l5 5-5 5" />,
   clock: <><circle cx="10" cy="10" r="7.5" /><path d="M10 5.8V10l2.5 1.7" /></>,
   calendar: <><rect x="3" y="4.5" width="14" height="12.5" rx="2" /><path d="M3 8.5h14M7 2.5v3M13 2.5v3" /></>,
+  globe: <><circle cx="10" cy="10" r="7.5" /><path d="M2.5 10h15M10 2.5c2.2 2.1 3.3 4.6 3.3 7.5S12.200 15.400 10 17.500c-2.200-2.100-3.300-4.600-3.300-7.500S7.800 4.600 10 2.500z" /></>,
+  lock: <><rect x="4.500" y="9" width="11" height="8" rx="2" /><path d="M7 9V6.500a3 3 0 0 1 6 0V9" /></>,
   search: <><circle cx="9.2" cy="9.2" r="5.8" /><path d="M17 17l-3.7-3.7" /></>,
   bell: <><path d="M5 7a5 5 0 0 1 10 0c0 5.8 2.5 6.7 2.5 6.7h-15S5 12.8 5 7" /><path d="M8.3 16.7a1.8 1.8 0 0 0 3.4 0" /></>,
   moon: <path d="M16.7 12.2A6.7 6.7 0 0 1 7.8 3.3a6.7 6.7 0 1 0 8.9 8.9z" />,
