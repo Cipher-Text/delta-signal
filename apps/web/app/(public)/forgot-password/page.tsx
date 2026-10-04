@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { forgotPasswordAction } from '../../../lib/auth-actions';
+import { redirectIfSignedIn } from '../../../lib/redirect-if-signed-in';
 
 export default async function ForgotPasswordPage(
   props: {
     searchParams: Promise<{ sent?: string }>;
   }
 ) {
+  await redirectIfSignedIn();
   const searchParams = await props.searchParams;
   if (searchParams.sent) {
     return (

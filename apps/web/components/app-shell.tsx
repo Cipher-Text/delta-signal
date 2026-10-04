@@ -6,18 +6,20 @@ import { setSidebarAction } from '../lib/sidebar-actions';
 import type { CurrentUser } from '../lib/current-user';
 import type { Theme } from '../lib/theme';
 import AppSidebar from './app-sidebar';
-import TopBar from './top-bar';
+import TopBar, { type TopBarAlerts } from './top-bar';
 
 /** Authenticated shell (§31): sidebar left, top utility bar over the main workspace. */
 export default function AppShell({
   user,
   theme,
   initialCollapsed,
+  alerts,
   children,
 }: {
   user: CurrentUser;
   theme: Theme | undefined;
   initialCollapsed: boolean;
+  alerts: TopBarAlerts;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -65,7 +67,7 @@ export default function AppShell({
         onToggleCollapsed={toggleCollapsed}
       />
       <div className="app-main-col">
-        <TopBar user={user} theme={theme} onOpenNav={() => setNavOpen(true)} />
+        <TopBar user={user} theme={theme} alerts={alerts} onOpenNav={() => setNavOpen(true)} />
         <main className="main">{children}</main>
       </div>
     </div>

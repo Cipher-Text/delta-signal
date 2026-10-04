@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { routes, type AuthResponse } from '@delta-signal/contracts';
 import { apiPost, ApiError } from './api';
 import { setSessionCookies, clearSessionCookies, getRefreshToken } from './session';
+import { INVALID_CREDENTIALS } from './session-constants';
 
 /** Only same-origin relative paths are allowed, to prevent open redirects. */
 function safeNextPath(value: FormDataEntryValue | null): string {
@@ -15,17 +16,25 @@ export async function loginAction(formData: FormData) {
   const next = safeNextPath(formData.get('next'));
   const email = String(formData.get('email') ?? '');
   const password = String(formData.get('password') ?? '');
+  const remember = formData.get('remember') === 'on';
 
   let tokens: AuthResponse;
   try {
     tokens = await apiPost<AuthResponse>(routes.auth.login, { email, password });
   } catch (err) {
-    const message = err instanceof ApiError ? err.message : 'Login failed';
+    // Any 401 gets one generic message: the API's wording differs for Google-only accounts,
+    // which would reveal that the email exists (DESIGN.md §3.3).
+    const message =
+      err instanceof ApiError
+        ? err.status === 401
+          ? INVALID_CREDENTIALS
+          : err.message
+        : 'Login failed';
     const nextQuery = next === '/dashboard' ? '' : `&next=${encodeURIComponent(next)}`;
     redirect(`/login?error=${encodeURIComponent(message)}${nextQuery}`);
   }
 
-  await setSessionCookies(tokens.accessToken, tokens.refreshToken);
+  await setSessionCookies(tokens.accessToken, tokens.refreshToken, remember);
   redirect(next);
 }
 

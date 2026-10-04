@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 import {
   ACCESS_TOKEN_COOKIE,
   REFRESH_TOKEN_COOKIE,
+  SESSION_ONLY_COOKIE,
   ACCESS_TOKEN_MAX_AGE_SECONDS,
   REFRESH_TOKEN_MAX_AGE_SECONDS,
 } from './lib/session-constants';
@@ -58,8 +59,8 @@ function isAccessTokenExpired(token: string): boolean {
   }
 }
 
-function cookieOptions(maxAge: number) {
-  return { httpOnly: true, secure: isProd, sameSite: 'lax' as const, path: '/', maxAge };
+function cookieOptions(maxAge?: number) {
+  return { httpOnly: true, secure: isProd, sameSite: 'lax' as const, path: '/', ...(maxAge ? { maxAge } : {}) };
 }
 
 export async function middleware(req: NextRequest) {
@@ -90,13 +91,20 @@ export async function middleware(req: NextRequest) {
 
     const response = NextResponse.next();
     response.cookies.set(ACCESS_TOKEN_COOKIE, tokens.accessToken, cookieOptions(ACCESS_TOKEN_MAX_AGE_SECONDS));
-    response.cookies.set(REFRESH_TOKEN_COOKIE, tokens.refreshToken, cookieOptions(REFRESH_TOKEN_MAX_AGE_SECONDS));
+    // Honour "Keep me signed in" being off: keep the refresh cookie session-only across rotations.
+    const sessionOnly = req.cookies.get(SESSION_ONLY_COOKIE)?.value === '1';
+    response.cookies.set(
+      REFRESH_TOKEN_COOKIE,
+      tokens.refreshToken,
+      cookieOptions(sessionOnly ? undefined : REFRESH_TOKEN_MAX_AGE_SECONDS),
+    );
     return response;
   } catch {
     if (isProtected) {
       const response = loginRedirect(req);
       response.cookies.delete(ACCESS_TOKEN_COOKIE);
       response.cookies.delete(REFRESH_TOKEN_COOKIE);
+      response.cookies.delete(SESSION_ONLY_COOKIE);
       return response;
     }
     return NextResponse.next();

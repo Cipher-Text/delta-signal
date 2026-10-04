@@ -22,6 +22,10 @@ const PATHS: Record<string, ReactNode> = {
   help: <><circle cx="10" cy="10" r="7.5" /><path d="M7.9 8a2.2 2.2 0 1 1 3.2 2c-.7.4-1.1.9-1.1 1.7M10 14.3v.2" /></>,
   collapse: <><rect x="3" y="3.5" width="14" height="13" rx="2" /><path d="M8 3.5v13" /></>,
   chevron: <path d="M5 8l5 5 5-5" />,
+  search: <><circle cx="9.2" cy="9.2" r="5.8" /><path d="M17 17l-3.7-3.7" /></>,
+  bell: <><path d="M5 7a5 5 0 0 1 10 0c0 5.8 2.5 6.7 2.5 6.7h-15S5 12.8 5 7" /><path d="M8.3 16.7a1.8 1.8 0 0 0 3.4 0" /></>,
+  moon: <path d="M16.7 12.2A6.7 6.7 0 0 1 7.8 3.3a6.7 6.7 0 1 0 8.9 8.9z" />,
+  sun: <><circle cx="10" cy="10" r="3.3" /><path d="M10 2v1.7M10 16.3V18M2 10h1.7M16.3 10H18M4.3 4.3l1.2 1.2M14.5 14.5l1.2 1.2M15.7 4.3l-1.2 1.2M5.5 14.5l-1.2 1.2" /></>,
   close: <path d="M5 5l10 10M15 5L5 15" />,
 };
 
