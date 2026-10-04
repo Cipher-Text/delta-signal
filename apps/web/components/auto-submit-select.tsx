@@ -17,5 +17,6 @@ export default function AutoSubmitSelect({ clears, ...props }: Props) {
     }
     form?.requestSubmit();
   };
-  return <select {...props} onChange={apply} />;
+  // Uncontrolled selects only read defaultValue on mount; remount when links change the URL filter.
+  return <select key={String(props.defaultValue ?? '')} {...props} onChange={apply} />;
 }

@@ -120,6 +120,7 @@ export default async function BiodiversityPage(props: { searchParams: Promise<Qu
               <label className="dt-search">
                 <NavIcon name="search" />
                 <input
+                  key={search ?? ''}
                   type="search"
                   name="search"
                   defaultValue={search}

@@ -28,14 +28,14 @@ export default function AlertFilterSelects({
       {severity && <input type="hidden" name="severity" value={severity} />}
       <label>
         Hazard
-        <select name="alertType" className="select-field" defaultValue={hazard ?? ''} onChange={apply}>
+        <select key={hazard ?? ''} name="alertType" className="select-field" defaultValue={hazard ?? ''} onChange={apply}>
           <option value="">All hazards</option>
           {hazards.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </label>
       <label>
         District
-        <select name="districtId" className="select-field" defaultValue={districtId ?? ''} onChange={apply}>
+        <select key={districtId ?? ''} name="districtId" className="select-field" defaultValue={districtId ?? ''} onChange={apply}>
           <option value="">All districts</option>
           {districts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>

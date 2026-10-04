@@ -179,6 +179,7 @@ export const routes = {
   radiation: {
     daily: `${apiPrefix}/radiation/daily`,
     dailyByDistrict: (districtId: string) => `${apiPrefix}/radiation/daily/${districtId}`,
+    days: `${apiPrefix}/radiation/days`,
   },
 
   marine: {
@@ -1215,7 +1216,7 @@ export interface SatelliteRadiationReading {
   lng: number;
   readingDate: string;
   shortwaveRadiationSum: number | null;
-  district?: { id: string; name: string };
+  district?: { id: string; name: string; division?: { id: string; name: string } };
 }
 
 // ─── Companies ────────────────────────────────────────────────────────────────

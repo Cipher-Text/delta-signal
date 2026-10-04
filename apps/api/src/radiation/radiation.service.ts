@@ -68,6 +68,26 @@ export class RadiationService {
     });
   }
 
+  /** Every district for one day (YYYY-MM-DD, stored as UTC midnight), with its division. */
+  getForDate(date: string) {
+    return this.prisma.satelliteRadiationReading.findMany({
+      where: { readingDate: new Date(`${date}T00:00:00.000Z`) },
+      include: { district: { select: { id: true, name: true, division: { select: { id: true, name: true } } } } },
+      orderBy: { district: { name: 'asc' } },
+    });
+  }
+
+  /** Days that have readings, newest first (YYYY-MM-DD). Satellite data arrives with a delay and can have gaps. */
+  async getDays(limit = 31): Promise<string[]> {
+    const rows = await this.prisma.satelliteRadiationReading.findMany({
+      distinct: ['readingDate'],
+      select: { readingDate: true },
+      orderBy: { readingDate: 'desc' },
+      take: limit,
+    });
+    return rows.map((r) => r.readingDate.toISOString().slice(0, 10));
+  }
+
   getReadings(districtId: string, from: Date, to: Date) {
     return this.prisma.satelliteRadiationReading.findMany({
       where: { districtId, readingDate: { gte: from, lte: to } },
