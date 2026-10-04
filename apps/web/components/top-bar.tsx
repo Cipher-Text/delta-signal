@@ -198,10 +198,6 @@ export default function TopBar({ user, theme, alerts, onOpenNav }: TopBarProps) 
             <div className="topbar-panel user-menu-panel" role="menu">
               <Link role="menuitem" href="/profile" onClick={close}>Profile &amp; alert emails</Link>
               <Link role="menuitem" href="/profile?tab=security" onClick={close}>Settings</Link>
-              <button className="user-menu-switch" type="button" role="menuitemcheckbox" aria-checked={isDark} onClick={toggleTheme}>
-                <span>Dark theme</span>
-                <span className="switch" aria-hidden="true"><span className="switch-knob" /></span>
-              </button>
               <div className="user-menu-sep" />
               <form action={logoutAction}>
                 <button role="menuitem" className="user-menu-signout" type="submit">Sign out</button>

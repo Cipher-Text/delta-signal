@@ -5813,8 +5813,7 @@ a.dashboard-secondary-stat:hover {
 .user-menu-panel { display: flex; flex-direction: column; width: 240px; }
 
 .user-menu-panel a,
-.user-menu-signout,
-.user-menu-switch {
+.user-menu-signout {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -5834,13 +5833,9 @@ a.dashboard-secondary-stat:hover {
 }
 
 .user-menu-panel a:hover,
-.user-menu-signout:hover,
-.user-menu-switch:hover { background: var(--ds-surface-2); }
+.user-menu-signout:hover { background: var(--ds-surface-2); }
 .user-menu-sep { height: 1px; margin: 6px 4px; background: var(--ds-border); }
 
-.switch { display: flex; width: 36px; height: 20px; box-sizing: border-box; padding: 2px; border-radius: 999px; background: var(--ds-border-strong); }
-.switch-knob { width: 16px; height: 16px; border-radius: 50%; background: #fff; }
-.user-menu-switch[aria-checked="true"] .switch { justify-content: flex-end; background: var(--ds-primary); }
 
 .alerts-panel { width: 340px; padding: 0; }
 .topbar-panel-head { display: flex; align-items: baseline; justify-content: space-between; padding: 12px var(--ds-space-16) 10px; border-bottom: 1px solid var(--ds-border); font-size: var(--ds-text-meta); }
