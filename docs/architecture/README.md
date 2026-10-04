@@ -82,7 +82,7 @@ Legend: ✓ Implemented
 | Admin console | `apps/admin` | Moderation, user management, alert creation, dataset publishing, organization membership management, ingestion monitoring |
 | Social content | `social-content`, `social-publishing`, `apps/admin` | Human-reviewed environmental card drafts, deterministic SVG rendering, approval, download, manual publication marking, and queued Facebook Page publishing |
 
-Advanced domains (climate forecasting, carbon accounting, research publications, structured surveys, satellite remote sensing) are planned for Phase 7 — see `docs/roadmap.md` and `docs/architecture/feature-map.md`.
+Advanced domains (climate forecasting, carbon accounting, research publications, structured surveys, satellite remote sensing) are planned for Phase 7 — see `docs/planning/roadmap.md` and `docs/architecture/feature-map.md`.
 
 ## Boundary Rules
 

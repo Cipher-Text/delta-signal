@@ -33,7 +33,7 @@ Legend: ✓ Implemented | ~ Stub / planned | ✗ Not started
 | GET  | `/auth/google/callback` | Public | ✓ | Google consent callback; issues 30s exchange code → redirects to `APP_URL/auth/callback?code=…` |
 | POST | `/auth/exchange` | Public | ✓ | Redeems 30s exchange code; returns access + refresh token pair (consumed server-side by Next.js) |
 
-Refresh tokens are opaque, Postgres-backed, and rotated on use — not Redis, not JWTs. Register/login/logout each write an audit event with the caller's IP. Google OAuth users have `authProvider = GOOGLE` and cannot use the email/password login or password-management endpoints. See `docs/flows.md` "Google OAuth Sign-in Flow" for the exchange code pattern.
+Refresh tokens are opaque, Postgres-backed, and rotated on use — not Redis, not JWTs. Register/login/logout each write an audit event with the caller's IP. Google OAuth users have `authProvider = GOOGLE` and cannot use the email/password login or password-management endpoints. See `docs/product/flows.md` "Google OAuth Sign-in Flow" for the exchange code pattern.
 
 ## Users
 

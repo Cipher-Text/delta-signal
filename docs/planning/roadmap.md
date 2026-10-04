@@ -184,7 +184,7 @@ Remaining gap: no SMS channel (EMAIL only). Government agency and emergency broa
 ### 6d. Operations
 
 - ~~Dockerfile for `apps/api`, `apps/web`, `apps/admin`.~~ Done (2026-08-22) — multi-stage Dockerfiles for all three, standalone Next.js output, `prisma migrate deploy` entrypoint, `docker-compose.prod.yml` with healthcheck-gated startup. Bug fix (2026-08-24): admin service was missing `API_URL` in `docker-compose.prod.yml` — would have caused all admin API calls to silently fail in production.
-- ~~Deployment documentation and a repeatable path.~~ Done (`infrastructure/docker/README.md`). Single-host compose only; multi-host deferred.
+- ~~Deployment documentation and a repeatable path.~~ Done (`docs/operations/docker.md`). Single-host compose only; multi-host deferred.
 - Backup/restore plan. — Not done.
 - Observability. Audit *writes* are complete; a dashboard over `AuditEvent` is still missing.
 - ~~Secure file/media handling~~ Done (2026-08-29) — `media` module fully implemented with `StorageService`, `MediaService`, `POST /media/upload`, `POST /media/presign`.

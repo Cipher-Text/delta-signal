@@ -1,6 +1,6 @@
 # Implementation Plan
 
-> Historical implementation record. Completed milestones and design deviations are retained for traceability. For current state, use [progress.md](progress.md), [roadmap.md](roadmap.md), and [architecture/feature-map.md](architecture/feature-map.md).
+> Historical implementation record. Completed milestones and design deviations are retained for traceability. For current state, use [progress log](../progress.md), [roadmap.md](roadmap.md), and [feature map](../architecture/feature-map.md).
 
 This plan defines the recommended build order. It is intentionally more concrete than the roadmap.
 
@@ -26,7 +26,7 @@ Build persistence and ingestion before features. Real environmental data in the 
 
 ## ~~Milestone 4: Database Foundation~~ — Done
 
-`packages/database` — Initial schema established and auto-seeding wired. Historical snapshot recorded when this milestone was completed: 15 migration files, 63 models, and 35 enums. Current counts are maintained in [architecture/data-model.md](architecture/data-model.md). PostgreSQL on port 5432. Auto-seed on boot via OnModuleInit hooks (`LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `SeedService`).
+`packages/database` — Initial schema established and auto-seeding wired. Historical snapshot recorded when this milestone was completed: 15 migration files, 63 models, and 35 enums. Current counts are maintained in [data-model.md](../architecture/data-model.md). PostgreSQL on port 5432. Auto-seed on boot via OnModuleInit hooks (`LocationsService`, `DatasetsService`, `ProvidersService`, `PermissionsService`, `SeedService`).
 
 ---
 
@@ -85,7 +85,7 @@ Also add to `District` model: `lat Float?` and `lng Float?` for OpenMeteo centro
 
 ## ~~Milestone 6: OpenMeteo Ingestion~~ — Done (redesigned)
 
-Implemented 2026-08-16, with a smaller scope than originally planned here. Full rationale for each deviation: `docs/ingestion-plan.md` → "Implementation status".
+Implemented 2026-08-16, with a smaller scope than originally planned here. Full rationale for each deviation: `docs/planning/ingestion-plan.md` → "Implementation status".
 
 **Target (actual):** `apps/api/src/weather/` — a self-contained module, not `apps/api/src/ingestion/` as originally scoped. The shared `IngestionModule` now tracks provider job lifecycle records for scheduled syncs.
 
@@ -108,7 +108,7 @@ apps/api/src/weather/
 2. Retry is inlined in `weather-openmeteo.client.ts` (no separate `util/retry.ts`) — 3 attempts, fixed backoff.
 3. No `ApiCallLog`/`logCall` — failures logged via NestJS `Logger` only.
 4. District coordinates: all 64 districts backfilled with real lat/lng from `open-nature`'s `district.csv` (not hardcoded divisional capitals), via `LocationsService.onModuleInit`.
-5. `weather-openmeteo.client.ts` has one method per fetch type (current/hourly/daily/air-quality) against OpenMeteo's forecast + air-quality endpoints, with a trimmed parameter set (see `docs/ingestion-plan.md`).
+5. `weather-openmeteo.client.ts` has one method per fetch type (current/hourly/daily/air-quality) against OpenMeteo's forecast + air-quality endpoints, with a trimmed parameter set (see `docs/planning/ingestion-plan.md`).
 6. Air quality fetch lives in the same client, not a separate `openmeteo-airquality.client.ts`.
 7. `weather.service.ts` loops fetchable districts (`lat`/`lng` not null), calls the client, upserts into `CurrentWeatherReading` / `HourlyWeatherForecast` / `DailyWeatherForecast` / `HourlyAirQuality` — one row per `(districtId, time)`, no `IngestionJob` start/end tracking.
 8. Air quality persistence is part of the same service, not a separate ingestion service.
@@ -317,7 +317,7 @@ Historical objective: replace the initial static seed data in `apps/web` with li
 
 Add urban AQI data from WAQI (World Air Quality Index) for station-level granularity.
 
-**Reference:** `docs/ingestion-plan.md` — priority 2 API, free key at `aqicn.org/data-platform/token/`
+**Reference:** `docs/planning/ingestion-plan.md` — priority 2 API, free key at `aqicn.org/data-platform/token/`
 
 ### Tasks
 
@@ -397,7 +397,7 @@ Both phases landed back-to-back; see `docs/progress.md` "Phase 6a Complete" and 
 
 ## Deferred / Later Phases
 
-Cross-check this table against `docs/roadmap.md` Phase 6 and Phase 7 before relying on it. This table covers items deferred from active milestones; advanced features (emissions, climate forecasting, carbon accounting, research publications, surveys, satellite) live in roadmap Phase 7.
+Cross-check this table against `docs/planning/roadmap.md` Phase 6 and Phase 7 before relying on it. This table covers items deferred from active milestones; advanced features (emissions, climate forecasting, carbon accounting, research publications, surveys, satellite) live in roadmap Phase 7.
 
 | Item | Why deferred |
 | --- | --- |

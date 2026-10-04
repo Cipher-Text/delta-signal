@@ -126,8 +126,8 @@ Update documentation when behavior or project facts change:
 - `README.md` for setup and high-level product information
 - `docs/architecture/` for modules, schema, and infrastructure
 - `docs/api/` and `packages/contracts` for API changes
-- `docs/roles-and-permissions.md` for access-control changes
-- `docs/progress.md` and `docs/roadmap.md` for milestone/status changes
+- `docs/product/roles-and-permissions.md` for access-control changes
+- `docs/progress.md` and `docs/planning/roadmap.md` for milestone/status changes
 - this file when commands, conventions, architecture, or agent assumptions
   change
 

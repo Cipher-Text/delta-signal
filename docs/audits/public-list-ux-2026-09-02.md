@@ -6,12 +6,12 @@ Scope: `apps/web` public-facing collection routes and collection-like sections. 
 > Historical UX assessment snapshot. The location pages changed on
 > 2026-09-19, and other collection work may have changed these findings since
 > the audit. Verify current route behavior before treating a listed issue as
-> open. The companion [filter audit](PUBLIC_LIST_FILTER_AUDIT.md) contains the
+> open. The companion [filter audit](public-list-filter-2026-09-02.md) contains the
 > more detailed control and API recommendations.
 
 Follow-up note: division, district, upazila, and union pages received a shared continuous non-tabbed UX revision on 2026-09-19. Location-specific findings below should be revalidated before this audit is treated as current.
 
-Evidence reviewed: `apps/web/app`, `apps/web/components`, `apps/web/lib/api.ts`, `apps/web/app/globals.css`, `apps/web/components/app-sidebar.tsx`, `docs/access-model.md`, `docs/architecture/feature-map.md`, and `docs/PUBLIC_LIST_FILTER_AUDIT.md`.
+Evidence reviewed: `apps/web/app`, `apps/web/components`, `apps/web/lib/api.ts`, `apps/web/app/globals.css`, `apps/web/components/app-sidebar.tsx`, `docs/product/access-model.md`, `docs/architecture/feature-map.md`, and `docs/audits/public-list-filter-2026-09-02.md`.
 
 ## 1. Executive Summary
 
@@ -19,7 +19,7 @@ I discovered 17 public-facing list or collection surfaces: the homepage’s embe
 
 Overall design maturity: **Needs Improvement**. The frontend has a coherent visual vocabulary—green tokens, panels, chips, tags, tables, and a small number of card grids—but it does not yet behave as one discovery system. Most pages are server-rendered tables with page-specific filter markup. Search is present only for species, explicit result counts are inconsistent, sortable lists do not expose sort, and pagination controls are absent even where the API returns totals.
 
-The most serious usability issue is access behavior: `(app)/layout.tsx` loads the current user but does not itself redirect; however, the public access intent in `docs/access-model.md` is not reflected consistently in the shell/navigation and must be verified end-to-end. Read-only collections should be anonymously browseable while write actions remain gated. This is a release-blocking product check because these are described as public environmental data surfaces.
+The most serious usability issue is access behavior: `(app)/layout.tsx` loads the current user but does not itself redirect; however, the public access intent in `docs/product/access-model.md` is not reflected consistently in the shell/navigation and must be verified end-to-end. Read-only collections should be anonymously browseable while write actions remain gated. This is a release-blocking product check because these are described as public environmental data surfaces.
 
 Top usability issues:
 

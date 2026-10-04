@@ -4,9 +4,9 @@ Delta Signal is a civic environmental intelligence platform for Bangladesh. It c
 
 The homepage at `/` is a complete public environmental board. No login required to see what is happening. Login is needed only to contribute, download data, or access advanced workflows.
 
-The authenticated `/dashboard` route is a separate role-scoped analytics workspace for researchers, organizations, government users, moderators, and admins. See [docs/dashboard.md](docs/dashboard.md) for the distinction between the two surfaces.
+The authenticated `/dashboard` route is a separate role-scoped analytics workspace for researchers, organizations, government users, moderators, and admins. See [docs/product/dashboard.md](docs/product/dashboard.md) for the distinction between the two surfaces.
 
-Full product brief: [docs/project-brief.md](docs/project-brief.md)
+Full product brief: [docs/product/project-brief.md](docs/product/project-brief.md)
 
 ---
 

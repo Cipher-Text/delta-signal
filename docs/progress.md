@@ -36,7 +36,7 @@ Public freshness indicators (2026-09-18): Added concrete weather `readingTime` a
 
 Current update (2026-09-18): Government flood and water-level intelligence now summarizes the existing latest `StationFloodForecast` and `WaterLevelReading` rows: high/elevated discharge signals, rising gauges, station coverage, river/district context, threshold status, and a ranked highest-risk list. The web government dashboard exposes these as KPIs and an operational table; no new data source or schema was introduced. API and web type checks pass.
 
-Historical summary through 2026-09-17 (Dashboard freshness metadata — all role-scoped analytics responses now include generated-at metadata and relevant provider sync status: Admin sees OpenMeteo/GBIF/World Bank, Government sees OpenMeteo, Researcher sees GBIF, and internal Moderator/Organization Admin views use no external source; freshness windows and explicit `UNKNOWN` fallback are included, and web headers display the latest relevant update/source names. Added shared contract types; metric meanings, access behavior, and ingestion schedules remain unchanged. Alert geography correction — Government analytics now aggregates active alerts from canonical `AlertArea` district/upazila/union records, deduplicates each alert per division, and reports area-less alerts as `Nationwide`; added mixed-area and nationwide regression coverage. Organization dashboard isolation — `/analytics/orgadmin` now resolves the caller's `ADMIN` memberships and scopes restoration project status, category, recency, participant totals, and top-project queries to those organizations; users with no administered organization receive an explicit empty portfolio. Added regression tests for cross-organization scoping and the no-membership zero state. Dashboard presentation refresh — `/dashboard` now has a clearer Bangladesh/live context, responsive KPI cards, elevated data panels, and improved dashboard hierarchy. See `docs/dashboard.md`. Previously: 2026-09-06 production hardening — deploy pipeline wired: `deploy.yml` builds to Docker Hub + SSH deploy to VPS via `appleboy/ssh-action`; `docker-compose.prod.yml` updated: Redis service added, `build:` replaced with `image:` refs, `REDIS_URL`/`NODE_ENV`/`APP_URL`/`GOOGLE_*`/`STORAGE_*` env vars added, API health check + `service_healthy` dependency for web/admin; root `error.tsx` + `not-found.tsx` added to `apps/web` and `apps/admin` (route-group boundaries already had them; root level was missing); `process.on('unhandledRejection')` + `process.on('uncaughtException')` added to `apps/api/src/main.ts`; `@@index([organizationId])` + `@@index([createdById])` added to `RestorationProject` schema + migration `20260906000000_add_restoration_project_indexes`; git remote (`Cipher-Text/delta-signal`) confirmed live. Previously: Google OAuth — `AuthProvider` enum (EMAIL | GOOGLE), `User.googleId`, nullable `User.passwordHash`, `OAuthExchangeCode` model, 30-second exchange code pattern, `GoogleStrategy`, `/auth/google` + `/auth/google/callback` + `/auth/exchange` endpoints, auto-send verification email on registration, SMTP/email flows fully wired (forgot-password, reset-password, verify-email), Mailpit added to docker-compose for local SMTP. Also: Docker build fixed (build cache pruned + `20260903000000_add_google_oauth` migration resolved). Previously: Companies + Industrial Sites — `Company` model (self-referential conglomerate/subsidiary tree) + `IndustrialFacility` model with `CompanyType`/`FacilityType`/`ComplianceStatus` enums; `CompaniesModule` with CRUD + two-pass idempotent seed (42 companies, 44 facilities); tabbed `/industrial-sites` page with URL-param tab switching between sites and companies; `/industrial-sites/companies/:id` and `/industrial-sites/:id` detail pages. Previously: World Bank emissions rewrite — `emissions/` module converted from user-input (`PollutionSource`/`EmissionEntry`) to World Bank Climate Change API ingestion; `NationalEmissionReading` model; 4 GHG indicators; weekly scheduler; `/emissions` frontend page showing time-series table. Before that: E2E test suite — 45 tests across 4 spec files; CI e2e job with postgres service container; docs updated — roadmap Phase 6/7/8 status, roles-and-permissions expanded with role-feature matrix and planned Phase 7/8 permissions. Community module — `CommunityModule`, 5 models, full CRUD + poll vote, `/community` and `/community/:id` pages; Phase 5 closed. PostGIS point geometry on District; Water Bodies module; flood module refactored to station-based; observation measurements; restoration sub-resources; AlertType enum + AlertArea; DatasetVersion; water level readings. 2026-08-29 BullMQ, Gamification module, Media module; 2026-08-28 OpenMeteo audit, Radiation, Marine, Emissions.)
+Historical summary through 2026-09-17 (Dashboard freshness metadata — all role-scoped analytics responses now include generated-at metadata and relevant provider sync status: Admin sees OpenMeteo/GBIF/World Bank, Government sees OpenMeteo, Researcher sees GBIF, and internal Moderator/Organization Admin views use no external source; freshness windows and explicit `UNKNOWN` fallback are included, and web headers display the latest relevant update/source names. Added shared contract types; metric meanings, access behavior, and ingestion schedules remain unchanged. Alert geography correction — Government analytics now aggregates active alerts from canonical `AlertArea` district/upazila/union records, deduplicates each alert per division, and reports area-less alerts as `Nationwide`; added mixed-area and nationwide regression coverage. Organization dashboard isolation — `/analytics/orgadmin` now resolves the caller's `ADMIN` memberships and scopes restoration project status, category, recency, participant totals, and top-project queries to those organizations; users with no administered organization receive an explicit empty portfolio. Added regression tests for cross-organization scoping and the no-membership zero state. Dashboard presentation refresh — `/dashboard` now has a clearer Bangladesh/live context, responsive KPI cards, elevated data panels, and improved dashboard hierarchy. See `docs/product/dashboard.md`. Previously: 2026-09-06 production hardening — deploy pipeline wired: `deploy.yml` builds to Docker Hub + SSH deploy to VPS via `appleboy/ssh-action`; `docker-compose.prod.yml` updated: Redis service added, `build:` replaced with `image:` refs, `REDIS_URL`/`NODE_ENV`/`APP_URL`/`GOOGLE_*`/`STORAGE_*` env vars added, API health check + `service_healthy` dependency for web/admin; root `error.tsx` + `not-found.tsx` added to `apps/web` and `apps/admin` (route-group boundaries already had them; root level was missing); `process.on('unhandledRejection')` + `process.on('uncaughtException')` added to `apps/api/src/main.ts`; `@@index([organizationId])` + `@@index([createdById])` added to `RestorationProject` schema + migration `20260906000000_add_restoration_project_indexes`; git remote (`Cipher-Text/delta-signal`) confirmed live. Previously: Google OAuth — `AuthProvider` enum (EMAIL | GOOGLE), `User.googleId`, nullable `User.passwordHash`, `OAuthExchangeCode` model, 30-second exchange code pattern, `GoogleStrategy`, `/auth/google` + `/auth/google/callback` + `/auth/exchange` endpoints, auto-send verification email on registration, SMTP/email flows fully wired (forgot-password, reset-password, verify-email), Mailpit added to docker-compose for local SMTP. Also: Docker build fixed (build cache pruned + `20260903000000_add_google_oauth` migration resolved). Previously: Companies + Industrial Sites — `Company` model (self-referential conglomerate/subsidiary tree) + `IndustrialFacility` model with `CompanyType`/`FacilityType`/`ComplianceStatus` enums; `CompaniesModule` with CRUD + two-pass idempotent seed (42 companies, 44 facilities); tabbed `/industrial-sites` page with URL-param tab switching between sites and companies; `/industrial-sites/companies/:id` and `/industrial-sites/:id` detail pages. Previously: World Bank emissions rewrite — `emissions/` module converted from user-input (`PollutionSource`/`EmissionEntry`) to World Bank Climate Change API ingestion; `NationalEmissionReading` model; 4 GHG indicators; weekly scheduler; `/emissions` frontend page showing time-series table. Before that: E2E test suite — 45 tests across 4 spec files; CI e2e job with postgres service container; docs updated — roadmap Phase 6/7/8 status, roles-and-permissions expanded with role-feature matrix and planned Phase 7/8 permissions. Community module — `CommunityModule`, 5 models, full CRUD + poll vote, `/community` and `/community/:id` pages; Phase 5 closed. PostGIS point geometry on District; Water Bodies module; flood module refactored to station-based; observation measurements; restoration sub-resources; AlertType enum + AlertArea; DatasetVersion; water level readings. 2026-08-29 BullMQ, Gamification module, Media module; 2026-08-28 OpenMeteo audit, Radiation, Marine, Emissions.)
 
 ## Status Legend
 
@@ -541,7 +541,7 @@ Three production-ready Dockerfiles, standalone Next.js config, a production dock
 - `apps/web/Dockerfile` — multi-stage. Builder runs `next build` (standalone mode). Runner copies the standalone tree + `apps/web/.next/static/`. Non-root user (`web:nature`).
 - `apps/admin/Dockerfile` — same pattern as web.
 - `docker-compose.prod.yml` — full production stack: postgres (with healthcheck), api (waits on `service_healthy`), web, admin. All env vars documented in compose file with defaults. Postgres not port-exposed to host by default.
-- `infrastructure/docker/README.md` — deployment guide: quick-start commands, required env vars table, manual migration command, health check summary, known gaps.
+- `docs/operations/docker.md` — deployment guide: quick-start commands, required env vars table, manual migration command, health check summary, known gaps.
 
 **Next.js config changes:**
 - `apps/web/next.config.mjs` — added `output: 'standalone'`, `outputFileTracingRoot` (repo root), `transpilePackages: ['@delta-signal/shared', '@delta-signal/contracts']`. The `.mjs` file takes precedence over `.ts`; the `.ts` file (accidentally created) was removed.
@@ -702,7 +702,7 @@ Known gap at this pass: failed logins were not audited — there was no `USER_LO
 
 ## Weather Ingestion (built 2026-08-16)
 
-Self-contained `apps/api/src/weather` module — not the generic `apps/api/src/ingestion` module described in `docs/ingestion-plan.md`/`docs/implementation-plan.md` M6. See those docs' "Implementation status" notes for the design deviations (no `ApiCallLog`, no `IngestionJob` wiring, trimmed field set, `districtId` FK instead of proximity search).
+Self-contained `apps/api/src/weather` module — not the generic `apps/api/src/ingestion` module described in `docs/planning/ingestion-plan.md`/`docs/planning/implementation-plan.md` M6. See those docs' "Implementation status" notes for the design deviations (no `ApiCallLog`, no `IngestionJob` wiring, trimmed field set, `districtId` FK instead of proximity search).
 
 - `weather-openmeteo.client.ts` — native `fetch` + manual 3-attempt retry against OpenMeteo forecast + air-quality APIs
 - `weather.service.ts` — fetch/map/upsert into 4 tables; read methods for controller and cross-module use
@@ -890,15 +890,15 @@ Verified live across both passes: with an empty DB, all sections correctly showe
 
 ### Project docs
 
-- `docs/project-brief.md`
-- `docs/access-model.md`
-- `docs/tech-stack.md`
-- `docs/roles-and-permissions.md`
-- `docs/business-logic.md`
-- `docs/flows.md`
-- `docs/roadmap.md`
+- `docs/product/project-brief.md`
+- `docs/product/access-model.md`
+- `docs/operations/tech-stack.md`
+- `docs/product/roles-and-permissions.md`
+- `docs/product/business-logic.md`
+- `docs/product/flows.md`
+- `docs/planning/roadmap.md`
 - `docs/progress.md`
-- `docs/implementation-plan.md`
+- `docs/planning/implementation-plan.md`
 
 ### Architecture docs
 
@@ -916,7 +916,7 @@ Verified live across both passes: with an empty DB, all sections correctly showe
 
 ### Ingestion and planning
 
-- `docs/ingestion-plan.md` — gap analysis vs Java backends, priority APIs, NestJS ingestion design, what NOT to port
+- `docs/planning/ingestion-plan.md` — gap analysis vs Java backends, priority APIs, NestJS ingestion design, what NOT to port
 
 ### Frontend mocks
 
@@ -995,7 +995,7 @@ Verified live across both passes: with an empty DB, all sections correctly showe
 
 ## Next Work
 
-See `docs/implementation-plan.md` for the full milestone list (M5–M14).
+See `docs/planning/implementation-plan.md` for the full milestone list (M5–M14).
 
 1. ~~Review and approve the public-first mock direction.~~ Done.
 2. ~~Revise mocks for production-level responsiveness and copy.~~ Done.
@@ -1004,7 +1004,7 @@ See `docs/implementation-plan.md` for the full milestone list (M5–M14).
 5. ~~Implement backend foundation.~~ Done — M3.
 6. ~~Start the database and run migration.~~ Done — M4. Postgres on port 5433, Redis on 6379, API live at port 3001.
 7. ~~Seed data.~~ Done — auto-seeded on first boot (8 div / 64 dist / 5 datasets).
-8. ~~Write ingestion plan — analyse Java backends, identify gaps, plan NestJS design.~~ Done — `docs/ingestion-plan.md`.
+8. ~~Write ingestion plan — analyse Java backends, identify gaps, plan NestJS design.~~ Done — `docs/planning/ingestion-plan.md`.
 9. **M5 partial:** District lat/lng ✓, auth refresh/logout ✓ (2026-08-16, Postgres-backed, not Redis — see "Auth Refresh/Logout" above), and `RestorationProject`/`RestorationParticipant` ✓ (2026-08-19, built as part of M11 — see "Restoration Projects Module" above). Still pending: `ReportMedia`, `ReportComment` models.
 10. ~~**M6:** Implement OpenMeteo ingestion — weather + air quality.~~ Done (2026-08-16), with a redesigned scope: self-contained `weather` module for provider client/service/scheduler/controller. `IngestionJob` tracking was added later on 2026-08-24. See `docs/integrations/openmeteo.md`.
 11. ~~**M13:** Frontend Data Integration.~~ Done (2026-08-19) — homepage weather sidebar (2026-08-16), full auth flow (2026-08-16), `/profile` rebuilt to match its mockup with a reusable sidebar app-shell (2026-08-17), citizen report submission (2026-08-17), observation submission (2026-08-17), live platform metrics (2026-08-19, task 7), and every remaining static homepage component wired to live data or an honest empty state (2026-08-19, task 2) — see "Public Weather Wiring", "Public Auth Flow Wiring", "Profile Page Mockup Fidelity", "Report Submission Form", "Observations Module", "Live Platform Metrics", and "Homepage Preview Sections Wired" above. **Milestone 13 is fully complete.**

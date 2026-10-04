@@ -174,7 +174,7 @@ Seeded on first boot by `PermissionsService.onModuleInit` with 18 named permissi
 | `DailyWeatherForecast` | `id`, `districtId`, `lat`, `lng`, `forecastDate date`, `weatherCode?`, `temperature2mMax?`, `temperature2mMin?`, `apparentTemperatureMax?`, `apparentTemperatureMin?`, `precipitationSum?`, `precipitationProbabilityMax?`, `windSpeed10mMax?`, `uvIndexMax?`, `sunrise?`, `sunset?` | → `District`; unique `(districtId, forecastDate)` |
 | `HourlyAirQuality` | `id`, `districtId`, `lat`, `lng`, `forecastTime`, `pm10?`, `pm25?`, `carbonMonoxide?`, `nitrogenDioxide?`, `sulphurDioxide?`, `ozone?`, `uvIndex?` | → `District`; unique `(districtId, forecastTime)` |
 
-All 4 weather tables are keyed by `districtId`, not raw `lat`/`lng` proximity matching — every fetch already targets a known district's coordinates, so a direct FK is simpler and exact. `lat`/`lng` are still stored on each row for provenance, duplicating the district's coordinates at fetch time. Field sets are trimmed relative to the OpenMeteo API's full parameter list (see `docs/ingestion-plan.md` for the parameters actually requested) — no soil temperature/moisture or multi-height wind data. Populated by the `weather` module (`apps/api/src/weather/`); see `docs/progress.md` "Weather Ingestion".
+All 4 weather tables are keyed by `districtId`, not raw `lat`/`lng` proximity matching — every fetch already targets a known district's coordinates, so a direct FK is simpler and exact. `lat`/`lng` are still stored on each row for provenance, duplicating the district's coordinates at fetch time. Field sets are trimmed relative to the OpenMeteo API's full parameter list (see `docs/planning/ingestion-plan.md` for the parameters actually requested) — no soil temperature/moisture or multi-height wind data. Populated by the `weather` module (`apps/api/src/weather/`); see `docs/progress.md` "Weather Ingestion".
 
 ## Satellite Radiation and Marine Models
 
@@ -256,7 +256,7 @@ Future candidates for proper geometry fields:
 
 `Observation`, `Species`, `RestorationProject`, and `WaterBody` were previously listed here and are now in the schema.
 
-Advanced domain models — climate forecasts, carbon footprint, research publications, structured surveys — are planned for Phase 7 and get their schema when that phase starts. Emissions tracking (`NationalEmissionReading`) shipped in Phase 7 as the first domain, initially as user-input (2026-08-28) then rewritten to World Bank API ingestion (2026-09-02). See `docs/roadmap.md` Phase 7 and `docs/architecture/feature-map.md`.
+Advanced domain models — climate forecasts, carbon footprint, research publications, structured surveys — are planned for Phase 7 and get their schema when that phase starts. Emissions tracking (`NationalEmissionReading`) shipped in Phase 7 as the first domain, initially as user-input (2026-08-28) then rewritten to World Bank API ingestion (2026-09-02). See `docs/planning/roadmap.md` Phase 7 and `docs/architecture/feature-map.md`.
 
 ## Status Workflows
 

@@ -7,7 +7,7 @@ store OpenMeteo seasonal forecast data.
 
 **Roadmap decision:** strategically relevant, but deferred until core
 report-to-agency response workflows and official Bangladesh weather and flood
-source integrations are stronger. See the [roadmap decision](../roadmap.md#seasonal-forecast-decision).
+source integrations are stronger. See the [roadmap decision](../planning/roadmap.md#seasonal-forecast-decision).
 
 ## Provider
 
