@@ -107,6 +107,11 @@
   --ds-ramp-solar-3: #ddb65a;
   --ds-ramp-solar-4: #b98a2e;
   --ds-ramp-solar-ink: #16201c;
+  /* Greenhouse-gas series colours: identical in light and dark (data colours, §21A). */
+  --ds-gas-co2: #4d5c56;
+  --ds-gas-ch4: #4e8b57;
+  --ds-gas-n2o: #2878b5;
+  --ds-gas-other: #b9c4bf;
   --ds-ramp-water-4-text: #ffffff;
   --ds-ramp-temp-1: #f7e6d4;
   --ds-ramp-temp-1-text: #16201c;
@@ -6651,4 +6656,100 @@ a.rad-row:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: -3
   .rad-bar { grid-area: bar; height: 6px; }
   .rad-foot { display: none; }
   .rad-foot-mobile { display: block; margin: var(--ds-space-16) 0 0; color: var(--ds-text-2); font-size: var(--ds-text-nav-group); line-height: 1.5; }
+}
+
+/* ── Greenhouse gas emissions (Web UI Reference) ── */
+.em-source { display: flex; align-items: center; gap: var(--ds-space-8); flex-shrink: 0; color: var(--ds-text-2); font-size: 0.8125rem; }
+.em-badge { display: inline-flex; align-items: center; height: 26px; box-sizing: border-box; padding: 0 10px; border: 1px dotted var(--ds-text-2); border-radius: 999px; color: var(--ds-text); font-size: 0.8125rem; font-weight: 500; }
+.em-source-short { display: none; }
+
+.em-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ds-space-16); margin-top: var(--ds-space-20); }
+.em-kpi { display: flex; flex-direction: column; gap: 2px; padding: var(--ds-space-16) var(--ds-space-20); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-card); background: var(--ds-surface); }
+.em-kpi > span { color: var(--ds-text-2); font-size: 0.8125rem; line-height: 1.4; }
+.em-kpi > span:first-child { font-weight: 500; }
+.em-kpi strong { color: var(--ds-text); font-size: 1.625rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.em-kpi small { color: var(--ds-text-2); font-size: 0.8125rem; font-weight: 500; }
+
+.em-card { margin-top: var(--ds-space-20); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-card); background: var(--ds-surface); }
+.em-chart { display: flex; flex-direction: column; gap: 14px; padding: var(--ds-space-20); }
+.em-chart-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ds-space-16); }
+.em-chart-head h2, .em-tbl-head h2 { margin: 0; font-size: var(--ds-text-body); font-weight: 600; color: var(--ds-text); }
+.em-sub { color: var(--ds-text-2); font-size: 0.8125rem; }
+.em-range { display: flex; width: 380px; max-width: 100%; gap: 4px; padding: 4px; border-radius: var(--ds-radius-control); background: var(--ds-surface-2); }
+.em-range a { display: flex; flex: 1; align-items: center; justify-content: center; height: 32px; padding: 0 var(--ds-space-12); border-radius: var(--ds-radius-control-sm); color: var(--ds-text-2); font-size: var(--ds-text-meta); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.em-range a:hover { color: var(--ds-text); }
+.em-range a[aria-current="true"] { background: var(--ds-surface-elevated); color: var(--ds-text); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08); }
+
+.em-svg { display: block; }
+.em-grid { stroke: var(--ds-border); stroke-width: 1; }
+.em-tick { fill: var(--ds-text-2); font-size: 11px; }
+.em-area { fill-opacity: 0.9; }
+.em-area--co2 { fill: var(--ds-gas-co2); }
+.em-area--ch4 { fill: var(--ds-gas-ch4); }
+.em-area--n2o { fill: var(--ds-gas-n2o); }
+.em-area--other { fill: var(--ds-gas-other); }
+.em-area-label { fill: var(--ds-text); font-size: 12px; font-weight: 600; }
+.em-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.em-legend span { display: flex; align-items: center; gap: 6px; color: var(--ds-text-2); font-size: var(--ds-text-nav-group); }
+.em-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.em-swatch.em-area--co2 { background: var(--ds-gas-co2); }
+.em-swatch.em-area--ch4 { background: var(--ds-gas-ch4); }
+.em-swatch.em-area--n2o { background: var(--ds-gas-n2o); }
+.em-swatch.em-area--other { background: var(--ds-gas-other); }
+
+.em-table-card { overflow: hidden; }
+.em-tbl-head { display: flex; align-items: baseline; justify-content: space-between; padding: var(--ds-space-16) var(--ds-space-20); }
+.em-csv { font-size: 0.8125rem; font-weight: 500; text-decoration: none; }
+.em-unit { display: none; }
+.em-table { display: flex; flex-direction: column; max-height: 520px; overflow-y: auto; font-size: var(--ds-text-meta); font-variant-numeric: tabular-nums; }
+.em-row { display: grid; grid-template-columns: 0.8fr 1fr 1fr 1fr 1fr 0.9fr 1fr; align-items: center; min-height: 44px; border-bottom: 1px solid var(--ds-border); color: var(--ds-text); }
+.em-row--head { position: sticky; top: 0; z-index: 1; height: 44px; background: var(--ds-surface-2); color: var(--ds-text-2); font-size: 0.8125rem; font-weight: 600; }
+.em-row > div { padding: 0 var(--ds-space-12); min-width: 0; }
+.em-row > div:first-child { padding-left: var(--ds-space-16); }
+.em-row > div:last-of-type { padding-right: var(--ds-space-16); }
+.em-year, .em-total { font-weight: 600; }
+.em-num { text-align: right; }
+.em-muted { color: var(--ds-text-2); }
+.em-mobile-gases { display: none; }
+.em-foot { margin: 0; padding: var(--ds-space-12) var(--ds-space-20); color: var(--ds-text-2); font-size: 0.8125rem; line-height: 1.55; overflow-wrap: anywhere; }
+.em-foot-mobile { display: none; }
+
+@media (max-width: 900px) {
+  .em-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 768px) {
+  .em-source-long { display: none; }
+  .em-source-short { display: inline; }
+  .em-kpis { gap: var(--ds-space-8); margin-top: var(--ds-space-12); }
+  .em-kpi { padding: var(--ds-space-12) 14px; }
+  .em-kpi strong { font-size: 1.25rem; }
+  .em-kpi--extra { display: none; }
+  .em-chart { padding: 14px; gap: 10px; }
+  .em-chart-head h2 { font-size: var(--ds-text-nav); }
+  .em-sub { display: none; }
+  /* The SVG scales down as a whole, so enlarge its text to stay readable (~9px rendered). */
+  .em-tick { font-size: 22px; }
+  .em-area-label { font-size: 24px; }
+  .em-tick--near { display: none; }
+  .em-range { width: 100%; }
+  .em-range a { height: 40px; padding: 0 var(--ds-space-8); font-size: 0.8125rem; }
+  .em-tbl-head { padding: var(--ds-space-12) 14px; }
+  .em-tbl-head h2 { font-size: var(--ds-text-nav); }
+  .em-csv { display: none; }
+  .em-unit { display: inline; color: var(--ds-text-2); font-size: var(--ds-text-nav-group); }
+  .em-table { max-height: 640px; }
+  .em-row--head, .em-col-gas { display: none; }
+  .em-row {
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    grid-template-areas: "year gases total" "year gases chg";
+    min-height: 56px; padding: var(--ds-space-8) 14px; column-gap: var(--ds-space-12); row-gap: 0;
+  }
+  .em-row > div { padding: 0 !important; }
+  .em-year { grid-area: year; font-size: var(--ds-text-nav); }
+  .em-mobile-gases { display: block; grid-area: gases; color: var(--ds-text-2); font-size: var(--ds-text-nav-group); }
+  .em-row > .em-total { grid-area: total; font-size: var(--ds-text-nav); font-weight: 650; }
+  .em-row > .em-num:last-of-type { grid-area: chg; font-size: var(--ds-text-nav-group); }
+  .em-foot { display: none; }
+  .em-foot-mobile { display: block; margin: var(--ds-space-16) 0 0; color: var(--ds-text-2); font-size: var(--ds-text-nav-group); line-height: 1.5; }
 }
