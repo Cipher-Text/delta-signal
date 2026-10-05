@@ -10,832 +10,404 @@ import {
   type AlertSubscription,
   type PaginatedEnvelope,
   type GamificationSummary,
-  type BadgeSummary,
-  type MissingField,
 } from '@delta-signal/contracts';
-import { titleCase, relativeTime } from '../../../lib/format';
+import { titleCase, relativeTime, dhakaDateTime, dhakaDate } from '../../../lib/format';
 import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
-import { updateProfileAction, changePasswordAction, uploadProfilePictureAction, removeProfilePictureAction } from '../../../lib/profile-actions';
-import { ENVIRONMENTAL_EXPERTISE, ENVIRONMENTAL_RESEARCH_INTERESTS } from '@delta-signal/shared';
-import TagInput from '../../../components/tag-input';
-import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
+import {
+  updateProfileAction,
+  changePasswordAction,
+  uploadProfilePictureAction,
+  removeProfilePictureAction,
+} from '../../../lib/profile-actions';
+import type { DistrictWithDivision } from '../../../components/district-select';
 import ProfilePictureForm from '../../../components/profile-picture-form';
+import NavIcon from '../../../components/nav-icons';
+import ProfileForm from '../../../components/profile/profile-form';
+import { LINK_PLATFORMS } from '../../../lib/profile-links';
+import AlertSubscribeForm from '../../../components/profile/alert-subscribe-form';
+import PasswordForm from '../../../components/profile/password-form';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
 type ProfileTab = 'personal' | 'alerts' | 'security';
 
 const TABS: { id: ProfileTab; label: string }[] = [
-  { id: 'personal',     label: 'Profile' },
-  { id: 'alerts',       label: 'Alerts' },
-  { id: 'security',     label: 'Security' },
+  { id: 'personal', label: 'Profile' },
+  { id: 'alerts', label: 'Alert emails' },
+  { id: 'security', label: 'Security' },
 ];
 
 const ROLE_LABELS: Record<string, string> = {
-  CITIZEN:            'Citizen contributor',
-  RESEARCHER:         'Researcher',
+  CITIZEN: 'Citizen',
+  RESEARCHER: 'Researcher',
   ORGANIZATION_ADMIN: 'Organization admin',
-  GOVERNMENT:         'Government official',
-  MODERATOR:          'Moderator',
-  ADMIN:              'Administrator',
-};
-
-const ROLE_BADGE_CLASS: Record<string, string> = {
-  CITIZEN:            'role-citizen',
-  RESEARCHER:         'role-researcher',
-  ORGANIZATION_ADMIN: 'role-org-admin',
-  GOVERNMENT:         'role-government',
-  MODERATOR:          'role-moderator',
-  ADMIN:              'role-admin',
-};
-
-const REPORT_STATUS_VARIANT: Record<string, string> = {
-  VERIFIED:     'success',
-  RESOLVED:     'success',
-  REJECTED:     'danger',
-  SUBMITTED:    'muted',
-  UNDER_REVIEW: 'info',
-};
-
-const TRUST_VARIANT: Record<string, string> = {
-  RESEARCH_GRADE: 'success',
-  COMMUNITY:      'info',
-  UNVERIFIED:     'muted',
-  FLAGGED:        'danger',
+  GOVERNMENT: 'Government',
+  MODERATOR: 'Moderator',
+  ADMIN: 'Admin',
 };
 
 const SEVERITY_LABEL: Record<string, string> = {
-  INFO:      'All alerts (Info+)',
-  WATCH:     'Watch and above',
-  WARNING:   'Warning and above',
+  INFO: 'All alerts',
+  WATCH: 'Watch and above',
+  WARNING: 'Warning and above',
   EMERGENCY: 'Emergency only',
 };
 
-const SEVERITY_VARIANT: Record<string, string> = {
-  INFO:      'info',
-  WATCH:     'warning',
-  WARNING:   'warning',
-  EMERGENCY: 'danger',
-};
-
-const SOCIAL_PLATFORMS = [
-  'googleScholar', 'researchGate', 'orcid',
-  'linkedin', 'website', 'github', 'facebook',
-] as const;
+const BADGE_CATEGORIES: Array<{ key: string; label: string; emoji: string }> = [
+  { key: 'civic_guardian', label: 'Civic Guardian', emoji: '🛡️' },
+  { key: 'water_sentinel', label: 'Water Sentinel', emoji: '🌊' },
+  { key: 'clean_air_defender', label: 'Clean Air Defender', emoji: '🌬️' },
+  { key: 'biodiversity_explorer', label: 'Biodiversity Explorer', emoji: '🌿' },
+  { key: 'restoration_pioneer', label: 'Restoration Pioneer', emoji: '🌳' },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function initials(displayName: string): string {
   const parts = displayName.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? '';
-  const last  = parts.length > 1 ? parts[parts.length - 1][0] : '';
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
   return (first + last).toUpperCase();
 }
 
-function monthYear(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+function monthYear(iso: string, month: 'long' | 'short' = 'long'): string {
+  return new Date(iso).toLocaleDateString('en-US', { month, year: 'numeric' });
 }
 
-function groupByDivision(districts: DistrictWithDivision[]): Map<string, DistrictWithDivision[]> {
-  const map = new Map<string, DistrictWithDivision[]>();
+function groupByDivision(districts: DistrictWithDivision[]) {
+  const map = new Map<string, { id: string; name: string }[]>();
   for (const d of districts) {
     const div = d.division?.name ?? 'Other';
     if (!map.has(div)) map.set(div, []);
-    map.get(div)!.push(d);
+    map.get(div)!.push({ id: d.id, name: d.name });
   }
-  return map;
+  return [...map.entries()].map(([division, list]) => ({ division, districts: list }));
 }
 
-// ── Profile Strength Widget ───────────────────────────────────────────────────
+const empty = <T,>(): PaginatedEnvelope<T> => ({ data: [], total: 0, page: 1, pageSize: 10 });
 
-const CIRCUMFERENCE = 2 * Math.PI * 28; // r=28, cx=cy=36 in a 72x72 viewBox
+// ── Left column ───────────────────────────────────────────────────────────────
 
-function ProfileStrengthWidget({ game }: { game: GamificationSummary | null }) {
+function StrengthCard({ game }: { game: GamificationSummary | null }) {
   if (!game) return null;
-
-  const { completeness, missingFields, points, level, levelLabel, nextLevelPoints } = game;
-  const offset = CIRCUMFERENCE * (1 - completeness / 100);
+  const earned = game.badges.filter((b) => b.earned).length;
+  const visible = game.missingFields.slice(0, 4);
+  const rest = game.missingFields.slice(4);
+  const points =
+    game.nextLevelPoints > 0 ? `${game.points} of ${game.nextLevelPoints} points` : `${game.points} points`;
 
   return (
-    <div className="strength-widget" aria-label="Profile strength">
-      <div className="strength-widget-left">
-        <div className="strength-circle-wrap" aria-hidden="true">
-          <svg viewBox="0 0 72 72" width="72" height="72" className="strength-circle">
-            <circle cx="36" cy="36" r="28" fill="none" strokeWidth="6" className="strength-track" />
-            <circle
-              cx="36" cy="36" r="28" fill="none" strokeWidth="6"
-              strokeDasharray={`${CIRCUMFERENCE}`}
-              strokeDashoffset={offset}
-              strokeLinecap="round"
-              className="strength-fill"
-              transform="rotate(-90 36 36)"
-            />
-          </svg>
-          <span className="strength-pct">{completeness}%</span>
-        </div>
-
-        <div className="strength-text">
-          <strong>Profile strength</strong>
-          <span>{completeness === 100 ? 'Complete!' : `${missingFields.length} item${missingFields.length !== 1 ? 's' : ''} remaining`}</span>
-          <span className="strength-level">
-            Lv.{level} · {levelLabel}
-            {nextLevelPoints > 0 && <> · <strong>{points}</strong>/{nextLevelPoints} pts</>}
-            {nextLevelPoints === -1 && <> · <strong>{points}</strong> pts (max)</>}
-          </span>
-        </div>
+    <section className="pf-side-card" aria-labelledby="pf-strength-h">
+      <div className="pf-side-title">
+        <h2 id="pf-strength-h">Profile strength</h2>
+        <strong>{game.completeness}%</strong>
       </div>
+      <div
+        className="pf-bar"
+        role="progressbar"
+        aria-valuenow={game.completeness}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Profile strength"
+      >
+        <span style={{ width: `${game.completeness}%` }} />
+      </div>
+      <p className="pf-side-sub">
+        Level {game.level} · {game.levelLabel} · {points} · {earned} of {game.badges.length} badges
+      </p>
 
-      {missingFields.length > 0 && (
-        <div className="strength-chips" aria-label="Quick actions to improve profile">
-          {missingFields.slice(0, 4).map((f: MissingField) => (
-            <a key={f.key} href={f.href} className="strength-chip" title={f.hint}>
-              +{f.weight}% {f.label}
-            </a>
+      {visible.length > 0 && (
+        <ul className="pf-todo">
+          {visible.map((f) => (
+            <li key={f.key}>
+              <Link href={f.href} title={f.hint}>
+                <span>{f.label}</span>
+                <b>+{f.weight}%</b>
+                <NavIcon name="chevron-right" />
+              </Link>
+            </li>
           ))}
-          {missingFields.length > 4 && (
-            <span className="strength-chip strength-chip-more">+{missingFields.length - 4} more</span>
-          )}
-        </div>
+        </ul>
       )}
-    </div>
-  );
-}
 
-// ── Badge Grid ────────────────────────────────────────────────────────────────
-
-const BADGE_CATEGORIES: Array<{ key: string; label: string; emoji: string }> = [
-  { key: 'civic_guardian',        label: 'Civic Guardian',        emoji: '🛡️' },
-  { key: 'water_sentinel',        label: 'Water Sentinel',        emoji: '🌊' },
-  { key: 'clean_air_defender',    label: 'Clean Air Defender',    emoji: '🌬️' },
-  { key: 'biodiversity_explorer', label: 'Biodiversity Explorer', emoji: '🌿' },
-  { key: 'restoration_pioneer',   label: 'Restoration Pioneer',   emoji: '🌳' },
-];
-
-const TIER_ORDER = ['BRONZE', 'SILVER', 'GOLD', 'EMERALD'] as const;
-
-const TIER_CSS: Record<string, string> = {
-  BRONZE:  'badge-tier-bronze',
-  SILVER:  'badge-tier-silver',
-  GOLD:    'badge-tier-gold',
-  EMERALD: 'badge-tier-emerald',
-};
-
-function BadgeCard({ badge }: { badge: BadgeSummary }) {
-  const progressPct = badge.threshold > 0
-    ? Math.round((Math.min(badge.current, badge.threshold) / badge.threshold) * 100)
-    : 0;
-
-  return (
-    <div
-      className={`badge-card ${badge.earned ? 'badge-earned' : 'badge-locked'} ${TIER_CSS[badge.tier] ?? ''}`}
-      title={badge.description}
-      aria-label={`${badge.label} ${badge.tierLabel} badge${badge.earned ? ' — earned' : ` — ${badge.current}/${badge.threshold}`}`}
-    >
-      <div className="badge-card-header">
-        <span className="badge-emoji" aria-hidden="true">{badge.emoji}</span>
-        <span className="badge-tier-label">{badge.tierLabel}</span>
-        {badge.earned && (
-          <span className="badge-earned-mark" aria-label="Earned">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-          </span>
+      <details className="pf-more">
+        <summary>
+          See {rest.length > 0 ? `${game.missingFields.length} remaining steps and ` : 'all '}badges
+        </summary>
+        {rest.length > 0 && (
+          <ul className="pf-todo">
+            {rest.map((f) => (
+              <li key={f.key}>
+                <Link href={f.href} title={f.hint}>
+                  <span>{f.label}</span>
+                  <b>+{f.weight}%</b>
+                  <NavIcon name="chevron-right" />
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
-      </div>
-      <p className="badge-description">{badge.description}</p>
-      {!badge.earned && (
-        <div className="badge-progress" aria-label={`Progress: ${badge.current} of ${badge.threshold}`}>
-          <div className="badge-progress-bar" style={{ width: `${progressPct}%` }} />
-          <span className="badge-progress-label">{badge.current}/{badge.threshold}</span>
-        </div>
-      )}
-      <div className="badge-points">{badge.points} pts</div>
-    </div>
-  );
-}
-
-function BadgeGrid({ game }: { game: GamificationSummary | null }) {
-  if (!game) {
-    return (
-      <div className="empty-state">
-        Achievement data is unavailable. Reload the page to try again.
-      </div>
-    );
-  }
-
-  const earnedCount = game.badges.filter((b) => b.earned).length;
-
-  return (
-    <div className="badge-grid">
-      <div className="badge-grid-summary">
-        <strong>{earnedCount}</strong> of <strong>{game.badges.length}</strong> badges earned
-        &nbsp;·&nbsp;
-        <strong>{game.points}</strong> contribution points
-        &nbsp;·&nbsp;
-        Level {game.level} — {game.levelLabel}
-        {game.nextLevelPoints > 0 && (
-          <> &nbsp;·&nbsp; <strong>{game.nextLevelPoints - game.points}</strong> pts to next level</>
-        )}
-      </div>
-
-      {BADGE_CATEGORIES.map(({ key, label, emoji }) => {
-        const catBadges = TIER_ORDER.map((tier) =>
-          game.badges.find((b) => b.category === key && b.tier === tier)
-        ).filter(Boolean) as BadgeSummary[];
-
-        if (catBadges.length === 0) return null;
-
-        return (
-          <section key={key} className="badge-category">
-            <h3 className="badge-category-title">
-              <span aria-hidden="true">{emoji}</span> {label}
-            </h3>
-            <div className="badge-category-grid">
-              {catBadges.map((badge) => (
-                <BadgeCard key={badge.key} badge={badge} />
-              ))}
-            </div>
-          </section>
-        );
-      })}
-    </div>
+        <ul className="pf-badges">
+          {BADGE_CATEGORIES.map((c) => {
+            const tiers = game.badges.filter((b) => b.category === c.key);
+            if (tiers.length === 0) return null;
+            const done = tiers.filter((b) => b.earned).length;
+            return (
+              <li key={c.key} title={tiers.map((b) => `${b.tierLabel}: ${b.description}`).join('\n')}>
+                <span aria-hidden="true">{c.emoji}</span>
+                <span className="pf-badge-name">{c.label}</span>
+                <span className="pf-tiers" aria-label={`${done} of ${tiers.length} tiers earned`}>
+                  {tiers.map((b) => (
+                    <i key={b.key} data-on={b.earned} />
+                  ))}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </details>
+    </section>
   );
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
-export default async function ProfilePage(
-  props: {
-    searchParams: Promise<{
-      tab?: string;
-      subscribed?: string;
-      unsubscribed?: string;
-      sub_error?: string;
-      profileSaved?: string;
-      profileError?: string;
-      profilePictureSaved?: string;
-      profilePictureError?: string;
-      pwError?: string;
-    }>;
-  }
-) {
-  const searchParams = await props.searchParams;
-  const activeTab: ProfileTab =
-    searchParams.tab && TABS.some((t) => t.id === searchParams.tab)
-      ? (searchParams.tab as ProfileTab)
-      : 'personal';
+export default async function ProfilePage(props: {
+  searchParams: Promise<{
+    tab?: string;
+    subscribed?: string;
+    unsubscribed?: string;
+    sub_error?: string;
+    profileSaved?: string;
+    profileError?: string;
+    profilePictureSaved?: string;
+    profilePictureError?: string;
+    pwError?: string;
+  }>;
+}) {
+  const sp = await props.searchParams;
+  const activeTab: ProfileTab = TABS.some((t) => t.id === sp.tab) ? (sp.tab as ProfileTab) : 'personal';
 
-  const user        = await getCurrentUser();
+  const user = await getCurrentUser();
   const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
 
-  const [myReports, myObservations, subscriptions, districts, gameData] = await Promise.all([
-    apiGetAuthed<PaginatedEnvelope<CitizenReport>>(routes.reports.mine, accessToken).catch(
-      (): PaginatedEnvelope<CitizenReport> => ({ data: [], total: 0, page: 1, pageSize: 10 }),
-    ),
-    apiGetAuthed<PaginatedEnvelope<Observation>>(routes.observations.mine, accessToken).catch(
-      (): PaginatedEnvelope<Observation> => ({ data: [], total: 0, page: 1, pageSize: 10 }),
-    ),
-    apiGetAuthed<AlertSubscription[]>(routes.notifications.subscriptions, accessToken).catch(
-      (): AlertSubscription[] => [],
-    ),
+  const [myReports, myObservations, subscriptions, districts, game] = await Promise.all([
+    apiGetAuthed<PaginatedEnvelope<CitizenReport>>(routes.reports.mine, accessToken).catch(() => empty<CitizenReport>()),
+    apiGetAuthed<PaginatedEnvelope<Observation>>(routes.observations.mine, accessToken).catch(() => empty<Observation>()),
+    apiGetAuthed<AlertSubscription[]>(routes.notifications.subscriptions, accessToken).catch((): AlertSubscription[] => []),
     apiGet<DistrictWithDivision[]>(routes.locations.districts),
-    apiGetAuthed<GamificationSummary>(routes.gamification.me, accessToken).catch(
-      (): null => null,
-    ),
+    apiGetAuthed<GamificationSummary>(routes.gamification.me, accessToken).catch((): null => null),
   ]);
 
-  const profile  = user?.profile;
-  const social   = Object.fromEntries((user?.socialLinks ?? []).map((l) => [l.platform, l.url]));
-  const districtsByDivision = groupByDivision(districts);
+  const profile = user?.profile;
+  const social = Object.fromEntries((user?.socialLinks ?? []).map((l) => [l.platform, l.url]));
+  const districtGroups = groupByDivision(districts);
+  const hasContributions = myReports.total + myObservations.total > 0;
+  const recent = [
+    ...myReports.data.slice(0, 2).map((r) => ({ id: r.id, href: `/reports/${r.id}`, title: r.title, meta: titleCase(r.status) })),
+    ...myObservations.data.slice(0, 2).map((o) => ({ id: o.id, href: `/observations/${o.id}`, title: titleCase(o.category), meta: relativeTime(o.observedAt) })),
+  ];
 
   return (
-    <>
-      {/* ── Identity card ──────────────────────────────────────────────────── */}
-      <section className="pf-card" aria-label="Your profile">
-        <div className="pf-identity">
-          <div className="pf-avatar-col">
-            <div className="pf-avatar">
-              {profile?.avatarUrl ? (
-                <img src={profile.avatarUrl} alt="" />
-              ) : (
-                <span aria-hidden="true">{user ? initials(user.displayName) : '?'}</span>
-              )}
+    <div className="pf-page">
+      <div className="pf-title">
+        <h1>Your profile</h1>
+        <p>Manage how you appear to others, your alert emails and your password.</p>
+      </div>
+
+      <div className="pf-layout">
+        <aside className="pf-aside" aria-label="Your profile summary">
+          <section className="pf-side-card pf-identity" aria-label="Identity">
+            <div className="pf-identity-row">
+              <span className="pf-avatar">
+                {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : <span aria-hidden="true">{user ? initials(user.displayName) : '?'}</span>}
+              </span>
+              <div className="pf-identity-text">
+                <strong>{user?.displayName ?? 'Your profile'}</strong>
+                <span className="pf-identity-meta">
+                  {user && <span className="pf-role">{ROLE_LABELS[user.role] ?? user.role}</span>}
+                  {user && <span>Since {monthYear(user.createdAt, 'short')}</span>}
+                </span>
+              </div>
             </div>
             {user && (
               <div className="pf-photo">
                 <ProfilePictureForm uploadAction={uploadProfilePictureAction} />
                 {profile?.avatarUrl && (
                   <form action={removeProfilePictureAction} className="profile-picture-remove-form">
-                    <button className="profile-picture-remove" type="submit">Remove photo</button>
+                    <button className="profile-picture-remove" type="submit">Remove</button>
                   </form>
                 )}
               </div>
             )}
-          </div>
-
-          <div className="pf-info">
-            <h1>{user?.displayName ?? 'Your Profile'}</h1>
-            <div className="pf-chips">
-              {user && (
-                <span className={`profile-role-badge ${ROLE_BADGE_CLASS[user.role] ?? 'role-citizen'}`}>
-                  {ROLE_LABELS[user.role] ?? user.role}
-                </span>
-              )}
-              {user?.organizations?.filter((o) => o.isVerified).map((org) => (
-                <span key={org.id} className="profile-org-badge">{org.name}</span>
-              ))}
-              {profile?.locationDistrict && <span className="pf-meta">{profile.locationDistrict}</span>}
-              <span className="pf-meta">{user?.email}</span>
-            </div>
-          </div>
-        </div>
-
-        <dl className="pf-stats" aria-label="Activity summary">
-          <Link href="/reports" className="pf-stat"><dd>{myReports.total}</dd><dt>Reports</dt></Link>
-          <Link href="/observations" className="pf-stat"><dd>{myObservations.total}</dd><dt>Observations</dt></Link>
-          <Link href="/profile?tab=alerts" className="pf-stat"><dd>{subscriptions.length}</dd><dt>Alert subscriptions</dt></Link>
-          <div className="pf-stat"><dd>{user ? monthYear(user.createdAt) : '—'}</dd><dt>Member since</dt></div>
-        </dl>
-      </section>
-
-      <div className="pf-aside">
-        <ProfileStrengthWidget game={gameData} />
-        {user?.role === 'CITIZEN' && (
-          <section className="pf-research" aria-labelledby="researcher-access-heading">
-            <div>
-              <h2 id="researcher-access-heading">Researcher access</h2>
-              <p>Published a paper on nature or the environment? Apply to unlock researcher tools after review.</p>
-            </div>
-            <Link className="pf-btn" href="/researcher-application">Apply</Link>
           </section>
-        )}
-      </div>
 
-      {/* ── Flash notifications ─────────────────────────────────────────────── */}
-      {searchParams.profileSaved && (
-        <div className="flash flash-success" role="status">Profile updated successfully.</div>
-      )}
-      {searchParams.profileError && (
-        <div className="flash flash-error" role="alert">{searchParams.profileError}</div>
-      )}
-      {searchParams.profilePictureSaved && (
-        <div className="flash flash-success" role="status">Profile picture updated successfully.</div>
-      )}
-      {searchParams.profilePictureError && (
-        <div className="flash flash-error" role="alert">{searchParams.profilePictureError}</div>
-      )}
+          <StrengthCard game={game} />
 
-      {/* ── Tab navigation ──────────────────────────────────────────────────── */}
-      <nav className="tab-nav" aria-label="Profile sections">
-        {TABS.map((tab) => (
-          <Link
-            key={tab.id}
-            href={`/profile?tab=${tab.id}`}
-            className={activeTab === tab.id ? 'active' : ''}
-            aria-current={activeTab === tab.id ? 'page' : undefined}
-          >
-            {tab.label}
-            {tab.id === 'alerts' && subscriptions.length > 0 && (
-              <span className="tab-badge" aria-label={`${subscriptions.length} active`}>
-                {subscriptions.length}
-              </span>
-            )}
-          </Link>
-        ))}
-      </nav>
-
-      {/* ══ Personal Info Tab ═══════════════════════════════════════════════ */}
-      {activeTab === 'personal' && (
-        <>
-        <article className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>Personal information</h2>
-              <p>Manage the information shown on your public profile. Fields are optional unless marked required.</p>
+          <section className="pf-side-card" aria-labelledby="pf-contrib-h">
+            <h2 id="pf-contrib-h">Your contributions</h2>
+            <div className="pf-counts">
+              <Link href="/reports"><b>{myReports.total}</b><span>Reports</span></Link>
+              <Link href="/observations"><b>{myObservations.total}</b><span>Observations</span></Link>
+              <Link href="/profile?tab=alerts"><b>{subscriptions.length}</b><span>Alert emails</span></Link>
             </div>
-          </div>
-
-          <form action={updateProfileAction} className="profile-form">
-            <input type="hidden" name="_tab" value="personal" />
-
-
-            {/* Identity */}
-            <h3>About you</h3>
-            <div className="profile-form-grid">
-              <label>
-                Display name
-                <input name="displayName" defaultValue={user?.displayName} required placeholder="Your full name" />
-              </label>
-              <label>
-                Email address
-                <input value={user?.email ?? ''} readOnly aria-describedby="email-hint" />
-                <small id="email-hint" className="field-hint">Managed by your administrator. Change it from Security if supported.</small>
-              </label>
-              <label>
-                Phone number
-                <input name="phone" type="tel" defaultValue={profile?.phone ?? ''} placeholder="+880 ..." />
-              </label>
-            </div>
-
-            {/* Location */}
-            <h3 id="location">Location</h3>
-            <p className="section-help">Your primary district personalizes weather summaries, environmental data, and notification suggestions. You can still report from any district.</p>
-            <div className="profile-form-grid">
-              <div>
-                <label htmlFor="locationDistrict-select">District</label>
-                <select
-                  id="locationDistrict-select"
-                  name="locationDistrict"
-                  className="select-field"
-                  defaultValue={profile?.locationDistrict ?? ''}
-                >
-                  <option value="">Not specified</option>
-                  {[...districtsByDivision.entries()].map(([divName, divDistricts]) => (
-                    <optgroup key={divName} label={divName}>
-                      {divDistricts.map((d) => (
-                        <option key={d.id} value={d.name}>{d.name}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-              <label>
-                Country
-                <input value={profile?.locationCountry ?? 'Bangladesh'} readOnly />
-              </label>
-            </div>
-
-            {/* Professional */}
-            <h3>Professional details <span className="section-optional">Optional</span></h3>
-            <div className="profile-form-grid">
-              <label>
-                Occupation
-                <input name="occupation" defaultValue={profile?.occupation ?? ''} placeholder="e.g. Field researcher, Ecologist" />
-              </label>
-              <label>
-                Institution / Employer
-                <input name="institution" defaultValue={profile?.institution ?? ''} placeholder="e.g. IUCN Bangladesh" />
-              </label>
-              <label>
-                Education
-                <input name="education" defaultValue={profile?.education ?? ''} placeholder="Degree or qualification" />
-              </label>
-            </div>
-            <label>
-              Biography
-              <textarea name="bio" defaultValue={profile?.bio ?? ''} rows={4} placeholder="A short introduction to yourself and your environmental work..." />
-            </label>
-
-            {/* Expertise */}
-            <h3>Expertise &amp; research interests <span className="section-optional">Optional</span></h3>
-            <div className="profile-form-grid">
-              <TagInput
-                name="expertise"
-                label="Expertise areas"
-                initialValues={profile?.expertise ?? []}
-                suggestions={ENVIRONMENTAL_EXPERTISE}
-                placeholder="Add expertise..."
-              />
-              <TagInput
-                name="researchInterests"
-                label="Research interests"
-                initialValues={profile?.researchInterests ?? []}
-                suggestions={ENVIRONMENTAL_RESEARCH_INTERESTS}
-                placeholder="Add interest..."
-              />
-            </div>
-
-            {/* Social links */}
-            <h3>Professional &amp; social links <span className="section-optional">Optional</span></h3>
-            <div className="profile-form-3col">
-              <label>Google Scholar<input name="googleScholar" defaultValue={social.googleScholar ?? ''} placeholder="https://scholar.google.com/..." /></label>
-              <label>ResearchGate<input name="researchGate"   defaultValue={social.researchGate   ?? ''} placeholder="https://researchgate.net/..." /></label>
-              <label>ORCID<input name="orcid"          defaultValue={social.orcid          ?? ''} placeholder="https://orcid.org/..." /></label>
-              <label>LinkedIn<input name="linkedin"       defaultValue={social.linkedin       ?? ''} placeholder="https://linkedin.com/in/..." /></label>
-              <label>Personal website<input name="website"         defaultValue={social.website         ?? ''} placeholder="https://..." /></label>
-              <label>GitHub<input name="github"         defaultValue={social.github         ?? ''} placeholder="https://github.com/..." /></label>
-              <label>Facebook<input name="facebook"       defaultValue={social.facebook       ?? ''} placeholder="https://facebook.com/..." /></label>
-            </div>
-
-            {/* Visibility */}
-            <h3>Privacy &amp; visibility</h3>
-            <p className="section-help">Choose who can see your profile, contact details, and professional links.</p>
-            <div className="profile-form-3col">
-              <label>
-                Profile visibility
-                <select name="profileVisibility" defaultValue={profile?.profileVisibility ?? 'PUBLIC'}>
-                  <option value="PUBLIC">Public — anyone can view</option>
-                  <option value="MEMBERS_ONLY">Members only</option>
-                  <option value="PRIVATE">Private</option>
-                </select>
-              </label>
-              <label>
-                Contact visibility
-                <select name="contactVisibility" defaultValue={profile?.contactVisibility ?? 'PRIVATE'}>
-                  <option value="PUBLIC">Public</option>
-                  <option value="MEMBERS_ONLY">Members only</option>
-                  <option value="PRIVATE">Private — hidden</option>
-                </select>
-              </label>
-              <label>
-                Links visibility
-                <select name="linksVisibility" defaultValue={profile?.linksVisibility ?? 'PUBLIC'}>
-                  <option value="PUBLIC">Public</option>
-                  <option value="MEMBERS_ONLY">Members only</option>
-                  <option value="PRIVATE">Private</option>
-                </select>
-              </label>
-            </div>
-
-            {/* Action bar */}
-            <div className="profile-save-bar">
-              <button className="button" type="submit">Save changes</button>
-              <Link className="button ghost" href="/profile?tab=personal">Cancel</Link>
-            </div>
-          </form>
-          {user?.organizations && user.organizations.length > 0 && (
-            <div className="profile-form">
-              <h3>Organization affiliations</h3>
-              <div className="subscription-list">
-                {user.organizations.map((org) => (
-                  <div key={org.id} className="subscription-row">
-                    <div className="subscription-info">
-                      <strong>{org.name}</strong>
-                      <span className="tag muted">{titleCase(org.type)}</span>
-                      {org.isVerified && <span className="tag success">Verified</span>}
-                      <span className="tag info">{org.membershipRole}</span>
-                    </div>
-                  </div>
+            {hasContributions ? (
+              <ul className="pf-recent">
+                {recent.map((r) => (
+                  <li key={r.id}>
+                    <Link href={r.href}><span>{r.title}</span><small>{r.meta}</small></Link>
+                  </li>
                 ))}
-              </div>
-            </div>
-          )}
-        </article>
-
-      <section className="profile-activity" aria-label="Your activity">
-      <article className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>Recent reports</h2>
-            <p>Your latest submissions, including pending and rejected</p>
-          </div>
-          <Link className="button ghost" href="/reports">View all reports</Link>
-        </div>
-
-        {myReports.data.length === 0 ? (
-          <div className="empty-state">
-            No reports yet. <Link href="/reports">Submit your first report</Link>.
-          </div>
-        ) : (
-          <div className="table" role="table" aria-label="My reports">
-            <div className="table-row table-head" role="row">
-              <span>Title</span>
-              <span>Location</span>
-              <span>Status</span>
-              <span>Submitted</span>
-            </div>
-            {myReports.data.slice(0, 3).map((r) => (
-              <Link key={r.id} className="table-row table-row-link" role="row" href={`/reports/${r.id}`}>
-                <strong>{r.title}</strong>
-                <span>{r.district?.name ?? '—'}</span>
-                <span className={`tag ${REPORT_STATUS_VARIANT[r.status] ?? 'muted'}`}>
-                  {titleCase(r.status)}
-                </span>
-                <span>{relativeTime(r.createdAt)}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </article>
-
-      {/* ── My Observations ─────────────────────────────────────────────────── */}
-      <article className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>Recent observations</h2>
-            <p>Your latest environmental observations</p>
-          </div>
-          <Link className="button ghost" href="/observations">View all observations</Link>
-        </div>
-
-        {myObservations.data.length === 0 ? (
-          <div className="empty-state">
-            No observations yet. <Link href="/observations">Submit your first observation</Link>.
-          </div>
-        ) : (
-          <div className="table" role="table" aria-label="My observations">
-            <div className="table-row table-head" role="row">
-              <span>Category</span>
-              <span>Location</span>
-              <span>Trust level</span>
-              <span>Observed</span>
-            </div>
-            {myObservations.data.slice(0, 3).map((o) => (
-              <Link key={o.id} className="table-row table-row-link" role="row" href={`/observations/${o.id}`}>
-                <span>{titleCase(o.category)}</span>
-                <span>{o.district?.name ?? '—'}</span>
-                <span className={`tag ${TRUST_VARIANT[o.trustLevel] ?? 'muted'}`}>
-                  {titleCase(o.trustLevel)}
-                </span>
-                <span>{relativeTime(o.observedAt)}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </article>
-      <article className="panel">
-        <details className="profile-badges">
-          <summary>
-            <span>
-              <h2>Badges &amp; achievements</h2>
-              <p>
-                {gameData
-                  ? `${gameData.badges.filter((b) => b.earned).length} of ${gameData.badges.length} earned · ${gameData.points} points`
-                  : 'Earn badges by contributing reports, observations, and restoration work.'}
+              </ul>
+            ) : (
+              <p className="pf-side-sub">
+                Nothing submitted yet. <Link href="/reports">Submit a report</Link> or <Link href="/observations">add an observation</Link>.
               </p>
-            </span>
-          </summary>
-          <BadgeGrid game={gameData} />
-        </details>
-      </article>
-      </section>
-        </>
-      )}
+            )}
+            {user?.role === 'CITIZEN' && (
+              <p className="pf-side-foot">
+                Published research? <Link href="/researcher-application">Apply for researcher access</Link>
+              </p>
+            )}
+          </section>
+        </aside>
 
-      {/* ══ Alert Subscriptions Tab ═════════════════════════════════════════ */}
-      {activeTab === 'alerts' && (
-        <article className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>Alert subscriptions</h2>
-              <p>Choose where alerts matter to you and the minimum severity that should reach your inbox.</p>
-            </div>
-          </div>
+        <div className="pf-main">
+          <nav className="pf-tabs" aria-label="Profile sections">
+            {TABS.map((t) => (
+              <Link key={t.id} href={`/profile?tab=${t.id}`} aria-current={activeTab === t.id ? 'page' : undefined}>
+                {t.label}
+              </Link>
+            ))}
+          </nav>
 
-          {searchParams.subscribed && (
-            <div className="flash flash-success" role="status">Subscription created successfully.</div>
-          )}
-          {searchParams.unsubscribed && (
-            <div className="flash flash-success" role="status">Unsubscribed successfully.</div>
-          )}
-          {searchParams.sub_error && (
-            <div className="flash flash-error" role="alert">{searchParams.sub_error}</div>
-          )}
+          {sp.profileSaved && <div className="pf-notice pf-notice--ok" role="status"><NavIcon name="check" />Profile saved</div>}
+          {sp.profileError && <div className="pf-notice pf-notice--err" role="alert">{sp.profileError}</div>}
+          {sp.profilePictureSaved && <div className="pf-notice pf-notice--ok" role="status"><NavIcon name="check" />Profile photo updated</div>}
+          {sp.profilePictureError && <div className="pf-notice pf-notice--err" role="alert">{sp.profilePictureError}</div>}
 
-          {subscriptions.length === 0 ? (
-            <div className="empty-state"><strong>No alert subscriptions yet.</strong><span>Subscribe to stay informed about environmental changes in a district or across Bangladesh.</span></div>
-          ) : (
-            <div className="subscription-list">
-              {subscriptions.map((sub) => (
-                <div key={sub.id} className="subscription-row">
-                  <div className="subscription-info">
-                    <strong>{sub.district?.name ?? 'Nationwide'}</strong>
-                    <span className={`tag ${SEVERITY_VARIANT[sub.minSeverity] ?? 'muted'}`}>
-                      {SEVERITY_LABEL[sub.minSeverity] ?? sub.minSeverity}
-                    </span>
-                    {!sub.district && <span className="tag muted">All districts</span>}
+          {activeTab === 'personal' && (
+            <div className="pf-panel">
+              <ProfileForm
+                action={updateProfileAction}
+                districts={districtGroups}
+                values={{
+                  displayName: user?.displayName ?? '',
+                  email: user?.email ?? '',
+                  phone: profile?.phone ?? '',
+                  locationDistrict: profile?.locationDistrict ?? '',
+                  country: profile?.locationCountry ?? 'Bangladesh',
+                  occupation: profile?.occupation ?? '',
+                  institution: profile?.institution ?? '',
+                  education: profile?.education ?? '',
+                  bio: profile?.bio ?? '',
+                  expertise: profile?.expertise ?? [],
+                  researchInterests: profile?.researchInterests ?? [],
+                  links: Object.fromEntries(LINK_PLATFORMS.map((p) => [p.key, social[p.key] ?? ''])),
+                  profileVisibility: profile?.profileVisibility ?? 'PUBLIC',
+                  contactVisibility: profile?.contactVisibility ?? 'PRIVATE',
+                  linksVisibility: profile?.linksVisibility ?? 'PUBLIC',
+                }}
+              />
+              {user?.organizations && user.organizations.length > 0 && (
+                <section className="pf-section pf-orgs">
+                  <div className="pf-section-head">
+                    <h3>Organizations</h3>
+                    <p>Memberships are managed by organization admins.</p>
                   </div>
-                  <form action={unsubscribeAction.bind(null, sub.id)}>
-                    <button
-                      className="button ghost"
-                      type="submit"
-                      aria-label={`Remove subscription for ${sub.district?.name ?? 'nationwide'}`}
-                    >
-                      Unsubscribe
-                    </button>
-                  </form>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="subscription-form-section">
-            <h3>Add subscription</h3>
-            <p className="section-help">Alerts will be sent to <strong>{user?.email}</strong>.</p>
-            <form action={subscribeAction} className="subscription-form">
-              <div className="subscription-form-fields">
-                <div className="field">
-                  <label htmlFor="districtId">Location</label>
-                  <DistrictSelect districts={districts} emptyLabel="Nationwide (all districts)" />
-                </div>
-                <div className="field">
-                  <label htmlFor="minSeverity">Minimum severity</label>
-                  <select id="minSeverity" name="minSeverity" className="select-field">
-                    <option value="INFO">All alerts (Info+)</option>
-                    <option value="WATCH">Watch and above</option>
-                    <option value="WARNING">Warning and above</option>
-                    <option value="EMERGENCY">Emergency only</option>
-                  </select>
-                </div>
-              </div>
-              <div className="profile-save-bar">
-                <button className="button" type="submit">Add subscription</button>
-              </div>
-            </form>
-          </div>
-        </article>
-      )}
-
-      {/* ══ Security Tab ════════════════════════════════════════════════════ */}
-      {activeTab === 'security' && (
-        <article className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>Security &amp; account</h2>
-              <p>Review your login credentials and account details.</p>
-            </div>
-          </div>
-
-          <h3>Account details</h3>
-          <div className="subscription-list">
-            <div className="profile-security-row">
-              <div>
-                <strong className="profile-security-label">Email address</strong>
-                <span className="profile-security-value">{user?.email}</span>
-              </div>
-            </div>
-            <div className="profile-security-row">
-              <div>
-                <strong className="profile-security-label">Account role</strong>
-                <span className="profile-security-value">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</span>
-              </div>
-              <span className={`profile-role-badge ${ROLE_BADGE_CLASS[user?.role ?? ''] ?? 'role-citizen'}`}>
-                {user?.role}
-              </span>
-            </div>
-            <div className="profile-security-row">
-              <div>
-                <strong className="profile-security-label">Last login</strong>
-                <span className="profile-security-value">
-                  {user?.lastLoginAt ? relativeTime(user.lastLoginAt) : 'Unknown'}
-                </span>
-              </div>
-            </div>
-            <div className="profile-security-row">
-              <div>
-                <strong className="profile-security-label">Member since</strong>
-                <span className="profile-security-value">
-                  {user?.createdAt ? monthYear(user.createdAt) : '—'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <h3>Change password</h3>
-
-          {user?.authProvider === 'GOOGLE' ? (
-            <div className="access-note">
-              <p>Your account is signed in with Google. Password management is handled by Google.</p>
-            </div>
-          ) : (
-            <>
-              {searchParams.pwError && (
-                <div className="flash flash-error" role="alert">{searchParams.pwError}</div>
+                  <ul className="pf-section-body pf-org-list">
+                    {user.organizations.map((org) => (
+                      <li key={org.id}>
+                        <Link href={`/organizations/${org.id}`}>{org.name}</Link>
+                        <span>{titleCase(org.type)}{org.isVerified ? ' · Verified' : ''} · {titleCase(org.membershipRole)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               )}
-              <form action={changePasswordAction} className="profile-form">
-                <div className="profile-form-grid">
-                  <label>
-                    Current password
-                    <input
-                      name="currentPassword"
-                      type="password"
-                      required
-                      autoComplete="current-password"
-                    />
-                  </label>
-                  <div />
-                  <label>
-                    New password
-                    <input
-                      name="newPassword"
-                      type="password"
-                      required
-                      autoComplete="new-password"
-                      minLength={8}
-                      maxLength={128}
-                    />
-                    <small className="field-hint">Use 8–128 characters. Avoid passwords you use elsewhere.</small>
-                  </label>
-                  <label>
-                    Confirm new password
-                    <input
-                      name="confirmPassword"
-                      type="password"
-                      required
-                      autoComplete="new-password"
-                      minLength={8}
-                      maxLength={128}
-                    />
-                  </label>
-                </div>
-                <div className="profile-save-bar">
-                  <button className="button" type="submit">Change password</button>
-                </div>
-              </form>
-            </>
+            </div>
           )}
-        </article>
-      )}
 
-      {/* ── Contributions ───────────────────────────────────────────────────── */}
-    </>
+          {activeTab === 'alerts' && (
+            <div className="pf-panel">
+              <div className="pf-form-head">
+                <h2>Alert emails</h2>
+                <p>Choose where alerts matter to you and the minimum severity that reaches your inbox.</p>
+              </div>
+              {sp.subscribed && <div className="pf-notice pf-notice--ok" role="status"><NavIcon name="check" />Subscription added</div>}
+              {sp.unsubscribed && <div className="pf-notice pf-notice--ok" role="status"><NavIcon name="check" />Unsubscribed</div>}
+              {sp.sub_error && <div className="pf-notice pf-notice--err" role="alert">{sp.sub_error}</div>}
+
+              <section className="pf-section pf-section--stack">
+                <h3>Your subscriptions</h3>
+                {subscriptions.length === 0 ? (
+                  <p className="pf-empty">
+                    <b>You&apos;re not subscribed to any alerts yet.</b> Add one below to get emails about a district or all of Bangladesh.
+                  </p>
+                ) : (
+                  <ul className="pf-subs">
+                    {subscriptions.map((s) => (
+                      <li key={s.id}>
+                        <span className="pf-sub-icon"><NavIcon name="alerts" /></span>
+                        <div>
+                          <strong>{s.district ? `${s.district.name} district` : 'Nationwide'}</strong>
+                          <small>
+                            {SEVERITY_LABEL[s.minSeverity] ?? s.minSeverity} · Email · added {dhakaDate(s.createdAt)}
+                          </small>
+                        </div>
+                        <form action={unsubscribeAction.bind(null, s.id)}>
+                          <button type="submit" className="pf-link-btn" aria-label={`Unsubscribe from ${s.district?.name ?? 'nationwide'} alerts`}>
+                            Unsubscribe
+                          </button>
+                        </form>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section className="pf-section pf-section--stack">
+                <h3>Add a subscription</h3>
+                <AlertSubscribeForm action={subscribeAction} districts={districtGroups} email={user?.email ?? ''} />
+              </section>
+            </div>
+          )}
+
+          {activeTab === 'security' && (
+            <div className="pf-panel">
+              <div className="pf-form-head">
+                <h2>Security</h2>
+                <p>Your account details and sign-in password.</p>
+              </div>
+
+              <section className="pf-section pf-section--stack">
+                <h3>Account</h3>
+                <dl className="pf-facts">
+                  <div><dt>Email address</dt><dd>{user?.email}</dd></div>
+                  <div><dt>Role</dt><dd><span className="pf-role">{ROLE_LABELS[user?.role ?? ''] ?? user?.role}</span></dd></div>
+                  <div>
+                    <dt>Last sign-in</dt>
+                    <dd>{user?.lastLoginAt ? <>{dhakaDateTime(user.lastLoginAt)} · {relativeTime(user.lastLoginAt)}</> : 'Unknown'}</dd>
+                  </div>
+                  <div><dt>Member since</dt><dd>{user?.createdAt ? monthYear(user.createdAt) : '—'}</dd></div>
+                </dl>
+              </section>
+
+              <section className="pf-section pf-section--stack">
+                <h3>Change password</h3>
+                {user?.authProvider === 'GOOGLE' ? (
+                  <p className="pf-empty">Your account is signed in with Google. Password management is handled by Google.</p>
+                ) : (
+                  <>
+                    {sp.pwError && <div className="pf-notice pf-notice--err" role="alert">{sp.pwError}</div>}
+                    <PasswordForm action={changePasswordAction} />
+                  </>
+                )}
+              </section>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
