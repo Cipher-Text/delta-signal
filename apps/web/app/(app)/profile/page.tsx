@@ -23,13 +23,11 @@ import ProfilePictureForm from '../../../components/profile-picture-form';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-type ProfileTab = 'personal' | 'alerts' | 'contributions' | 'security' | 'achievements';
+type ProfileTab = 'personal' | 'alerts' | 'security';
 
 const TABS: { id: ProfileTab; label: string }[] = [
-  { id: 'personal',     label: 'Personal Info' },
-  { id: 'alerts',       label: 'Notifications' },
-  { id: 'contributions', label: 'Contributions' },
-  { id: 'achievements', label: 'Achievements' },
+  { id: 'personal',     label: 'Profile' },
+  { id: 'alerts',       label: 'Alerts' },
   { id: 'security',     label: 'Security' },
 ];
 
@@ -310,85 +308,66 @@ export default async function ProfilePage(
 
   return (
     <>
-      {/* ── Profile Banner ─────────────────────────────────────────────────── */}
-      <div className="profile-banner" aria-label="Your profile">
-        <div className="profile-banner-top" aria-hidden="true" />
-        <div className="profile-banner-body">
-          <div className="profile-avatar-editor">
-            <div className="profile-avatar-xl">
+      {/* ── Identity card ──────────────────────────────────────────────────── */}
+      <section className="pf-card" aria-label="Your profile">
+        <div className="pf-identity">
+          <div className="pf-avatar-col">
+            <div className="pf-avatar">
               {profile?.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="" />
               ) : (
                 <span aria-hidden="true">{user ? initials(user.displayName) : '?'}</span>
               )}
             </div>
-            {user && <>
-              <ProfilePictureForm uploadAction={uploadProfilePictureAction} />
-              {profile?.avatarUrl && (
-                <form action={removeProfilePictureAction} className="profile-picture-remove-form">
-                  <button className="profile-picture-remove" type="submit">Remove photo</button>
-                </form>
-              )}
-            </>}
+            {user && (
+              <div className="pf-photo">
+                <ProfilePictureForm uploadAction={uploadProfilePictureAction} />
+                {profile?.avatarUrl && (
+                  <form action={removeProfilePictureAction} className="profile-picture-remove-form">
+                    <button className="profile-picture-remove" type="submit">Remove photo</button>
+                  </form>
+                )}
+              </div>
+            )}
           </div>
 
-          <div className="profile-banner-info">
+          <div className="pf-info">
             <h1>{user?.displayName ?? 'Your Profile'}</h1>
-
-            <div className="profile-banner-meta">
+            <div className="pf-chips">
               {user && (
                 <span className={`profile-role-badge ${ROLE_BADGE_CLASS[user.role] ?? 'role-citizen'}`}>
                   {ROLE_LABELS[user.role] ?? user.role}
                 </span>
               )}
-              {profile?.locationDistrict && (
-                <span className="profile-location-badge">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 21s-8-7.3-8-13a8 8 0 0 1 16 0c0 5.7-8 13-8 13z"/><circle cx="12" cy="8" r="3"/></svg>
-                  {profile.locationDistrict}
-                </span>
-              )}
-              <span className="profile-location-badge">{user?.email}</span>
               {user?.organizations?.filter((o) => o.isVerified).map((org) => (
                 <span key={org.id} className="profile-org-badge">{org.name}</span>
               ))}
-            </div>
-
-            <div className="profile-banner-stats" aria-label="Activity summary">
-              <div className="profile-banner-stat">
-                <strong>{myReports.total}</strong>
-                <span>Reports</span>
-              </div>
-              <div className="profile-banner-stat">
-                <strong>{myObservations.total}</strong>
-                <span>Observations</span>
-              </div>
-              <div className="profile-banner-stat">
-                <strong>{subscriptions.length}</strong>
-                <span>Subscriptions</span>
-              </div>
-              <div className="profile-banner-stat">
-                <strong>{user ? monthYear(user.createdAt) : '—'}</strong>
-                <span>Member since</span>
-              </div>
+              {profile?.locationDistrict && <span className="pf-meta">{profile.locationDistrict}</span>}
+              <span className="pf-meta">{user?.email}</span>
             </div>
           </div>
         </div>
-      </div>
 
-      {user?.role === 'CITIZEN' && (
-        <section className="panel" aria-labelledby="researcher-access-heading">
-          <div className="panel-header">
+        <dl className="pf-stats" aria-label="Activity summary">
+          <Link href="/reports" className="pf-stat"><dd>{myReports.total}</dd><dt>Reports</dt></Link>
+          <Link href="/observations" className="pf-stat"><dd>{myObservations.total}</dd><dt>Observations</dt></Link>
+          <Link href="/profile?tab=alerts" className="pf-stat"><dd>{subscriptions.length}</dd><dt>Alert subscriptions</dt></Link>
+          <div className="pf-stat"><dd>{user ? monthYear(user.createdAt) : '—'}</dd><dt>Member since</dt></div>
+        </dl>
+      </section>
+
+      <div className="pf-aside">
+        <ProfileStrengthWidget game={gameData} />
+        {user?.role === 'CITIZEN' && (
+          <section className="pf-research" aria-labelledby="researcher-access-heading">
             <div>
               <h2 id="researcher-access-heading">Researcher access</h2>
-              <p>Have a published paper about nature or the environment? Apply to unlock researcher tools after review.</p>
+              <p>Published a paper on nature or the environment? Apply to unlock researcher tools after review.</p>
             </div>
-            <Link className="button" href="/researcher-application">Apply for researcher access</Link>
-          </div>
-        </section>
-      )}
-
-      {/* ── Profile Strength Widget ─────────────────────────────────────────── */}
-      <ProfileStrengthWidget game={gameData} />
+            <Link className="pf-btn" href="/researcher-application">Apply</Link>
+          </section>
+        )}
+      </div>
 
       {/* ── Flash notifications ─────────────────────────────────────────────── */}
       {searchParams.profileSaved && (
@@ -419,23 +398,13 @@ export default async function ProfilePage(
                 {subscriptions.length}
               </span>
             )}
-            {tab.id === 'achievements' && gameData && (() => {
-              const earned = gameData.badges.filter((b) => b.earned).length;
-              return earned > 0
-                ? <span className="tab-badge tab-badge-gold" aria-label={`${earned} badges earned`}>{earned}</span>
-                : null;
-            })()}
-            {tab.id === 'contributions' && (myReports.total + myObservations.total > 0) && (
-              <span className="tab-badge" aria-label={`${myReports.total + myObservations.total} contributions`}>
-                {myReports.total + myObservations.total}
-              </span>
-            )}
           </Link>
         ))}
       </nav>
 
       {/* ══ Personal Info Tab ═══════════════════════════════════════════════ */}
       {activeTab === 'personal' && (
+        <>
         <article className="panel">
           <div className="panel-header">
             <div>
@@ -600,6 +569,95 @@ export default async function ProfilePage(
             </div>
           )}
         </article>
+
+      <section className="profile-activity" aria-label="Your activity">
+      <article className="panel">
+        <div className="panel-header">
+          <div>
+            <h2>Recent reports</h2>
+            <p>Your latest submissions, including pending and rejected</p>
+          </div>
+          <Link className="button ghost" href="/reports">View all reports</Link>
+        </div>
+
+        {myReports.data.length === 0 ? (
+          <div className="empty-state">
+            No reports yet. <Link href="/reports">Submit your first report</Link>.
+          </div>
+        ) : (
+          <div className="table" role="table" aria-label="My reports">
+            <div className="table-row table-head" role="row">
+              <span>Title</span>
+              <span>Location</span>
+              <span>Status</span>
+              <span>Submitted</span>
+            </div>
+            {myReports.data.slice(0, 3).map((r) => (
+              <Link key={r.id} className="table-row table-row-link" role="row" href={`/reports/${r.id}`}>
+                <strong>{r.title}</strong>
+                <span>{r.district?.name ?? '—'}</span>
+                <span className={`tag ${REPORT_STATUS_VARIANT[r.status] ?? 'muted'}`}>
+                  {titleCase(r.status)}
+                </span>
+                <span>{relativeTime(r.createdAt)}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </article>
+
+      {/* ── My Observations ─────────────────────────────────────────────────── */}
+      <article className="panel">
+        <div className="panel-header">
+          <div>
+            <h2>Recent observations</h2>
+            <p>Your latest environmental observations</p>
+          </div>
+          <Link className="button ghost" href="/observations">View all observations</Link>
+        </div>
+
+        {myObservations.data.length === 0 ? (
+          <div className="empty-state">
+            No observations yet. <Link href="/observations">Submit your first observation</Link>.
+          </div>
+        ) : (
+          <div className="table" role="table" aria-label="My observations">
+            <div className="table-row table-head" role="row">
+              <span>Category</span>
+              <span>Location</span>
+              <span>Trust level</span>
+              <span>Observed</span>
+            </div>
+            {myObservations.data.slice(0, 3).map((o) => (
+              <Link key={o.id} className="table-row table-row-link" role="row" href={`/observations/${o.id}`}>
+                <span>{titleCase(o.category)}</span>
+                <span>{o.district?.name ?? '—'}</span>
+                <span className={`tag ${TRUST_VARIANT[o.trustLevel] ?? 'muted'}`}>
+                  {titleCase(o.trustLevel)}
+                </span>
+                <span>{relativeTime(o.observedAt)}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </article>
+      <article className="panel">
+        <details className="profile-badges">
+          <summary>
+            <span>
+              <h2>Badges &amp; achievements</h2>
+              <p>
+                {gameData
+                  ? `${gameData.badges.filter((b) => b.earned).length} of ${gameData.badges.length} earned · ${gameData.points} points`
+                  : 'Earn badges by contributing reports, observations, and restoration work.'}
+              </p>
+            </span>
+          </summary>
+          <BadgeGrid game={gameData} />
+        </details>
+      </article>
+      </section>
+        </>
       )}
 
       {/* ══ Alert Subscriptions Tab ═════════════════════════════════════════ */}
@@ -673,24 +731,6 @@ export default async function ProfilePage(
               </div>
             </form>
           </div>
-        </article>
-      )}
-
-      {/* ══ Achievements Tab ════════════════════════════════════════════════ */}
-      {activeTab === 'achievements' && (
-        <article className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>Achievements &amp; badges</h2>
-              <p>Earn badges by contributing reports, observations, and participating in restoration projects.</p>
-            </div>
-          </div>
-          <div className="access-note achievement-next-step">
-            <strong>Keep contributing to unlock more badges.</strong>
-            <p>Reports, observations, and restoration activity earn points and move you toward the next tier.</p>
-            <div className="inline-actions"><Link className="button ghost" href="/reports">Submit a report</Link><Link className="button ghost" href="/observations">Add an observation</Link></div>
-          </div>
-          <BadgeGrid game={gameData} />
         </article>
       )}
 
@@ -796,79 +836,6 @@ export default async function ProfilePage(
       )}
 
       {/* ── Contributions ───────────────────────────────────────────────────── */}
-      {activeTab === 'contributions' && <>
-      <article className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>My reports</h2>
-            <p>All your submissions including pending and rejected</p>
-          </div>
-          <Link className="button ghost" href="/reports">Submit new</Link>
-        </div>
-
-        {myReports.data.length === 0 ? (
-          <div className="empty-state">
-            No reports yet. <Link href="/reports">Submit your first report</Link>.
-          </div>
-        ) : (
-          <div className="table" role="table" aria-label="My reports">
-            <div className="table-row table-head" role="row">
-              <span>Title</span>
-              <span>Location</span>
-              <span>Status</span>
-              <span>Submitted</span>
-            </div>
-            {myReports.data.map((r) => (
-              <Link key={r.id} className="table-row table-row-link" role="row" href={`/reports/${r.id}`}>
-                <strong>{r.title}</strong>
-                <span>{r.district?.name ?? '—'}</span>
-                <span className={`tag ${REPORT_STATUS_VARIANT[r.status] ?? 'muted'}`}>
-                  {titleCase(r.status)}
-                </span>
-                <span>{relativeTime(r.createdAt)}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </article>
-
-      {/* ── My Observations ─────────────────────────────────────────────────── */}
-      <article className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>My observations</h2>
-            <p>Your submitted environmental observations</p>
-          </div>
-          <Link className="button ghost" href="/observations">Submit new</Link>
-        </div>
-
-        {myObservations.data.length === 0 ? (
-          <div className="empty-state">
-            No observations yet. <Link href="/observations">Submit your first observation</Link>.
-          </div>
-        ) : (
-          <div className="table" role="table" aria-label="My observations">
-            <div className="table-row table-head" role="row">
-              <span>Category</span>
-              <span>Location</span>
-              <span>Trust level</span>
-              <span>Observed</span>
-            </div>
-            {myObservations.data.map((o) => (
-              <Link key={o.id} className="table-row table-row-link" role="row" href={`/observations/${o.id}`}>
-                <span>{titleCase(o.category)}</span>
-                <span>{o.district?.name ?? '—'}</span>
-                <span className={`tag ${TRUST_VARIANT[o.trustLevel] ?? 'muted'}`}>
-                  {titleCase(o.trustLevel)}
-                </span>
-                <span>{relativeTime(o.observedAt)}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </article>
     </>
-      }
-      </>
   );
 }
