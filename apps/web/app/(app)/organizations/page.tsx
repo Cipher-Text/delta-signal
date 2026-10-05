@@ -1,118 +1,171 @@
-import { cookies } from 'next/headers';
 import Link from 'next/link';
-import { getCurrentUser } from '../../../lib/current-user';
-import { apiGet, apiGetAuthed } from '../../../lib/api';
-import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
-import ListPagination from '../../../components/list-pagination';
-import ListResultToolbar from '../../../components/list-result-toolbar';
+import { apiGet } from '../../../lib/api';
+import { pluralize } from '../../../lib/format';
+import { routes, type Organization, type OrganizationType, type PaginatedEnvelope } from '@delta-signal/contracts';
+import AutoSubmitCheckbox from '../../../components/auto-submit-checkbox';
+import EmptyState from '../../../components/empty-state';
+import NavIcon from '../../../components/nav-icons';
 import PageHeader from '../../../components/page-header';
 
-type Organization = {
-  id: string;
-  name: string;
-  type: string;
-  description: string | null;
-  website: string | null;
-  country: string;
-  isVerified: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+type Query = { type?: string; verified?: string; q?: string };
 
-type OrgListResponse = {
-  data: Organization[];
-  total: number;
-  page: number;
-  pageSize: number;
+const TYPE_META: Record<OrganizationType, { label: string; short: string; tint: string }> = {
+  NGO: { label: 'NGO', short: 'NGO', tint: 'bio' },
+  GOVERNMENT_AGENCY: { label: 'Government agency', short: 'Government', tint: 'water' },
+  RESEARCH_INSTITUTION: { label: 'Research institution', short: 'Research', tint: 'sky' },
+  INTERNATIONAL_ORG: { label: 'International org', short: 'International', tint: 'earth' },
+  COMMUNITY_GROUP: { label: 'Community group', short: 'Community', tint: 'neutral' },
+  PRIVATE_COMPANY: { label: 'Corporate', short: 'Corporate', tint: 'neutral' },
+  OTHER: { label: 'Other', short: 'Other', tint: 'neutral' },
 };
+const TYPE_ORDER = Object.keys(TYPE_META) as OrganizationType[];
 
-function titleCase(value: string) {
-  return value.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+/** The directory is small, so it is loaded whole (100 per API page) and filtered in memory. */
+async function loadAll(): Promise<Organization[]> {
+  const all: Organization[] = [];
+  for (let page = 1; page <= 20; page++) {
+    const res = await apiGet<PaginatedEnvelope<Organization>>(`${routes.organizations.list}?page=${page}&pageSize=100`);
+    all.push(...res.data);
+    if (all.length >= res.total || res.data.length === 0) break;
+  }
+  return all;
 }
 
-const ORG_TYPES = [
-  { label: 'All', value: '' },
-  { label: 'NGO', value: 'NGO' },
-  { label: 'Government', value: 'GOVERNMENT_AGENCY' },
-  { label: 'Research', value: 'RESEARCH_INSTITUTION' },
-  { label: 'International', value: 'INTERNATIONAL_ORG' },
-  { label: 'Community', value: 'COMMUNITY_GROUP' },
-  { label: 'Corporate', value: 'PRIVATE_COMPANY' },
-];
+function href(q: Query, patch: Partial<Query>) {
+  const next = { ...q, ...patch };
+  const params = new URLSearchParams();
+  if (next.type) params.set('type', next.type);
+  if (next.verified) params.set('verified', '1');
+  if (next.q) params.set('q', next.q);
+  const s = params.toString();
+  return s ? `/organizations?${s}` : '/organizations';
+}
 
-export default async function OrganizationsPage(
-  props: {
-    searchParams: Promise<{ type?: string; page?: string }>;
-  }
-) {
-  const searchParams = await props.searchParams;
-  const user = await getCurrentUser();
+function TypePill({ type }: { type: OrganizationType }) {
+  const m = TYPE_META[type] ?? TYPE_META.OTHER;
+  return <span className={`org-pill org-pill--${m.tint}`}>{m.label}</span>;
+}
 
-  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
-  const activeType = searchParams.type ?? '';
-  const typeFilter = activeType ? `&type=${encodeURIComponent(activeType)}` : '';
-  const page = searchParams.page ?? '1';
-  const result = await (user
-    ? apiGetAuthed<OrgListResponse>(`/api/v1/organizations?page=${page}&pageSize=20${typeFilter}`, accessToken)
-    : apiGet<OrgListResponse>(`/api/v1/organizations?page=${page}&pageSize=20${typeFilter}`));
+function VerifiedPill() {
+  return (
+    <span className="org-verified">
+      <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+        <path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      Verified
+    </span>
+  );
+}
 
-  const myOrgIds = new Set(user?.organizations.map((o) => o.id) ?? []);
+/** Organization directory (Web UI Reference): type segments, verified toggle, search, 3-up cards / mobile list. */
+export default async function OrganizationsPage(props: { searchParams: Promise<Query> }) {
+  const sp = await props.searchParams;
+  const q: Query = {
+    type: sp.type && sp.type in TYPE_META ? sp.type : undefined,
+    verified: sp.verified ? '1' : undefined,
+    q: sp.q?.trim() || undefined,
+  };
+
+  const all = await loadAll();
+  const needle = q.q?.toLowerCase();
+  const base = all.filter(
+    (o) =>
+      (!q.verified || o.isVerified) &&
+      (!needle || o.name.toLowerCase().includes(needle) || (o.description ?? '').toLowerCase().includes(needle)),
+  );
+  const orgs = base.filter((o) => !q.type || o.type === q.type);
+
+  const segments = [
+    { key: '', label: 'All', count: base.length },
+    ...TYPE_ORDER.map((t) => ({ key: t, label: TYPE_META[t].short, count: base.filter((o) => o.type === t).length })).filter(
+      (s) => s.count > 0 || s.key === q.type,
+    ),
+  ];
+  const chips: { label: string; href: string; aria: string }[] = [];
+  if (q.verified) chips.push({ label: 'Verified only', href: href(q, { verified: undefined }), aria: 'Remove verified filter' });
+  if (q.q) chips.push({ label: `Search: ${q.q}`, href: href(q, { q: undefined }), aria: 'Clear search' });
+  const filtered = chips.length > 0 || !!q.type;
 
   return (
-    <div className="page-stack">
+    <div className="page-stack org-page">
       <PageHeader
-        eyebrow="Directory"
         title="Organizations"
-        description={`${result.total} organization${result.total !== 1 ? 's' : ''} registered on the platform.`}
+        description="NGOs, agencies and research institutions working on Bangladesh's environment."
       />
 
-      <nav className="tab-nav">
-        {ORG_TYPES.map((t) => (
-          <Link
-            key={t.value}
-            href={t.value ? `/organizations?type=${t.value}` : '/organizations'}
-            className={activeType === t.value ? 'active' : ''}
-          >
-            {t.label}
-          </Link>
-        ))}
-      </nav>
-
-      <ListResultToolbar total={result.total} label="organizations" />
-
-      {result.data.length === 0 ? (
-        <section className="empty-state">
-          <h2>No organizations found</h2>
-          <p>No organizations match this filter.</p>
-        </section>
-      ) : (
-        <div className="content-grid organizations-grid">
-          {result.data.map((org) => (
-            <Link
-              href={`/organizations/${org.id}`}
-              key={org.id}
-              className="organization-card-link"
-              aria-label={`View ${org.name}`}
-            >
-              <article className="content-card organization-card">
-                <div className="organization-card-topline">
-                  <div className="card-kicker">{titleCase(org.type)}</div>
-                  <span className="organization-card-arrow" aria-hidden="true">→</span>
-                </div>
-                <h2>{org.name}</h2>
-                {org.description && <p>{org.description}</p>}
-                <div className="card-meta">
-                  <span>{org.country}</span>
-                  {org.isVerified && <span className="card-badge">✓ Verified</span>}
-                  {myOrgIds.has(org.id) && <span className="card-badge card-badge-member">Member</span>}
-                </div>
-              </article>
+      <div className="org-controls">
+        <nav className="dt-seg org-seg" aria-label="Organization type">
+          {segments.map((s) => (
+            <Link key={s.key} href={href(q, { type: s.key || undefined })} aria-current={(q.type ?? '') === s.key ? 'true' : undefined}>
+              {s.label}
+              <span>{s.count}</span>
             </Link>
           ))}
-        </div>
-      )}
+        </nav>
+        <form method="get" action="/organizations" className="org-filters">
+          {q.type && <input type="hidden" name="type" value={q.type} />}
+          <label className="org-check">
+            <AutoSubmitCheckbox name="verified" value="1" defaultChecked={!!q.verified} />
+            Verified only
+          </label>
+          <label className="dt-search">
+            <NavIcon name="search" />
+            <input key={q.q ?? ''} type="search" name="q" aria-label="Search organizations" placeholder="Search name or focus" defaultValue={q.q ?? ''} />
+          </label>
+          <button type="submit" className="org-apply">Apply</button>
+        </form>
+      </div>
 
-      <ListPagination pathname="/organizations" page={result.page} pageSize={result.pageSize} total={result.total} query={{ type: activeType }} />
+      <div className="org-count-row">
+        <span className="org-count">
+          {pluralize(orgs.length, 'organization')} · A–Z
+        </span>
+        {chips.length > 0 && (
+          <div className="dt-chips">
+            <span>Filtered by</span>
+            {chips.map((c) => (
+              <Link key={c.label} href={c.href} className="dt-chip" aria-label={c.aria}>
+                {c.label}
+                <NavIcon name="close" />
+              </Link>
+            ))}
+            <Link href={href({}, { type: q.type })} className="dt-clear">Clear all</Link>
+          </div>
+        )}
+      </div>
+
+      {orgs.length === 0 ? (
+        <EmptyState
+          title="No organizations match."
+          description="Try another type or search."
+          action={filtered ? <Link className="org-apply" href="/organizations">Clear filters</Link> : undefined}
+        />
+      ) : (
+        <ul className="org-grid">
+          {orgs.map((o) => (
+            <li key={o.id}>
+              <Link href={`/organizations/${o.id}`} className="org-card">
+                <span className="org-card-tags">
+                  <TypePill type={o.type} />
+                  {o.isVerified && <VerifiedPill />}
+                </span>
+                <h3>{o.name}</h3>
+                {o.description && <p>{o.description}</p>}
+                <span className="org-card-foot">
+                  <span className="org-country">
+                    <NavIcon name="globe" />
+                    {o.country}
+                  </span>
+                  <span className="org-view">
+                    View profile <NavIcon name="chevron-right" />
+                  </span>
+                  <span className="org-chev" aria-hidden="true"><NavIcon name="chevron-right" /></span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
