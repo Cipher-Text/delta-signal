@@ -7256,3 +7256,49 @@ a.pf-stat:hover { background: var(--ds-surface); }
   .pf-section:not(.pf-section--stack) { grid-template-columns: 240px minmax(0, 1fr); gap: var(--ds-space-24, 24px); }
 }
 @container (min-width: 600px) { .pf-facts > div { grid-template-columns: 180px minmax(0, 1fr); gap: 12px; } }
+
+/* ── Members (Web UI Reference) ─────────────────────────────────── */
+.mem-page > *, .mem-controls > *, .mem-filters > * { min-width: 0; max-width: 100%; }
+.mem-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
+.mem-seg { overflow-x: auto; }
+.mem-seg a { flex: 0 0 auto; }
+.mem-filters { display: flex; align-items: center; gap: var(--ds-space-12); }
+.mem-filters .dt-search { flex: none; width: 260px; }
+.mem-district select { height: 40px; min-width: 180px; padding: 0 12px; border: 1px solid var(--ds-border-strong); border-radius: var(--ds-radius-control); background: var(--ds-surface); color: var(--ds-text); font: inherit; font-size: var(--ds-text-nav); }
+.mem-count-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ds-space-12); }
+.mem-count { color: var(--ds-text-2); font-size: var(--ds-text-meta); }
+.mem-table { border: 1px solid var(--ds-border); border-radius: var(--ds-radius-card); background: var(--ds-surface); overflow: hidden; }
+.mem-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) minmax(0, 1.3fr) 64px minmax(0, 1.1fr) 20px; align-items: center; gap: var(--ds-space-12); min-height: 60px; padding: 8px var(--ds-space-16); color: var(--ds-text); font-size: var(--ds-text-nav); text-decoration: none; }
+.mem-row + .mem-row { border-top: 1px solid var(--ds-border); }
+a.mem-row:hover { background: var(--ds-surface-2); }
+.mem-row--head { min-height: 44px; background: var(--ds-surface-2); color: var(--ds-text-2); font-size: 0.8125rem; font-weight: 600; }
+.mem-row > div { min-width: 0; }
+.mem-num { text-align: right; font-variant-numeric: tabular-nums; }
+.mem-muted { color: var(--ds-text-2); }
+.mem-who { display: flex; align-items: center; gap: 12px; }
+.mem-avatar { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; overflow: hidden; border-radius: 50%; background: var(--ds-tint-neutral-bg); color: var(--ds-tint-neutral-icon); font-size: 0.8125rem; font-weight: 600; }
+.mem-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mem-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.mem-name strong { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mem-name small { color: var(--ds-text-2); font-size: 0.8125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mem-row [role="cell"]:nth-child(5) { white-space: nowrap; }
+.mem-role { max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--ds-surface-2); color: var(--ds-text); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+.mem-chev { display: flex; justify-content: flex-end; color: var(--ds-text-2); }
+.mem-chev .nav-icon { width: 16px; height: 16px; }
+.mem-list { display: none; margin: 0; padding: 0; list-style: none; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-card); background: var(--ds-surface); overflow: hidden; }
+.mem-list li + li { border-top: 1px solid var(--ds-border); }
+.mem-list a { display: flex; align-items: center; gap: 12px; padding: 14px; color: var(--ds-text); text-decoration: none; }
+.mem-list .mem-name { flex: 1; gap: 4px; }
+.mem-list .mem-name strong { font-size: 0.9375rem; }
+.mem-list-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--ds-text-2); font-size: 0.8125rem; }
+.mem-note { margin: 0; color: var(--ds-text-2); font-size: 0.8125rem; }
+
+@media (max-width: 768px) {
+  .mem-controls, .mem-filters { flex-direction: column; align-items: stretch; }
+  .mem-filters { gap: var(--ds-space-8); }
+  .mem-filters .dt-search { width: 100%; max-width: none; height: 44px; }
+  .mem-district select { width: 100%; height: 44px; }
+  .mem-seg a { height: 40px; }
+  .mem-table { display: none; }
+  .mem-list { display: block; }
+}

@@ -644,6 +644,11 @@ export interface MemberSummary {
   } | null;
 }
 
+/** GET /members — a page of members plus per-role totals for the current search/district filters. */
+export interface MemberListResponse extends PaginatedEnvelope<MemberSummary> {
+  roleCounts: Partial<Record<UserRole, number>>;
+}
+
 /** GET /members/:id — richer than MemberSummary; phone is never included (PII, no public use case). */
 export interface MemberDetail {
   id: string;
