@@ -1348,8 +1348,14 @@ export interface CommunityPostSummary {
     id: string;
     question: string;
     endsAt: string | null;
-    options: { _count: { votes: number } }[];
+    options: PollOptionWithCount[];
   } | null;
+}
+
+/** GET /community/posts — `counts` ignores the hasPoll filter; `userVotes` maps pollId -> the caller's option id. */
+export interface CommunityPostListResponse extends PaginatedEnvelope<CommunityPostSummary> {
+  counts: { all: number; posts: number; polls: number };
+  userVotes: Record<string, string>;
 }
 
 export interface PollOptionWithCount {

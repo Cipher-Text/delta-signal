@@ -2,6 +2,7 @@
 
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { routes } from '@delta-signal/contracts';
 import { apiPostAuthed, apiDeleteAuthed, ApiError } from './api';
 import { ACCESS_TOKEN_COOKIE } from './session-constants';
@@ -37,7 +38,7 @@ export async function createPostAction(formData: FormData) {
   }
 
   // Determine which tab to redirect back to
-  const redirectTab = poll ? 'polls' : 'posts';
+  const redirectTab = poll ? 'polls' : 'posts';  // feed filter to land on after publishing
 
   try {
     await apiPostAuthed<unknown>(
@@ -47,10 +48,10 @@ export async function createPostAction(formData: FormData) {
     );
   } catch (err) {
     const message = err instanceof ApiError ? err.message : 'Failed to create post';
-    redirect(`/community?tab=${redirectTab}&error=${encodeURIComponent(message)}`);
+    redirect(`/community?show=${redirectTab}&error=${encodeURIComponent(message)}`);
   }
 
-  redirect(`/community?tab=${redirectTab}&created=1`);
+  redirect(`/community?show=${redirectTab}&created=1`);
 }
 
 export async function addPostCommentAction(postId: string, formData: FormData) {
@@ -80,7 +81,7 @@ export async function deletePostAction(postId: string, hasPoll: boolean) {
     redirect(`/community/${postId}?error=${encodeURIComponent(message)}`);
   }
 
-  redirect(`/community?tab=${hasPoll ? 'polls' : 'posts'}&deleted=1`);
+  redirect(`/community?show=${hasPoll ? 'polls' : 'posts'}&deleted=1`);
 }
 
 export async function deleteCommentAction(postId: string, commentId: string) {
@@ -111,4 +112,17 @@ export async function castVoteAction(postId: string, formData: FormData) {
   }
 
   redirect(`/community/${postId}?voted=1`);
+}
+
+/** Votes from the feed: updates in place (no redirect) so the list keeps its scroll position. */
+export async function castFeedVoteAction(postId: string, optionId: string): Promise<{ error?: string }> {
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
+  if (!accessToken) return { error: 'Sign in to vote.' };
+  try {
+    await apiPostAuthed<unknown>(routes.community.vote(postId), { optionId }, accessToken);
+  } catch (err) {
+    return { error: err instanceof ApiError ? err.message : 'Failed to cast vote' };
+  }
+  revalidatePath('/community');
+  return {};
 }

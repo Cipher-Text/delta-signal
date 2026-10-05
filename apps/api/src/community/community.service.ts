@@ -28,7 +28,7 @@ const POST_LIST_SELECT = {
       id:       true,
       question: true,
       endsAt:   true,
-      options:  { select: { _count: { select: { votes: true } } } },
+      options:  { orderBy: { order: 'asc' }, select: { id: true, text: true, order: true, _count: { select: { votes: true } } } },
     },
   },
 } as const;
@@ -56,20 +56,26 @@ export class CommunityService {
     private readonly gamification: GamificationService,
   ) {}
 
-  listPosts(
+  /**
+   * `hasPoll` undefined returns everything. `counts` ignores that filter (but respects the district) so the
+   * All / Discussions / Polls segments each keep their own total; `userVotes` maps pollId -> the caller's option.
+   */
+  async listPosts(
     districtId: string | undefined,
     hasPoll: boolean | undefined,
     rawPage: number,
     rawPageSize: number,
+    userId?: string,
   ) {
     const { page, pageSize } = clampPagination(rawPage, rawPageSize);
     const skip = (page - 1) * pageSize;
+    const base = districtId ? { districtId } : {};
     const where = {
-      ...(districtId ? { districtId } : {}),
+      ...base,
       ...(hasPoll === true  ? { poll: { isNot: null } } : {}),
       ...(hasPoll === false ? { poll: { is:    null } } : {}),
     };
-    return Promise.all([
+    const [data, total, all, polls] = await Promise.all([
       this.prisma.communityPost.findMany({
         where,
         skip,
@@ -78,7 +84,27 @@ export class CommunityService {
         select: POST_LIST_SELECT,
       }),
       this.prisma.communityPost.count({ where }),
-    ]).then(([data, total]) => ({ data, total, page, pageSize }));
+      this.prisma.communityPost.count({ where: base }),
+      this.prisma.communityPost.count({ where: { ...base, poll: { isNot: null } } }),
+    ]);
+
+    const pollIds = data.flatMap((p) => (p.poll ? [p.poll.id] : []));
+    const votes =
+      userId && pollIds.length
+        ? await this.prisma.pollVote.findMany({
+            where: { userId, pollId: { in: pollIds } },
+            select: { pollId: true, optionId: true },
+          })
+        : [];
+
+    return {
+      data,
+      total,
+      page,
+      pageSize,
+      counts: { all, posts: all - polls, polls },
+      userVotes: Object.fromEntries(votes.map((v) => [v.pollId, v.optionId])) as Record<string, string>,
+    };
   }
 
   async createPost(dto: CreatePostDto, actor: JwtPayload) {

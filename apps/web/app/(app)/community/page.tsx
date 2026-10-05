@@ -1,320 +1,217 @@
 import Link from 'next/link';
-import { apiGet } from '../../../lib/api';
+import { apiGet, apiGetAuthed } from '../../../lib/api';
+import { cookies } from 'next/headers';
 import { getCurrentUser } from '../../../lib/current-user';
-import { createPostAction } from '../../../lib/community-actions';
-import { routes, type CommunityPostSummary, type PaginatedEnvelope } from '@delta-signal/contracts';
-import { relativeTime } from '../../../lib/format';
-import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
+import { createPostAction, deletePostAction } from '../../../lib/community-actions';
+import { routes, type CommunityPostListResponse } from '@delta-signal/contracts';
+import { dhakaDateTimeShort, pluralize, relativeTime } from '../../../lib/format';
+import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
+import type { DistrictWithDivision } from '../../../components/district-select';
+import AutoSubmitSelect from '../../../components/auto-submit-select';
+import Composer from '../../../components/community/composer';
+import PollOptions from '../../../components/community/poll-options';
+import EmptyState from '../../../components/empty-state';
 import ListPagination from '../../../components/list-pagination';
-import ListResultToolbar from '../../../components/list-result-toolbar';
+import NavIcon from '../../../components/nav-icons';
 import PageHeader from '../../../components/page-header';
 
-type CommunityTab = 'posts' | 'polls';
+type Show = 'all' | 'posts' | 'polls';
+type Query = { show?: string; tab?: string; districtId?: string; page?: string; created?: string; deleted?: string; error?: string };
 
-export default async function CommunityPage(
-  props: {
-    searchParams: Promise<{
-      tab?: string;
-      districtId?: string;
-      page?: string;
-      created?: string;
-      deleted?: string;
-      error?: string;
-    }>;
+const FILTERS: { key: Show; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'posts', label: 'Discussions' },
+  { key: 'polls', label: 'Polls' },
+];
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return ((parts[0]?.[0] ?? '') + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+}
+
+/** Within a day: "5 min ago"; older: "3 Oct 2026, 18:20" (Dhaka time). */
+function postedAt(iso: string): string {
+  return Date.now() - new Date(iso).getTime() < 86_400_000 ? relativeTime(iso) : dhakaDateTimeShort(iso);
+}
+
+function groupByDivision(districts: DistrictWithDivision[]) {
+  const map = new Map<string, { id: string; name: string }[]>();
+  for (const d of districts) {
+    const div = d.division?.name ?? 'Other';
+    if (!map.has(div)) map.set(div, []);
+    map.get(div)!.push({ id: d.id, name: d.name });
   }
-) {
-  const searchParams = await props.searchParams;
-  const tab: CommunityTab =
-    searchParams.tab === 'polls' ? 'polls' : 'posts';
-  const districtId = searchParams.districtId;
-  const page = Math.max(1, Number(searchParams.page ?? 1) || 1);
+  return [...map.entries()].map(([division, list]) => ({ division, districts: list }));
+}
 
-  const hasPoll = tab === 'polls' ? 'true' : 'false';
-  const postsPath =
-    `${routes.community.posts}?hasPoll=${hasPoll}&page=${page}&pageSize=20` +
+/** Community feed (Web UI Reference): composer, All / Discussions / Polls filter, post cards with in-feed voting. */
+export default async function CommunityPage(props: { searchParams: Promise<Query> }) {
+  const sp = await props.searchParams;
+  // `tab=` was the old Posts/Polls switch; keep old links working.
+  const raw = sp.show ?? sp.tab;
+  const show: Show = raw === 'polls' ? 'polls' : raw === 'posts' ? 'posts' : 'all';
+  const districtId = sp.districtId || undefined;
+  const page = Math.max(1, Number(sp.page ?? 1) || 1);
+
+  const user = await getCurrentUser();
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
+
+  const path =
+    `${routes.community.posts}?page=${page}&pageSize=20` +
+    (show !== 'all' ? `&hasPoll=${show === 'polls'}` : '') +
     (districtId ? `&districtId=${districtId}` : '');
+  const empty: CommunityPostListResponse = { data: [], total: 0, page: 1, pageSize: 20, counts: { all: 0, posts: 0, polls: 0 }, userVotes: {} };
 
-  const [postsRes, user, allDistricts] = await Promise.all([
-    apiGet<PaginatedEnvelope<CommunityPostSummary>>(postsPath, 0).catch(
-      (): PaginatedEnvelope<CommunityPostSummary> => ({ data: [], total: 0, page: 1, pageSize: 20 }),
-    ),
-    getCurrentUser(),
-    apiGet<DistrictWithDivision[]>(routes.locations.districts, 3600).catch(() => []),
+  const [feed, districts] = await Promise.all([
+    (user ? apiGetAuthed<CommunityPostListResponse>(path, accessToken) : apiGet<CommunityPostListResponse>(path, 0)).catch(() => empty),
+    apiGet<DistrictWithDivision[]>(routes.locations.districts, 3600).catch((): DistrictWithDivision[] => []),
   ]);
 
-  // District select for the create-post/poll forms is authenticated-only content,
-  // but the district *filter* below applies to everyone browsing the list.
-  const districts: DistrictWithDivision[] = user ? allDistricts : [];
-  const canCreatePoll = user?.role === 'ADMIN' || user?.role === 'MODERATOR';
+  const canPoll = user?.role === 'ADMIN' || user?.role === 'MODERATOR';
+  const filterHref = (key: Show) => {
+    const params = new URLSearchParams();
+    if (key !== 'all') params.set('show', key);
+    if (districtId) params.set('districtId', districtId);
+    const s = params.toString();
+    return s ? `/community?${s}` : '/community';
+  };
 
   return (
-    <>
+    <div className="page-stack cm-page">
       <PageHeader
         title="Community"
-        description="Posts, discussions, and polls from contributors across Bangladesh."
-        action={!user && (
-          <Link href="/login" className="button">
-            Sign in to post
-          </Link>
-        )}
+        description={<><span className="cm-sub-long">Discussions and polls from people working on Bangladesh&apos;s environment.</span><span className="cm-sub-short">Discussions and polls · not verified data</span></>}
       />
 
-      {/* Tab nav */}
-      <nav className="tab-nav" aria-label="Community sections">
-        <Link
-          href="/community?tab=posts"
-          className={tab === 'posts' ? 'active' : ''}
-          aria-current={tab === 'posts' ? 'page' : undefined}
-        >
-          Posts
-        </Link>
-        <Link
-          href="/community?tab=polls"
-          className={tab === 'polls' ? 'active' : ''}
-          aria-current={tab === 'polls' ? 'page' : undefined}
-        >
-          Polls
-        </Link>
-      </nav>
-
-      <form className="toolbar" method="get" aria-label="Community filters">
-        <input type="hidden" name="tab" value={tab} />
-        <label htmlFor="communityDistrict">District</label>
-        <select id="communityDistrict" name="districtId" className="select-field" defaultValue={districtId ?? ''}>
-          <option value="">All districts</option>
-          {allDistricts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-        </select>
-        <button type="submit" className="button">Apply</button>
-        {districtId && (
-          <Link className="button ghost" href={`/community?tab=${tab}`}>Reset</Link>
-        )}
-      </form>
-
-      {searchParams.created && (
-        <p className="form-success">
-          {tab === 'polls' ? 'Poll created.' : 'Post created.'}
-        </p>
-      )}
-      {searchParams.deleted && <p className="form-success">Deleted.</p>}
-      {searchParams.error && (
-        <p className="form-error">{decodeURIComponent(searchParams.error)}</p>
-      )}
-
-      {/* ── Posts tab ─────────────────────────────────────────────────── */}
-      {tab === 'posts' && (
-        <>
-          {user && (
-            <article className="panel">
-              <div className="panel-header">
-                <div>
-                  <h2>Create a post</h2>
-                  <p>Share an update, observation, or question with the community.</p>
-                </div>
-              </div>
-              <form action={createPostAction} className="submit-form">
-                <div className="field">
-                  <label htmlFor="title">Title</label>
-                  <input
-                    id="title"
-                    name="title"
-                    type="text"
-                    required
-                    minLength={3}
-                    maxLength={300}
-                    placeholder="e.g. New mangrove planting near Sundarbans"
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="body">Body</label>
-                  <textarea
-                    id="body"
-                    name="body"
-                    required
-                    minLength={10}
-                    maxLength={10000}
-                    rows={4}
-                    placeholder="Share details, links, or observations…"
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="districtId">District (optional)</label>
-                  <DistrictSelect districts={districts} />
-                </div>
-                <button className="button" type="submit">Create post</button>
-              </form>
-            </article>
-          )}
-
-          <ListResultToolbar total={postsRes.total} label="posts" />
-
-          <div className="table" role="table" aria-label="Community posts">
-            <div className="table-row table-head" role="row">
-              <span>Title</span>
-              <span>Author</span>
-              <span>District</span>
-              <span>Comments</span>
-              <span>Posted</span>
-            </div>
-            {postsRes.data.map((p) => (
-              <Link
-                key={p.id}
-                className="table-row table-row-link"
-                role="row"
-                href={`/community/${p.id}`}
-              >
-                <strong>{p.title}</strong>
-                <span>{p.author.displayName}</span>
-                <span>{p.district?.name ?? '—'}</span>
-                <span>
-                  {p._count.comments} comment{p._count.comments !== 1 ? 's' : ''}
-                </span>
-                <span>{relativeTime(p.createdAt)}</span>
+      <div className="cm-layout">
+        <div className="cm-main">
+          <section aria-label="Create a post">
+            {user ? (
+              <Composer action={createPostAction} districts={groupByDivision(districts)} initials={initials(user.displayName)} canPoll={canPoll} />
+            ) : (
+              <Link href="/login?next=/community" className="cm-compose-bar">
+                <span className="cm-avatar" aria-hidden="true"><NavIcon name="community" /></span>
+                <span>Sign in to share an update or ask a question</span>
               </Link>
-            ))}
-            {postsRes.data.length === 0 && (
-              <div className="empty-state">No posts yet. Be the first to post!</div>
             )}
-          </div>
+          </section>
 
-          <ListPagination
-            pathname="/community"
-            page={postsRes.page}
-            pageSize={postsRes.pageSize}
-            total={postsRes.total}
-            query={{ tab: 'posts', districtId }}
-          />
-        </>
-      )}
+          {sp.created && <div className="pf-notice pf-notice--ok" role="status"><NavIcon name="check" />Published. Your post is at the top of the feed.</div>}
+          {sp.deleted && <div className="pf-notice pf-notice--ok" role="status"><NavIcon name="check" />Post deleted.</div>}
+          {sp.error && <div className="pf-notice pf-notice--err" role="alert">{sp.error}</div>}
 
-      {/* ── Polls tab ─────────────────────────────────────────────────── */}
-      {tab === 'polls' && (
-        <>
-          {canCreatePoll && (
-            <article className="panel">
-              <div className="panel-header">
-                <div>
-                  <h2>Create a poll</h2>
-                  <p>Ask the community a question and collect structured responses.</p>
-                </div>
-              </div>
-              <form action={createPostAction} className="submit-form">
-                <div className="field">
-                  <label htmlFor="pollQuestion">Question *</label>
-                  <input
-                    id="pollQuestion"
-                    name="pollQuestion"
-                    type="text"
-                    required
-                    maxLength={500}
-                    placeholder="e.g. How often do you observe plastic waste near waterways?"
-                  />
-                </div>
-
-                {[0, 1, 2, 3].map((i) => (
-                  <div className="field" key={i}>
-                    <label htmlFor={`pollOption${i}`}>
-                      Option {i + 1}{i < 2 ? ' *' : ' (optional)'}
-                    </label>
-                    <input
-                      id={`pollOption${i}`}
-                      name={`pollOption${i}`}
-                      type="text"
-                      maxLength={200}
-                      placeholder={`Option ${i + 1}`}
-                    />
-                  </div>
-                ))}
-
-                {/* Hidden title — derived from question on the server action */}
-                <input type="hidden" name="title" value="" />
-
-                <div className="poll-create-meta">
-                  <div className="field">
-                    <label htmlFor="pollEndsAt">Closes at (optional)</label>
-                    <input
-                      id="pollEndsAt"
-                      name="pollEndsAt"
-                      type="datetime-local"
-                    />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="districtId">District (optional)</label>
-                    <DistrictSelect districts={districts} />
-                  </div>
-                </div>
-
-                <button className="button" type="submit">Create poll</button>
-              </form>
-            </article>
-          )}
-
-          {!canCreatePoll && user && (
-            <p className="access-note">
-              Only moderators and admins can create polls.
-            </p>
-          )}
-
-          <ListResultToolbar total={postsRes.total} label="polls" />
-
-          <div className="table poll-table" role="table" aria-label="Community polls">
-            <div className="table-row table-head" role="row">
-              <span>Question</span>
-              <span>Author</span>
-              <span>Votes</span>
-              <span>Status</span>
-              <span>Posted</span>
-            </div>
-            {postsRes.data.map((p) => {
-              const isClosed =
-                !!p.poll?.endsAt && new Date() > new Date(p.poll.endsAt);
-              const totalVotes =
-                p.poll?.options.reduce((s, o) => s + o._count.votes, 0) ?? 0;
-              return (
-                <Link
-                  key={p.id}
-                  className="table-row table-row-link"
-                  role="row"
-                  href={`/community/${p.id}`}
-                >
-                  <span>
-                    <strong>{p.title}</strong>
-                    {p.poll?.question && (
-                      <span className="poll-question-preview">{p.poll.question}</span>
-                    )}
-                  </span>
-                  <span>{p.author.displayName}</span>
-                  <span>{totalVotes} vote{totalVotes !== 1 ? 's' : ''}</span>
-                  <span>
-                    {isClosed ? (
-                      <span className="tag muted">Closed</span>
-                    ) : p.poll?.endsAt ? (
-                      <span className="tag success">Closes {relativeTime(p.poll.endsAt)}</span>
-                    ) : (
-                      <span className="tag info">Open</span>
-                    )}
-                  </span>
-                  <span>{relativeTime(p.createdAt)}</span>
+          <div className="cm-controls">
+            <nav className="dt-seg cm-seg" aria-label="Show">
+              {FILTERS.map((f) => (
+                <Link key={f.key} href={filterHref(f.key)} aria-current={show === f.key ? 'true' : undefined}>
+                  {f.label}
+                  <span>{feed.counts[f.key]}</span>
                 </Link>
-              );
-            })}
-            {postsRes.data.length === 0 && (
-              <div className="empty-state">
-                {canCreatePoll
-                  ? 'No polls yet. Create the first one above.'
-                  : 'No polls yet.'}
-              </div>
-            )}
+              ))}
+            </nav>
+            <form method="get" action="/community" className="cm-filter">
+              {show !== 'all' && <input type="hidden" name="show" value={show} />}
+              <span className="cm-order">Newest first</span>
+              <AutoSubmitSelect name="districtId" aria-label="District" defaultValue={districtId ?? ''}>
+                <option value="">All districts</option>
+                {districts.map((d) => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </AutoSubmitSelect>
+            </form>
           </div>
+
+          {feed.data.length === 0 ? (
+            <EmptyState
+              title="Nothing here yet."
+              description={districtId ? 'Start the conversation for this district.' : 'Start the conversation.'}
+            />
+          ) : (
+            <div className="cm-feed">
+              {feed.data.map((p) => {
+                const poll = p.poll;
+                const closed = !!poll?.endsAt && new Date(poll.endsAt) < new Date();
+                const canDelete = user && (user.id === p.author.id || user.role === 'ADMIN' || user.role === 'MODERATOR');
+                const comments = p._count.comments;
+                return (
+                  <article key={p.id} className="cm-post">
+                    <header>
+                      <span className="cm-avatar" aria-hidden="true">{initials(p.author.displayName)}</span>
+                      <div className="cm-post-by">
+                        <strong>{p.author.displayName}</strong>
+                        <span>{postedAt(p.createdAt)}{p.district ? ` · ${p.district.name}` : ''}</span>
+                      </div>
+                      {poll && <span className="cm-badge">Poll</span>}
+                      {canDelete && (
+                        <details className="cm-menu">
+                          <summary aria-label="More actions"><NavIcon name="more" /></summary>
+                          <form action={deletePostAction.bind(null, p.id, !!poll)}>
+                            <button type="submit">Delete post</button>
+                          </form>
+                        </details>
+                      )}
+                    </header>
+                    <div className="cm-post-body">
+                      <h3><Link href={`/community/${p.id}`}>{poll ? poll.question : p.title}</Link></h3>
+                      {p.body && <p>{p.body}</p>}
+                    </div>
+                    {poll && (
+                      <PollOptions
+                        postId={p.id}
+                        options={poll.options.map((o) => ({ id: o.id, text: o.text, votes: o._count.votes }))}
+                        votedId={feed.userVotes[poll.id] ?? null}
+                        closed={closed}
+                        canVote={!!user}
+                        meta={
+                          poll.endsAt
+                            ? closed
+                              ? 'Closed'
+                              : `Closes ${dhakaDateTimeShort(poll.endsAt)}`
+                            : 'No closing date'
+                        }
+                      />
+                    )}
+                    <footer>
+                      <Link href={`/community/${p.id}`}>
+                        <NavIcon name="community" />
+                        {comments === 0 ? 'Comment' : pluralize(comments, 'comment')}
+                      </Link>
+                      <Link href={`/community/${p.id}`}>Open discussion →</Link>
+                    </footer>
+                  </article>
+                );
+              })}
+            </div>
+          )}
 
           <ListPagination
             pathname="/community"
-            page={postsRes.page}
-            pageSize={postsRes.pageSize}
-            total={postsRes.total}
-            query={{ tab: 'polls', districtId }}
+            page={feed.page}
+            pageSize={feed.pageSize}
+            total={feed.total}
+            query={{ show: show === 'all' ? undefined : show, districtId }}
           />
-        </>
-      )}
-    </>
+        </div>
+
+        <aside className="cm-aside" aria-label="About the community">
+          <section>
+            <h2>Community guidelines</h2>
+            <ul>
+              <li>Share sources for facts and figures.</li>
+              <li>Keep it about Bangladesh&apos;s environment.</li>
+              <li>Be respectful. Moderators remove abuse and misinformation.</li>
+            </ul>
+          </section>
+          <section>
+            <h2>Posts or reports?</h2>
+            <p>
+              Community posts are open discussion and are not verified. To flag pollution, flooding or dumping at a location,
+              submit a citizen report so moderators can verify and map it.
+            </p>
+            <Link href="/reports">Submit a citizen report</Link>
+          </section>
+        </aside>
+      </div>
+    </div>
   );
 }
