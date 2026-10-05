@@ -722,6 +722,16 @@ export interface RestorationProject {
   _count: { participants: number };
 }
 
+export interface RestorationProjectListItem extends RestorationProject {
+  joinedByMe: boolean;
+}
+
+/** GET /restoration/projects — active first; `stats` is platform-wide, `categoryCounts` ignores the category filter. */
+export interface RestorationProjectListResponse extends PaginatedEnvelope<RestorationProjectListItem> {
+  stats: { active: number; planned: number; paused: number; completed: number; participants: number };
+  categoryCounts: Partial<Record<RestorationCategory, number>>;
+}
+
 export interface CreateRestorationProjectRequest {
   title: string;
   description: string;

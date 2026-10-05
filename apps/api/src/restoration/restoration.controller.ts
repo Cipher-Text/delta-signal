@@ -6,6 +6,7 @@ import { UpdateRestorationProjectDto } from './dto/update-restoration-project.dt
 import { CreateProjectTargetDto } from './dto/create-project-target.dto';
 import { CreateProjectActivityDto } from './dto/create-project-activity.dto';
 import { CreateProjectMetricDto } from './dto/create-project-metric.dto';
+import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentUser, JwtPayload } from '../common/decorators/current-user.decorator';
@@ -18,6 +19,7 @@ export class RestorationController {
   constructor(private readonly restorationService: RestorationService) {}
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get()
   list(
     @Query('category') category?: string,
@@ -27,6 +29,7 @@ export class RestorationController {
     @Query('unionId') unionId?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
+    @CurrentUser() user?: JwtPayload,
   ) {
     return this.restorationService.list(
       category as RestorationCategory | undefined,
@@ -36,6 +39,7 @@ export class RestorationController {
       unionId,
       Number(page ?? 1),
       Number(pageSize ?? 20),
+      user?.sub,
     );
   }
 

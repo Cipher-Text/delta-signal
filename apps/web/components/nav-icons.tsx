@@ -33,6 +33,7 @@ const PATHS: Record<string, ReactNode> = {
   moon: <path d="M16.7 12.2A6.7 6.7 0 0 1 7.8 3.3a6.7 6.7 0 1 0 8.9 8.9z" />,
   sun: <><circle cx="10" cy="10" r="3.3" /><path d="M10 2v1.7M10 16.3V18M2 10h1.7M16.3 10H18M4.3 4.3l1.2 1.2M14.5 14.5l1.2 1.2M15.7 4.3l-1.2 1.2M5.5 14.5l-1.2 1.2" /></>,
   more: <><circle cx="4.5" cy="10" r="1.1" /><circle cx="10" cy="10" r="1.1" /><circle cx="15.5" cy="10" r="1.1" /></>,
+  plus: <path d="M10 4v12M4 10h12" />,
   check: <path d="M4 10.5l4 4 8-9" />,
   close: <path d="M5 5l10 10M15 5L5 15" />,
 };

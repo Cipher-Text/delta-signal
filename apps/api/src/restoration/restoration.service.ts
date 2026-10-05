@@ -174,7 +174,12 @@ export class RestorationService {
     });
   }
 
-  list(
+  /**
+   * Active projects first, then planned, paused, completed (newest first within each).
+   * `stats` is platform-wide; `categoryCounts` respects the status/district filters but not the category itself,
+   * so each category segment keeps its own total. `joinedByMe` needs the caller's id.
+   */
+  async list(
     category?: RestorationCategory,
     status?: ProjectStatus,
     districtId?: string,
@@ -182,26 +187,69 @@ export class RestorationService {
     unionId?: string,
     rawPage = 1,
     rawPageSize = 20,
+    userId?: string,
   ) {
     const { page, pageSize } = clampPagination(rawPage, rawPageSize);
     const skip = (page - 1) * pageSize;
-    const where = {
-      ...(category ? { category } : {}),
+    const scope = {
       ...(status ? { status } : {}),
       ...(upazilaId ? { upazilaId } : {}),
       ...(unionId ? { unionId } : {}),
       ...(districtId ? { districtId } : {}),
     };
-    return Promise.all([
-      this.prisma.restorationProject.findMany({
-        where,
-        skip,
-        take: pageSize,
-        orderBy: { createdAt: 'desc' },
-        select: PROJECT_SELECT,
-      }),
+    const where = { ...scope, ...(category ? { category } : {}) };
+
+    const conds = [
+      category ? Prisma.sql`"category"::text = ${category}` : null,
+      status ? Prisma.sql`"status"::text = ${status}` : null,
+      districtId ? Prisma.sql`"districtId" = ${districtId}` : null,
+      upazilaId ? Prisma.sql`"upazilaId" = ${upazilaId}` : null,
+      unionId ? Prisma.sql`"unionId" = ${unionId}` : null,
+    ].filter((c): c is Prisma.Sql => c !== null);
+    const whereSql = conds.length ? Prisma.sql`WHERE ${Prisma.join(conds, ' AND ')}` : Prisma.empty;
+
+    const [idRows, total, byStatus, byCategory, participants] = await Promise.all([
+      this.prisma.$queryRaw<{ id: string }[]>`
+        SELECT "id" FROM "RestorationProject" ${whereSql}
+        ORDER BY CASE "status"::text WHEN 'ACTIVE' THEN 0 WHEN 'PLANNED' THEN 1 WHEN 'PAUSED' THEN 2 ELSE 3 END,
+                 "createdAt" DESC, "id"
+        LIMIT ${pageSize} OFFSET ${skip}`,
       this.prisma.restorationProject.count({ where }),
-    ]).then(([data, total]) => ({ data, total, page, pageSize }));
+      this.prisma.restorationProject.groupBy({ by: ['status'], _count: { _all: true } }),
+      this.prisma.restorationProject.groupBy({ by: ['category'], where: scope, _count: { _all: true } }),
+      this.prisma.restorationParticipant.count(),
+    ]);
+
+    const ids = idRows.map((r) => r.id);
+    const [rows, joined] = await Promise.all([
+      this.prisma.restorationProject.findMany({ where: { id: { in: ids } }, select: PROJECT_SELECT }),
+      userId && ids.length
+        ? this.prisma.restorationParticipant.findMany({ where: { userId, projectId: { in: ids } }, select: { projectId: true } })
+        : Promise.resolve([] as { projectId: string }[]),
+    ]);
+    const order = new Map(ids.map((id, i) => [id, i]));
+    const joinedSet = new Set(joined.map((j) => j.projectId));
+    const data = rows
+      .sort((x, y) => (order.get(x.id) ?? 0) - (order.get(y.id) ?? 0))
+      .map((r) => ({ ...r, joinedByMe: joinedSet.has(r.id) }));
+
+    const count = (st: ProjectStatus) => byStatus.find((g) => g.status === st)?._count._all ?? 0;
+    return {
+      data,
+      total,
+      page,
+      pageSize,
+      stats: {
+        active: count('ACTIVE'),
+        planned: count('PLANNED'),
+        paused: count('PAUSED'),
+        completed: count('COMPLETED'),
+        participants,
+      },
+      categoryCounts: Object.fromEntries(byCategory.map((g) => [g.category, g._count._all])) as Partial<
+        Record<RestorationCategory, number>
+      >,
+    };
   }
 
   async getById(id: string) {
