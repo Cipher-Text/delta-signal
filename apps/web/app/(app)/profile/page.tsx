@@ -23,11 +23,10 @@ import ProfilePictureForm from '../../../components/profile-picture-form';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-type ProfileTab = 'personal' | 'location' | 'alerts' | 'contributions' | 'security' | 'achievements';
+type ProfileTab = 'personal' | 'alerts' | 'contributions' | 'security' | 'achievements';
 
 const TABS: { id: ProfileTab; label: string }[] = [
   { id: 'personal',     label: 'Personal Info' },
-  { id: 'location',     label: 'Location & Scope' },
   { id: 'alerts',       label: 'Notifications' },
   { id: 'contributions', label: 'Contributions' },
   { id: 'achievements', label: 'Achievements' },
@@ -465,6 +464,30 @@ export default async function ProfilePage(
                 Phone number
                 <input name="phone" type="tel" defaultValue={profile?.phone ?? ''} placeholder="+880 ..." />
               </label>
+            </div>
+
+            {/* Location */}
+            <h3 id="location">Location</h3>
+            <p className="section-help">Your primary district personalizes weather summaries, environmental data, and notification suggestions. You can still report from any district.</p>
+            <div className="profile-form-grid">
+              <div>
+                <label htmlFor="locationDistrict-select">District</label>
+                <select
+                  id="locationDistrict-select"
+                  name="locationDistrict"
+                  className="select-field"
+                  defaultValue={profile?.locationDistrict ?? ''}
+                >
+                  <option value="">Not specified</option>
+                  {[...districtsByDivision.entries()].map(([divName, divDistricts]) => (
+                    <optgroup key={divName} label={divName}>
+                      {divDistricts.map((d) => (
+                        <option key={d.id} value={d.name}>{d.name}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
+              </div>
               <label>
                 Country
                 <input value={profile?.locationCountry ?? 'Bangladesh'} readOnly />
@@ -559,91 +582,23 @@ export default async function ProfilePage(
               <Link className="button ghost" href="/profile?tab=personal">Cancel</Link>
             </div>
           </form>
-        </article>
-      )}
-
-      {/* ══ Location & Geo-Scope Tab ════════════════════════════════════════ */}
-      {activeTab === 'location' && (
-        <article className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>Location &amp; geo-scope</h2>
-              <p>Set your primary administrative location for localized data and reporting defaults.</p>
-            </div>
-          </div>
-
-          <form action={updateProfileAction} className="profile-form">
-            <input type="hidden" name="_tab" value="location" />
-            {/* Preserve all other profile fields unchanged */}
-            <input type="hidden" name="displayName"      value={user?.displayName ?? ''} />
-            <input type="hidden" name="phone"            value={profile?.phone ?? ''} />
-            <input type="hidden" name="occupation"       value={profile?.occupation ?? ''} />
-            <input type="hidden" name="bio"              value={profile?.bio ?? ''} />
-            <input type="hidden" name="education"        value={profile?.education ?? ''} />
-            <input type="hidden" name="institution"      value={profile?.institution ?? ''} />
-            <input type="hidden" name="expertise"        value={(profile?.expertise ?? []).join(',')} />
-            <input type="hidden" name="researchInterests" value={(profile?.researchInterests ?? []).join(',')} />
-            <input type="hidden" name="profileVisibility"  value={profile?.profileVisibility  ?? 'PUBLIC'} />
-            <input type="hidden" name="contactVisibility"  value={profile?.contactVisibility  ?? 'PRIVATE'} />
-            <input type="hidden" name="linksVisibility"    value={profile?.linksVisibility    ?? 'PUBLIC'} />
-            {SOCIAL_PLATFORMS.map((p) => (
-              <input key={p} type="hidden" name={p} value={social[p] ?? ''} />
-            ))}
-
-            <h3>Primary district</h3>
-
-            <div className="access-note">
-              <p>Your district personalizes weather summaries, environmental data, and notification suggestions. You can still report from any district.</p>
-            </div>
-
-            <div className="profile-form-grid">
-              <div>
-                <label htmlFor="locationDistrict-select">District</label>
-                <select
-                  id="locationDistrict-select"
-                  name="locationDistrict"
-                  className="select-field"
-                  defaultValue={profile?.locationDistrict ?? ''}
-                >
-                  <option value="">Not specified</option>
-                  {[...districtsByDivision.entries()].map(([divName, divDistricts]) => (
-                    <optgroup key={divName} label={divName}>
-                      {divDistricts.map((d) => (
-                        <option key={d.id} value={d.name}>{d.name}</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </div>
-              <label>
-                Country
-                <input value={profile?.locationCountry ?? 'Bangladesh'} readOnly />
-              </label>
-            </div>
-
-            {user?.organizations && user.organizations.length > 0 && (
-              <>
-                <h3>Organization affiliations</h3>
-                <div className="subscription-list">
-                  {user.organizations.map((org) => (
-                    <div key={org.id} className="subscription-row">
-                      <div className="subscription-info">
-                        <strong>{org.name}</strong>
-                        <span className="tag muted">{titleCase(org.type)}</span>
-                        {org.isVerified && <span className="tag success">Verified</span>}
-                        <span className="tag info">{org.membershipRole}</span>
-                      </div>
+          {user?.organizations && user.organizations.length > 0 && (
+            <div className="profile-form">
+              <h3>Organization affiliations</h3>
+              <div className="subscription-list">
+                {user.organizations.map((org) => (
+                  <div key={org.id} className="subscription-row">
+                    <div className="subscription-info">
+                      <strong>{org.name}</strong>
+                      <span className="tag muted">{titleCase(org.type)}</span>
+                      {org.isVerified && <span className="tag success">Verified</span>}
+                      <span className="tag info">{org.membershipRole}</span>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <div className="profile-save-bar">
-              <button className="button" type="submit">Save location</button>
-              <Link className="button ghost" href="/profile?tab=location">Cancel</Link>
+                  </div>
+                ))}
+              </div>
             </div>
-          </form>
+          )}
         </article>
       )}
 
