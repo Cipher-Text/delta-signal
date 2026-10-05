@@ -1,205 +1,286 @@
 import Link from 'next/link';
-import { apiGet } from '../../../lib/api';
+import { cookies } from 'next/headers';
+import { apiGet, apiGetAuthed } from '../../../lib/api';
 import { getCurrentUser } from '../../../lib/current-user';
 import { submitReportAction } from '../../../lib/report-actions';
-import { routes, type CitizenReport, type PaginatedEnvelope } from '@delta-signal/contracts';
-import { titleCase, relativeTime } from '../../../lib/format';
-import DistrictSelect, { type DistrictWithDivision } from '../../../components/district-select';
+import {
+  routes,
+  type CitizenReport,
+  type CitizenReportListResponse,
+  type PaginatedEnvelope,
+  type ReportCategory,
+} from '@delta-signal/contracts';
+import { dhakaDate, pluralize } from '../../../lib/format';
+import type { DistrictWithDivision } from '../../../components/district-select';
+import { ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
+import AutoSubmitSelect from '../../../components/auto-submit-select';
+import EmptyState from '../../../components/empty-state';
 import ListPagination from '../../../components/list-pagination';
-import ListResultToolbar from '../../../components/list-result-toolbar';
+import NavIcon from '../../../components/nav-icons';
 import PageHeader from '../../../components/page-header';
+import ReportDrawer from '../../../components/reports/report-drawer';
 
-const CATEGORIES = [
-  'WATER_POLLUTION',
-  'ILLEGAL_DUMPING',
-  'DEFORESTATION',
-  'WILDLIFE_INCIDENT',
-  'FLOODING',
-  'AIR_POLLUTION',
-  'OTHER',
-] as const;
+type Query = { category?: string; status?: string; districtId?: string; page?: string; submitted?: string; photosFailed?: string; error?: string };
+type Seg = 'VERIFIED' | 'RESOLVED' | 'all';
 
-const STATUS_VARIANT: Record<string, string> = {
-  VERIFIED: 'success',
-  RESOLVED: 'success',
-  REJECTED: 'danger',
+const CATEGORIES: { value: ReportCategory; label: string; tint: string }[] = [
+  { value: 'WATER_POLLUTION', label: 'Water pollution', tint: 'water' },
+  { value: 'ILLEGAL_DUMPING', label: 'Illegal dumping', tint: 'earth' },
+  { value: 'DEFORESTATION', label: 'Deforestation', tint: 'bio' },
+  { value: 'WILDLIFE_INCIDENT', label: 'Wildlife incident', tint: 'bio' },
+  { value: 'FLOODING', label: 'Flooding', tint: 'water' },
+  { value: 'AIR_POLLUTION', label: 'Air pollution', tint: 'neutral' },
+  { value: 'OTHER', label: 'Other', tint: 'neutral' },
+];
+
+const MINE_STATUS: Record<string, string> = {
+  SUBMITTED: 'Submitted',
+  UNDER_REVIEW: 'Under review',
+  VERIFIED: 'Verified',
+  RESOLVED: 'Resolved',
+  REJECTED: 'Rejected',
 };
 
-type DistrictOption = DistrictWithDivision;
+const REVIEW_STEPS = [
+  ['Submitted', 'You send the report'],
+  ['Under review', 'A moderator checks it'],
+  ['Verified', 'Confirmed and shown publicly'],
+  ['Resolved', 'The issue has been addressed'],
+];
 
-export default async function ReportsPage(
-  props: {
-    searchParams: Promise<{ category?: string; status?: string; districtId?: string; page?: string; submitted?: string; error?: string }>;
+function groupByDivision(districts: DistrictWithDivision[]) {
+  const map = new Map<string, { id: string; name: string }[]>();
+  for (const d of districts) {
+    const div = d.division?.name ?? 'Other';
+    if (!map.has(div)) map.set(div, []);
+    map.get(div)!.push({ id: d.id, name: d.name });
   }
-) {
-  const searchParams = await props.searchParams;
-  const category = searchParams.category;
-  const { status, districtId } = searchParams;
-  const page = Math.max(1, Number(searchParams.page ?? 1) || 1);
-  const reportParams = new URLSearchParams();
-  if (category) reportParams.set('category', category);
-  if (status) reportParams.set('status', status);
-  if (districtId) reportParams.set('districtId', districtId);
-  reportParams.set('page', String(page));
-  reportParams.set('pageSize', '20');
-  const reportsPath = reportParams.toString() ? `${routes.reports.list}?${reportParams}` : routes.reports.list;
+  return [...map.entries()].map(([division, list]) => ({ division, districts: list }));
+}
 
-  const [reportsRes, verifiedRes, resolvedRes, user] = await Promise.all([
-    apiGet<PaginatedEnvelope<CitizenReport>>(reportsPath),
-    apiGet<PaginatedEnvelope<CitizenReport>>(`${routes.reports.list}?status=VERIFIED&pageSize=1`),
-    apiGet<PaginatedEnvelope<CitizenReport>>(`${routes.reports.list}?status=RESOLVED&pageSize=1`),
-    getCurrentUser(),
+function href(q: Query, patch: Partial<Query>) {
+  const next = { ...q, ...patch };
+  const params = new URLSearchParams();
+  if (next.status) params.set('status', next.status);
+  if (next.category) params.set('category', next.category);
+  if (next.districtId) params.set('districtId', next.districtId);
+  const s = params.toString();
+  return s ? `/reports?${s}` : '/reports';
+}
+
+const snippet = (text: string) => (text.length > 180 ? `${text.slice(0, 177).trimEnd()}…` : text);
+
+/** Public citizen reports (Web UI Reference): status segments, filters, report cards, your reports + how review works, report drawer. */
+export default async function ReportsPage(props: { searchParams: Promise<Query> }) {
+  const sp = await props.searchParams;
+  // Default segment is Verified (as in the mock); `status=all` means verified + resolved.
+  const seg: Seg = sp.status === 'RESOLVED' ? 'RESOLVED' : sp.status === 'all' ? 'all' : 'VERIFIED';
+  const category = CATEGORIES.some((c) => c.value === sp.category) ? sp.category : undefined;
+  const districtId = sp.districtId || undefined;
+  const page = Math.max(1, Number(sp.page ?? 1) || 1);
+  const q: Query = { status: sp.status === 'RESOLVED' || sp.status === 'all' ? sp.status : undefined, category, districtId };
+
+  const user = await getCurrentUser();
+  const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
+
+  const params = new URLSearchParams({ page: String(page), pageSize: '20' });
+  if (seg !== 'all') params.set('status', seg);
+  if (category) params.set('category', category);
+  if (districtId) params.set('districtId', districtId);
+  const empty: CitizenReportListResponse = { data: [], total: 0, page: 1, pageSize: 20, counts: { verified: 0, resolved: 0, all: 0 } };
+
+  const [res, districts, mine] = await Promise.all([
+    apiGet<CitizenReportListResponse>(`${routes.reports.list}?${params}`, 0).catch(() => empty),
+    apiGet<DistrictWithDivision[]>(routes.locations.districts, 3600).catch((): DistrictWithDivision[] => []),
+    user
+      ? apiGetAuthed<PaginatedEnvelope<CitizenReport>>(`${routes.reports.mine}?pageSize=3`, accessToken).catch(() => null)
+      : Promise.resolve(null),
   ]);
 
-  const districts = await apiGet<DistrictOption[]>(routes.locations.districts).catch(() => []);
+  const segments: { key: Seg; param?: string; label: string; count: number }[] = [
+    { key: 'VERIFIED', label: 'Verified', count: res.counts.verified },
+    { key: 'RESOLVED', param: 'RESOLVED', label: 'Resolved', count: res.counts.resolved },
+    { key: 'all', param: 'all', label: 'All public', count: res.counts.all },
+  ];
+  const districtName = districts.find((d) => d.id === districtId)?.name;
+  const typeLabel = CATEGORIES.find((c) => c.value === category)?.label;
+  const chips: { label: string; href: string; aria: string }[] = [];
+  if (category) chips.push({ label: `Type: ${typeLabel}`, href: href(q, { category: undefined }), aria: 'Remove issue type filter' });
+  if (districtId) chips.push({ label: `District: ${districtName ?? '…'}`, href: href(q, { districtId: undefined }), aria: 'Remove district filter' });
+
+  const drawerProps = {
+    action: submitReportAction,
+    categories: CATEGORIES.map((c) => ({ value: c.value, label: c.label })),
+    districts: groupByDivision(districts),
+    signedIn: !!user,
+  };
+  const nothingAtAll = res.counts.all === 0 && !category && !districtId;
 
   return (
-    <>
-      <PageHeader title="Citizen Reports" description="Only reviewed and accepted records appear here." />
+    <div className="page-stack rp-page">
+      <PageHeader
+        title="Citizen reports"
+        description={
+          <>
+            <span className="rs-sub-long">Environmental issues reported by people across Bangladesh. Only reports checked by a moderator appear here.</span>
+            <span className="rs-sub-short">Checked by moderators before they appear</span>
+          </>
+        }
+        action={<ReportDrawer {...drawerProps} />}
+      />
 
-      <div className="metric-grid">
-        <div className="metric">
-          <span>Verified reports</span>
-          <strong>{verifiedRes.total}</strong>
+      {sp.submitted && (
+        <div className="pf-notice pf-notice--ok" role="status">
+          <NavIcon name="check" />
+          Report submitted. A moderator will review it. You can follow it under Your reports.
         </div>
-        <div className="metric">
-          <span>Resolved</span>
-          <strong>{resolvedRes.total}</strong>
+      )}
+      {sp.photosFailed && (
+        <div className="pf-notice pf-notice--err" role="alert">
+          {pluralize(Number(sp.photosFailed) || 1, 'photo')} could not be attached. Your report was still submitted.
         </div>
-      </div>
+      )}
+      {sp.error && <div className="pf-notice pf-notice--err" role="alert">{sp.error}</div>}
 
-      <div className="toolbar" aria-label="Category filter">
-        <Link className={`chip${!category ? ' active' : ''}`} href={`/reports${status || districtId ? `?${new URLSearchParams({ ...(status ? { status } : {}), ...(districtId ? { districtId } : {}) }).toString()}` : ''}`}>
-          All
-        </Link>
-        {CATEGORIES.map((c) => (
-          <Link
-            key={c}
-            className={`chip${category === c ? ' active' : ''}`}
-            href={`/reports?${new URLSearchParams({ category: c, ...(status ? { status } : {}), ...(districtId ? { districtId } : {}) }).toString()}`}
-          >
-            {titleCase(c)}
-          </Link>
-        ))}
-      </div>
-
-      <ListResultToolbar total={reportsRes.total} label="verified reports" />
-
-      <form className="toolbar" method="get" aria-label="Report filters">
-        {category && <input type="hidden" name="category" value={category} />}
-        <label htmlFor="reportStatus">Status</label>
-        <select id="reportStatus" name="status" className="select-field" defaultValue={status ?? ''}>
-          <option value="">Verified or resolved</option><option value="VERIFIED">Verified</option><option value="RESOLVED">Resolved</option>
-        </select>
-        <label htmlFor="reportDistrict">District</label>
-        <select id="reportDistrict" name="districtId" className="select-field" defaultValue={districtId ?? ''}>
-          <option value="">All districts</option>{districts.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
-        </select>
-        <button type="submit" className="button">Apply</button>
-      </form>
-
-      <div className="table" role="table" aria-label="Citizen reports">
-        <div className="table-row table-head" role="row">
-          <span>Report</span>
-          <span>Location</span>
-          <span>Status</span>
-          <span>Updated</span>
-        </div>
-        {reportsRes.data.map((r) => (
-          <Link className="table-row table-row-link" role="row" key={r.id} href={`/reports/${r.id}`}>
-            <strong>{r.title}</strong>
-            <span>{r.district?.name ?? '—'}</span>
-            <span className={`tag ${STATUS_VARIANT[r.status] ?? 'muted'}`}>
-              {titleCase(r.status)}
-            </span>
-            <span>{relativeTime(r.updatedAt)}</span>
-          </Link>
-        ))}
-        {reportsRes.data.length === 0 && (
-          <div className="empty-state">No reports match this category yet.</div>
-        )}
-      </div>
-      <ListPagination pathname="/reports" page={reportsRes.page} pageSize={reportsRes.pageSize} total={reportsRes.total} query={{ category, status, districtId }} />
-
-      <article className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>Report an environmental issue</h2>
-            <p>Submitted reports start as &quot;Submitted&quot; and go through moderator review before appearing above.</p>
-          </div>
-        </div>
-
-        {searchParams.submitted && (
-          <p className="form-success">
-            Report submitted — it&apos;s now pending moderator review. It will appear in
-            the list above once verified.
-          </p>
-        )}
-        {searchParams.error && <p className="form-error">{searchParams.error}</p>}
-
-        <form action={submitReportAction} className="submit-form">
-          <div className="field">
-            <label htmlFor="title">Title</label>
-            <input
-              id="title"
-              name="title"
-              type="text"
-              required
-              minLength={5}
-              maxLength={200}
-              placeholder="e.g. Industrial discharge near Buriganga bridge"
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="category">Issue type</label>
-            <select id="category" name="category" className="select-field" required>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {titleCase(c)}
-                </option>
+      <div className="rp-layout">
+        <div className="rp-main">
+          <div className="rs-controls">
+            <nav className="dt-seg rs-seg" aria-label="Status">
+              {segments.map((s) => (
+                <Link key={s.key} href={href(q, { status: s.param })} aria-current={seg === s.key ? 'true' : undefined}>
+                  {s.label}
+                  <span>{s.count}</span>
+                </Link>
               ))}
-            </select>
+            </nav>
+            <form method="get" action="/reports" className="rs-filters">
+              {q.status && <input type="hidden" name="status" value={q.status} />}
+              <label>
+                <span className="rs-lab">Issue type</span>
+                <AutoSubmitSelect name="category" aria-label="Issue type" defaultValue={category ?? ''}>
+                  <option value="">All issue types</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </AutoSubmitSelect>
+              </label>
+              <label>
+                <span className="rs-lab">District</span>
+                <AutoSubmitSelect name="districtId" aria-label="District" defaultValue={districtId ?? ''}>
+                  <option value="">All districts</option>
+                  {districts.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </AutoSubmitSelect>
+              </label>
+            </form>
           </div>
-          <div className="field">
-            <label htmlFor="districtId">District (optional)</label>
-            <DistrictSelect districts={districts} />
-          </div>
-          <div className="field">
-            <label htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              name="description"
-              required
-              minLength={20}
-              maxLength={5000}
-              rows={4}
-              placeholder="Describe what you observed, when, and any evidence (at least 20 characters)"
-            />
-          </div>
-          <button className="button" type="submit">
-            Submit report
-          </button>
-        </form>
-      </article>
 
-      <article className="panel">
-        <div className="panel-header">
-          <div>
-            <h2>Status flow</h2>
-            <p>How a report moves from submission to resolution</p>
+          <div className="rs-count-row">
+            <span className="rs-count">{pluralize(res.total, 'report')} · most recently updated</span>
+            {chips.length > 0 && (
+              <div className="dt-chips">
+                <span>Filtered by</span>
+                {chips.map((c) => (
+                  <Link key={c.label} href={c.href} className="dt-chip" aria-label={c.aria}>
+                    {c.label}
+                    <NavIcon name="close" />
+                  </Link>
+                ))}
+                <Link href={href({ status: q.status }, {})} className="dt-clear">Clear all</Link>
+              </div>
+            )}
           </div>
+
+          {res.data.length === 0 ? (
+            <EmptyState
+              title={nothingAtAll ? 'No verified reports yet' : 'No reports match these filters'}
+              description="Reports appear here once a moderator has checked them. Seen pollution, dumping or flooding? Your report starts the process."
+              action={<ReportDrawer {...drawerProps} variant="outline" />}
+            />
+          ) : (
+            <ul className="rp-list">
+              {res.data.map((r) => {
+                const cat = CATEGORIES.find((c) => c.value === r.category);
+                const resolved = r.status === 'RESOLVED';
+                return (
+                  <li key={r.id}>
+                    <Link href={`/reports/${r.id}`} className="rp-card">
+                      <span className="rp-card-top">
+                        <span className={`org-pill org-pill--${cat?.tint ?? 'neutral'}`}>{cat?.label ?? r.category}</span>
+                        <span className={`rp-status${resolved ? ' rp-status--resolved' : ''}`}>
+                          <span className="rp-status-icon"><NavIcon name="check" /></span>
+                          {resolved ? 'Resolved' : 'Verified'}
+                        </span>
+                        <span className="rp-updated">Updated {dhakaDate(r.updatedAt)}</span>
+                      </span>
+                      <strong className="rp-title">{r.title}</strong>
+                      <span className="rp-summary">{snippet(r.summary || r.description)}</span>
+                      <span className="rp-foot">
+                        <NavIcon name="locations" />
+                        {r.district?.name ?? 'District not set'}
+                        {r.reporter && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            Reported by {r.reporter.displayName}
+                          </>
+                        )}
+                        {r.mediaCount > 0 && (
+                          <>
+                            <span aria-hidden="true">·</span>
+                            {pluralize(r.mediaCount, 'photo')}
+                          </>
+                        )}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+
+          <ListPagination pathname="/reports" page={res.page} pageSize={res.pageSize} total={res.total} query={q} />
         </div>
-        <ul className="steps">
-          <li className="done">Submitted</li>
-          <li className="done">Under review</li>
-          <li className="active">Verified</li>
-          <li>Resolved</li>
-        </ul>
-        <p className="access-note" style={{ marginTop: '14px' }}>
-          Rejected reports remain visible to moderators and admins for audit, but
-          don&apos;t appear in this public list.
-        </p>
-      </article>
-    </>
+
+        <aside className="rp-aside" aria-label="Your reports and review process">
+          <section>
+            <h2>Your reports</h2>
+            {!user ? (
+              <p className="rp-aside-note">
+                <Link href="/login?next=/reports">Sign in</Link> to follow the reports you submit.
+              </p>
+            ) : mine && mine.data.length > 0 ? (
+              <ul className="rp-mine">
+                {mine.data.map((m) => (
+                  <li key={m.id}>
+                    <Link href={`/reports/${m.id}`}>{m.title}</Link>
+                    <span>
+                      <b>{MINE_STATUS[m.status] ?? m.status}</b> · {dhakaDate(m.createdAt)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="rp-aside-note">You haven&apos;t submitted a report yet.</p>
+            )}
+          </section>
+          <section>
+            <h2>How review works</h2>
+            <ol className="rp-flow">
+              {REVIEW_STEPS.map(([name, hint], i) => (
+                <li key={name}>
+                  <span className="rp-flow-n">{i + 1}</span>
+                  <span>
+                    <b>{name}</b>
+                    <small>{hint}</small>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <p className="rp-aside-note">Rejected reports are kept for moderators and admins but aren&apos;t shown publicly.</p>
+          </section>
+        </aside>
+      </div>
+    </div>
   );
 }

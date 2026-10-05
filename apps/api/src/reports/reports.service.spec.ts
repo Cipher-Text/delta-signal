@@ -14,6 +14,7 @@ function mockPrisma() {
       findUnique: jest.fn(),
       findMany:   jest.fn().mockResolvedValue([]),
       count:      jest.fn().mockResolvedValue(0),
+      groupBy:    jest.fn().mockResolvedValue([]),
       create:     jest.fn(),
       update:     jest.fn(),
     },
@@ -153,6 +154,35 @@ describe('ReportsService', () => {
         expect.objectContaining({
           where: expect.objectContaining({ status: ReportStatus.SUBMITTED }),
         }),
+      );
+    });
+  });
+
+  describe('list — counts and photos', () => {
+    it('returns per-status counts that ignore the status filter, and a photo count per report', async () => {
+      const { service, prisma } = build();
+      prisma.citizenReport.findMany.mockResolvedValue([{ ...BASE_REPORT, _count: { media: 2 } }]);
+      prisma.citizenReport.groupBy.mockResolvedValue([
+        { status: ReportStatus.VERIFIED, _count: { _all: 3 } },
+        { status: ReportStatus.RESOLVED, _count: { _all: 1 } },
+      ]);
+
+      const res = await service.list(ReportStatus.RESOLVED, ReportCategory.FLOODING);
+
+      expect(res.counts).toEqual({ verified: 3, resolved: 1, all: 4 });
+      expect(res.data[0].mediaCount).toBe(2);
+      expect(prisma.citizenReport.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { category: ReportCategory.FLOODING, status: { in: [ReportStatus.VERIFIED, ReportStatus.RESOLVED] } },
+        }),
+      );
+    });
+
+    it('orders by most recently updated', async () => {
+      const { service, prisma } = build();
+      await service.list();
+      expect(prisma.citizenReport.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }] }),
       );
     });
   });

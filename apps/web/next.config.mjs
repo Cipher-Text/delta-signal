@@ -19,8 +19,8 @@ const securityHeaders = [
   { key: 'X-XSS-Protection', value: '1; mode=block' },
   // Only send the origin as referrer when navigating to same-origin; strip it cross-origin.
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-  // Restrict browser feature access — deny camera/mic/geolocation by default.
-  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  // Restrict browser feature access — deny camera/mic by default; geolocation is allowed for this origin only (report location button).
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
   // HSTS: force HTTPS for 2 years, include subdomains, allow preloading.
   // Only set in production — localhost must not be HSTS-pinned.
   ...(isProd
@@ -32,6 +32,9 @@ const securityHeaders = [
 const nextConfig = {
   // Produce a self-contained server bundle for Docker.
   output: 'standalone',
+
+  // Report submissions can carry up to three 5 MB photos through a Server Action.
+  experimental: { serverActions: { bodySizeLimit: '20mb' } },
 
   // Point file tracing at the monorepo root so standalone output includes
   // workspace package files (@delta-signal/shared, @delta-signal/contracts).

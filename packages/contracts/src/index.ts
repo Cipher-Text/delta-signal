@@ -464,6 +464,15 @@ export interface CitizenReport {
   district: DistrictSummary | null;
 }
 
+export interface CitizenReportListItem extends CitizenReport {
+  mediaCount: number;
+}
+
+/** GET /reports — public list; `counts` ignores the status filter so each segment keeps its own total. */
+export interface CitizenReportListResponse extends PaginatedEnvelope<CitizenReportListItem> {
+  counts: { verified: number; resolved: number; all: number };
+}
+
 export interface CreateReportRequest {
   title: string;
   category: ReportCategory;
