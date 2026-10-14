@@ -327,7 +327,9 @@ Generates an on-demand environmental data brief from the current database snapsh
 
 | Method | Path | Access |
 | --- | --- | --- |
-| GET | `/ecobriefs` | Public (`areaType`, `from`, `to`, optional `areaId` and comma-separated `topics`) |
+| GET | `/ecobriefs` | Public (`areaType`, `from`, `to`, optional `areaId`, comma-separated `topics`, and `trust=all|research` for observations) |
+
+The response is shaped like a short journal report: `summary` (abstract), `methods` (sources with licences, retrieval time), per-topic sections with statistics and tables, `limitations`, and a `reportId` (`EB-XXXXXXXX`, a hash of the query so the same query over unchanged data gives the same ID). Climate is always the latest 30-day snapshot (`periodAligned: false`) because daily history is not retained. Species rows that share a scientific name are folded into one. The web page renders it as an article (abstract, methods, numbered results with tables and figures, limitations, citation, references, appendices) with CSV, JSON and print/PDF output.
 
 ## companies ✓
 

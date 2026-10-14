@@ -17,4 +17,9 @@ export class EcoBriefQueryDto {
   @IsOptional()
   @IsString()
   topics?: string;
+
+  /** Observations: `research` keeps research-grade records only; default `all` keeps every non-flagged record. */
+  @IsOptional()
+  @IsIn(['all', 'research'])
+  trust?: 'all' | 'research';
 }

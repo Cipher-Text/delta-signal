@@ -321,21 +321,68 @@ export interface EcoBriefMetric {
   unit: string;
 }
 
+export type EcoBriefTrustFilter = 'all' | 'research';
+
+export interface EcoBriefStatistic {
+  key: string;
+  label: string;
+  unit: string;
+  mean: number | null;
+  min: number | null;
+  max: number | null;
+  /** Number of reporting districts that contribute. */
+  n: number;
+}
+
+export interface EcoBriefSource {
+  topic: EcoBriefTopic;
+  name: string;
+  description: string;
+  licence: string;
+  url: string | null;
+  dataUpdatedAt: string | null;
+}
+
 export interface EcoBrief {
   title: string;
   summary: string[];
   generatedAt: string;
+  /** Stable ID derived from the query: the same query over the same data gives the same ID. */
+  reportId: string;
+  query: {
+    areaType: EcoBriefAreaType;
+    areaId: string | null;
+    from: string;
+    to: string;
+    topics: EcoBriefTopic[];
+    trust: EcoBriefTrustFilter;
+  };
   area: { type: EcoBriefAreaType; id: string | null; name: string };
   period: { from: string; to: string };
   topics: EcoBriefTopic[];
+  methods: { retrievedAt: string; sources: EcoBriefSource[]; notes: string[] };
+  limitations: string[];
   sections: {
     climate?: {
       available: boolean;
       source: string;
       periodLabel: string;
+      /** false: values are the latest 30-day snapshot and do not follow the selected dates. */
+      periodAligned: boolean;
       coverage: { reportingDistricts: number; totalDistricts: number };
       updatedAt: string | null;
       metrics: EcoBriefMetric[];
+      statistics: EcoBriefStatistic[];
+      districts: Array<{
+        id: string;
+        name: string;
+        temperature: number | null;
+        temperatureMin: number | null;
+        temperatureMax: number | null;
+        rainfall: number | null;
+        humidity: number | null;
+        pm25: number | null;
+      }>;
       note: string;
     };
     biodiversity?: {
@@ -344,6 +391,19 @@ export interface EcoBrief {
       periodLabel: string;
       coverage: { occurrenceRecords: number; speciesRecorded: number };
       topSpecies: Array<{ scientificName: string; commonName: string | null; records: number }>;
+      species: Array<{
+        scientificName: string;
+        commonName: string | null;
+        kingdom: string | null;
+        family: string | null;
+        iucnStatus: string | null;
+        records: number;
+        firstObserved: string | null;
+        lastObserved: string | null;
+      }>;
+      speciesListTruncated: boolean;
+      byKingdom: Array<{ kingdom: string; species: number; records: number }>;
+      excluded: { undatedInArea: number; unmappedNationwide: number | null };
       note: string;
     };
     emissions?: {
@@ -353,6 +413,7 @@ export interface EcoBrief {
       periodLabel: string;
       coverage: { yearsWithData: number } | null;
       points: Array<{ year: number; value: number; unit: string }>;
+      series: Array<{ key: string; label: string; indicatorCode: string; points: Array<{ year: number; value: number; unit: string }> }>;
       updatedAt?: string | null;
       note: string;
     };
@@ -360,9 +421,11 @@ export interface EcoBrief {
       available: boolean;
       source: string;
       periodLabel: string;
+      trustFilter: EcoBriefTrustFilter;
       coverage: { observations: number };
       byCategory: Array<{ category: string; count: number }>;
       byTrustLevel: Array<{ trustLevel: string; count: number }>;
+      unverifiedInPeriod: number;
       note: string;
     };
   };
