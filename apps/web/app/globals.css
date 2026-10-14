@@ -4017,65 +4017,56 @@ a.dashboard-secondary-stat:hover {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   EMERGENCY BANNER
-   Full-width red strip above the fold — only renders for EMERGENCY alerts
+   ALERT BAR (docs/DESIGN.md §23, "Delta Signal — Web UI Reference")
+   One compact row for the most severe active alert. Neutral surface with
+   a 4px left border in the severity color; the badge carries the label.
    ═══════════════════════════════════════════════════════════════ */
 
-.emergency-banner {
+.alert-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 10px 20px;
-  background: color-mix(in srgb, var(--danger) 55%, black);
-  color: var(--hero-on-ink);
-  font-size: 0.85rem;
-  flex-wrap: wrap;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  gap: var(--ds-space-4) var(--ds-space-12);
+  padding: var(--ds-space-12) var(--ds-space-20);
+  background: var(--ds-surface);
+  border-bottom: 1px solid var(--ds-border);
+  border-left: 4px solid var(--ds-semantic-unknown);
+  color: var(--ds-text);
+  font-size: var(--ds-text-meta);
 }
 
-.emergency-banner-label {
-  flex-shrink: 0;
-  background: var(--ds-status-critical-text);
-  color: var(--ds-on-critical);
-  font-size: 0.68rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 3px;
-}
+.alert-bar--critical { border-left-color: var(--ds-semantic-critical); }
+.alert-bar--warning  { border-left-color: var(--ds-semantic-warning); }
 
-.emergency-banner-items {
-  flex: 1;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
+.alert-bar-text {
   min-width: 0;
+  font-size: var(--ds-text-nav);
 }
 
-.emergency-banner-item {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.emergency-banner-item strong {
-  font-weight: 700;
-}
-
-.emergency-banner-link {
-  flex-shrink: 0;
-  color: color-mix(in srgb, var(--hero-on-ink) 70%, var(--danger) 30%);
+.alert-bar-title {
+  color: var(--ds-text);
   font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  white-space: nowrap;
+  text-decoration: none;
 }
 
-.emergency-banner-link:hover {
-  color: var(--hero-on-ink);
+.alert-bar-title:hover { text-decoration: underline; }
+
+.alert-bar-meta { color: var(--ds-text-2); }
+
+.alert-bar-link {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--ds-link);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.alert-bar-link:hover { color: var(--ds-link-hover); text-decoration: underline; }
+
+@media (max-width: 640px) {
+  .alert-bar { padding: 10px var(--ds-space-16); gap: 6px 12px; }
+  .alert-bar-text { font-size: var(--ds-text-meta); }
+  .alert-bar-link { margin-left: 0; }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -5617,20 +5608,23 @@ a.dashboard-secondary-stat:hover {
 .ds-status-badge {
   display: inline-flex;
   align-items: center;
-  gap: var(--ds-space-8);
-  padding: 2px var(--ds-space-12);
+  gap: 6px;
+  height: 22px;
+  padding: 0 var(--ds-space-8);
   border-radius: 99px;
-  font-size: var(--ds-text-nav-group);
-  font-weight: 600;
-  line-height: 1.6;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .ds-status-badge-shape {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: currentColor;
+  background: var(--ds-semantic-unknown);
   flex-shrink: 0;
 }
 
@@ -5640,10 +5634,15 @@ a.dashboard-secondary-stat:hover {
 .ds-status-badge--critical { background: var(--ds-status-critical-bg); color: var(--ds-status-critical-text); }
 .ds-status-badge--unknown  { background: var(--ds-surface-2);          color: var(--ds-text-2); }
 
+.ds-status-badge--normal   .ds-status-badge-shape { background: var(--ds-semantic-normal); }
+.ds-status-badge--watch    .ds-status-badge-shape { background: var(--ds-semantic-watch); }
+.ds-status-badge--warning  .ds-status-badge-shape { background: var(--ds-semantic-warning); }
+.ds-status-badge--critical .ds-status-badge-shape { background: var(--ds-semantic-critical); }
+
 /* Square for Warning and above, so severity never depends on color alone. */
 .ds-status-badge--warning .ds-status-badge-shape,
 .ds-status-badge--critical .ds-status-badge-shape {
-  border-radius: 2px;
+  border-radius: 1px;
 }
 
 /* Data-state badge */
