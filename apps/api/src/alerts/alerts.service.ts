@@ -50,18 +50,23 @@ export class AlertsService {
   ) {
     const { page, pageSize } = clampPagination(rawPage, rawPageSize);
     const skip = (page - 1) * pageSize;
+    const effectiveStatus = status ?? AlertStatus.ACTIVE;
+    const and: Record<string, unknown>[] = [];
+
+    // An active alert past its expiry is not active, even before the scheduler marks it EXPIRED.
+    if (effectiveStatus === AlertStatus.ACTIVE) {
+      and.push({ OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }] });
+    }
+    if (districtId) {
+      and.push({ OR: [{ districtId }, { areas: { some: { districtId } } }] });
+    }
+
     const where: Record<string, unknown> = {
-      ...(status ? { status } : { status: AlertStatus.ACTIVE }),
+      status: effectiveStatus,
       ...(severity ? { severity } : {}),
       ...(alertType ? { alertType } : {}),
+      ...(and.length ? { AND: and } : {}),
     };
-
-    if (districtId) {
-      where['OR'] = [
-        { districtId },
-        { areas: { some: { districtId } } },
-      ];
-    }
 
     return Promise.all([
       this.prisma.alert.findMany({

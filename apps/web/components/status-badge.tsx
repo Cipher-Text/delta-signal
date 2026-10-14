@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-export type StatusLevel = 'normal' | 'watch' | 'warning' | 'critical' | 'unknown';
+export type StatusLevel = 'normal' | 'watch' | 'warning' | 'critical' | 'info' | 'unknown';
 
 interface StatusBadgeProps {
   level: StatusLevel;

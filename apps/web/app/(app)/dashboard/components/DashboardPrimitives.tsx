@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { DashboardMeta } from '@delta-signal/contracts';
-import { relativeTime, titleCase } from '../../../../lib/format';
+import EmptyState from '../../../../components/empty-state';
+import { dhakaDateTime, relativeTime, titleCase } from '../../../../lib/format';
 
 export function DashboardHeader({ title, subtitle, eyebrow = 'Workspace', meta }: { title: string; subtitle: string; eyebrow?: string; meta?: DashboardMeta }) {
   const knownSources = meta?.sources.filter((source) => source.status !== 'UNKNOWN') ?? [];
@@ -8,7 +9,8 @@ export function DashboardHeader({ title, subtitle, eyebrow = 'Workspace', meta }
     .map((source) => source.lastSuccessfulSync)
     .filter((value): value is string => Boolean(value))
     .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0];
-  const hasStaleSource = meta?.sources.some((source) => source.status === 'STALE');
+  const staleSources = meta?.sources.filter((source) => source.status === 'STALE') ?? [];
+  const hasStaleSource = staleSources.length > 0;
   const statusClass = hasStaleSource ? 'is-stale' : knownSources.length > 0 ? 'is-fresh' : 'is-unknown';
 
   return (
@@ -22,8 +24,12 @@ export function DashboardHeader({ title, subtitle, eyebrow = 'Workspace', meta }
         <span className="dashboard-live-dot" aria-hidden="true" />
         <span>
           <strong>Bangladesh</strong>
-          <small>{latestSync ? `Updated ${relativeTime(latestSync)}` : 'Source status unavailable'}</small>
-          {knownSources.length > 0 && <small>{knownSources.map((source) => source.name).join(' · ')}</small>}
+          <small title={latestSync ? dhakaDateTime(latestSync) : undefined}>{latestSync ? `${hasStaleSource ? 'Latest sync' : 'Updated'} ${relativeTime(latestSync)}` : 'Source status unavailable'}</small>
+          {hasStaleSource ? (
+            <small className="dashboard-live-stale">Stale: {staleSources.map((source) => source.name).join(', ')}</small>
+          ) : (
+            knownSources.length > 0 && <small>{knownSources.map((source) => source.name).join(' · ')}</small>
+          )}
         </span>
       </div>
     </header>
@@ -37,13 +43,18 @@ interface StatCardProps {
   value: string;
   variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
   href?: string;
+  /** Optional context line under the label, e.g. "of 120 total reports". */
+  note?: string;
+  /** De-emphasise a zero that is not an operational state (§20). */
+  muted?: boolean;
 }
 
-export function StatCard({ label, value, variant = 'default', href }: StatCardProps) {
+export function StatCard({ label, value, variant = 'default', href, note, muted }: StatCardProps) {
   const inner = (
-    <div className={`stat-card${variant !== 'default' ? ` stat-card-${variant}` : ''}`}>
+    <div className={`stat-card${variant !== 'default' ? ` stat-card-${variant}` : ''}${muted ? ' stat-card-muted' : ''}`}>
       <div className="stat-card-value">{value}</div>
       <div className="stat-card-label">{label}</div>
+      {note && <div className="stat-card-note">{note}</div>}
     </div>
   );
 
@@ -108,7 +119,7 @@ interface BarChartProps {
 
 export function BarChart({ items, labelKey, valueKey, total, variantMap, href }: BarChartProps) {
   if (items.length === 0) {
-    return <p className="empty-state" style={{ padding: '12px 0' }}>No data.</p>;
+    return <EmptyState title="No data yet" />;
   }
 
   return (
@@ -132,7 +143,10 @@ export function BarChart({ items, labelKey, valueKey, total, variantMap, href }:
                 aria-valuemax={100}
               />
             </div>
-            <span className="bar-value">{count.toLocaleString()}</span>
+            <span className="bar-value">
+              {count.toLocaleString()}
+              <small className="bar-pct">{pct}%</small>
+            </span>
           </div>
         );
       })}

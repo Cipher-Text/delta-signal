@@ -12,6 +12,7 @@ export class WaterBodiesController {
   list(
     @Query('class') hydrologicalClass?: HydrologicalClass,
     @Query('waterBodyType') waterBodyType?: WaterBodyType,
+    @Query('waterBodySubtype') waterBodySubtype?: string,
     @Query('upazilaId') upazilaId?: string,
     @Query('districtId') districtId?: string,
     @Query('page') page?: string,
@@ -20,11 +21,17 @@ export class WaterBodiesController {
     return this.service.list({
       hydrologicalClass,
       waterBodyType,
+      waterBodySubtype,
       upazilaId,
       districtId,
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? Math.min(parseInt(limit, 10), 100) : 20,
     });
+  }
+
+  @Get('subtypes')
+  subtypes() {
+    return this.service.listSubtypes();
   }
 
   @Get('stations')

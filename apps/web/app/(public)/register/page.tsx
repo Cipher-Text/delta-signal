@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { registerAction } from '../../../lib/auth-actions';
+import { redirectIfSignedIn } from '../../../lib/redirect-if-signed-in';
 
 export default async function RegisterPage(
   props: {
     searchParams: Promise<{ error?: string }>;
   }
 ) {
+  await redirectIfSignedIn();
   const searchParams = await props.searchParams;
   return (
     <main className="auth-page">

@@ -9,48 +9,18 @@ const LOOK_BACK_DAYS      = 7;
 const MAX_ATTEMPTS        = 3;
 const RETRY_DELAYS_MS     = [500, 1500];
 const FETCH_TIMEOUT_MS    = 30_000;
-
-// ── Aggregation helper ────────────────────────────────────────────────────────
-
-/**
- * Groups sub-hourly (e.g. 10-min) W/m² samples into daily MJ/m² sums.
- *
- * Formula: Σ(W/m²) × step_seconds / 1 000 000  →  MJ/m²
- *
- * The time-step is inferred from the gap between the first two timestamps,
- * so it handles both native 10-min resolution and any other interval.
- */
-function aggregateDailySums(
-  times:  string[],
-  values: (number | null)[],
-): { dates: string[]; sums: (number | null)[] } {
-  if (!times.length) return { dates: [], sums: [] };
-
-  // Detect interval in seconds from consecutive timestamps.
-  let stepSeconds = 3_600; // fall back to 1 h if only one sample
-  if (times.length >= 2) {
-    stepSeconds = (Date.parse(times[1]) - Date.parse(times[0])) / 1_000;
-  }
-
-  const dailyMap = new Map<string, number>();
-  for (let i = 0; i < times.length; i++) {
-    const date = times[i].slice(0, 10); // 'YYYY-MM-DD'
-    const v    = values[i];
-    if (v != null && Number.isFinite(v) && v >= 0) {
-      dailyMap.set(date, (dailyMap.get(date) ?? 0) + v);
-    }
-  }
-
-  const dates = [...dailyMap.keys()].sort();
-  const sums  = dates.map((d) => {
-    const sumW = dailyMap.get(d);
-    if (sumW == null) return null;
-    // Round to 4 significant figures — consistent with forecast API output.
-    return Math.round(sumW * stepSeconds / 1_000_000 * 10_000) / 10_000;
-  });
-
-  return { dates, sums };
-}
+const DAILY_VARIABLES = [
+  'sunrise', 'sunset', 'daylight_duration', 'sunshine_duration', 'shortwave_radiation_sum',
+].join(',');
+const HOURLY_VARIABLES = [
+  'shortwave_radiation', 'direct_radiation', 'diffuse_radiation',
+  'direct_normal_irradiance', 'shortwave_radiation_clear_sky',
+  'global_tilted_irradiance', 'terrestrial_radiation',
+  'shortwave_radiation_instant', 'direct_radiation_instant',
+  'diffuse_radiation_instant', 'direct_normal_irradiance_instant',
+  'global_tilted_irradiance_instant', 'terrestrial_radiation_instant',
+  'shortwave_radiation_clear_sky_instant', 'is_day',
+].join(',');
 
 // ── Client ────────────────────────────────────────────────────────────────────
 
@@ -60,38 +30,29 @@ export class RadiationOpenMeteoClient {
 
   /**
    * Fetches the last {@link LOOK_BACK_DAYS} days of satellite-observed
-   * shortwave radiation for a coordinate, aggregates native 10-minute
-   * W/m² samples into daily MJ/m² sums, and returns the result in the
-   * same daily shape that the service and scheduler expect.
+   * shortwave radiation for a coordinate. Open-Meteo provides the daily
+   * aggregate directly in MJ/m² alongside the native-resolution hourly data.
    */
   async fetch(lat: number, lng: number): Promise<OpenMeteoRadiationResponse> {
-    const endDate   = new Date();
-    const startDate = new Date(Date.now() - (LOOK_BACK_DAYS - 1) * 24 * 60 * 60 * 1_000);
-
-    const url =
-      `${SATELLITE_BASE_URL}?latitude=${lat}&longitude=${lng}` +
-      `&hourly=shortwave_radiation&models=satellite_radiation_seamless` +
-      `&temporal_resolution=native` +
-      `&start_date=${startDate.toISOString().slice(0, 10)}` +
-      `&end_date=${endDate.toISOString().slice(0, 10)}` +
-      `&timezone=UTC`;
+    const params = new URLSearchParams({
+      latitude: String(lat),
+      longitude: String(lng),
+      daily: DAILY_VARIABLES,
+      hourly: HOURLY_VARIABLES,
+      models: 'satellite_radiation_seamless',
+      past_days: String(LOOK_BACK_DAYS),
+      forecast_days: '0',
+      temporal_resolution: 'native',
+      timezone: 'UTC',
+    });
+    const url = `${SATELLITE_BASE_URL}?${params.toString()}`;
 
     const raw = await this.getJson<SatelliteArchiveRawResponse>(url);
-
-    const { dates, sums } = aggregateDailySums(
-      raw.hourly.time,
-      raw.hourly.shortwave_radiation,
-    );
 
     return {
       latitude:  raw.latitude,
       longitude: raw.longitude,
-      daily: {
-        time:                    dates,
-        shortwave_radiation_sum: sums,
-        // sunshine_duration and daylight_duration are not available from the
-        // satellite archive API — the service stores them as null.
-      },
+      daily: raw.daily,
     };
   }
 

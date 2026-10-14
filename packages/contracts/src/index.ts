@@ -179,10 +179,12 @@ export const routes = {
   radiation: {
     daily: `${apiPrefix}/radiation/daily`,
     dailyByDistrict: (districtId: string) => `${apiPrefix}/radiation/daily/${districtId}`,
+    days: `${apiPrefix}/radiation/days`,
   },
 
   marine: {
     forecast: `${apiPrefix}/marine/forecast`,
+    forecastDays: `${apiPrefix}/marine/forecast-days`,
     forecastByDistrict: (districtId: string) => `${apiPrefix}/marine/forecast/${districtId}`,
   },
 
@@ -190,12 +192,17 @@ export const routes = {
     list: `${apiPrefix}/water-bodies`,
     detail: (id: string) => `${apiPrefix}/water-bodies/${id}`,
     stations: `${apiPrefix}/water-bodies/stations`,
+    subtypes: `${apiPrefix}/water-bodies/subtypes`,
   },
 
   emissions: {
     list: `${apiPrefix}/emissions`,
     byYear: (year: number) => `${apiPrefix}/emissions/${year}`,
     indicators: `${apiPrefix}/emissions/indicators`,
+  },
+
+  ecoBriefs: {
+    generate: `${apiPrefix}/ecobriefs`,
   },
 
   industrialSites: {
@@ -303,6 +310,63 @@ export interface ApiError {
   details?: Record<string, string[]>;
 }
 
+export type EcoBriefTopic = 'climate' | 'biodiversity' | 'emissions' | 'observations';
+export type EcoBriefAreaType = 'COUNTRY' | 'DIVISION' | 'DISTRICT';
+
+export interface EcoBriefMetric {
+  key: string;
+  label: string;
+  value: number | null;
+  unit: string;
+}
+
+export interface EcoBrief {
+  title: string;
+  summary: string[];
+  generatedAt: string;
+  area: { type: EcoBriefAreaType; id: string | null; name: string };
+  period: { from: string; to: string };
+  topics: EcoBriefTopic[];
+  sections: {
+    climate?: {
+      available: boolean;
+      source: string;
+      periodLabel: string;
+      coverage: { reportingDistricts: number; totalDistricts: number };
+      updatedAt: string | null;
+      metrics: EcoBriefMetric[];
+      note: string;
+    };
+    biodiversity?: {
+      available: boolean;
+      source: string;
+      periodLabel: string;
+      coverage: { occurrenceRecords: number; speciesRecorded: number };
+      topSpecies: Array<{ scientificName: string; commonName: string | null; records: number }>;
+      note: string;
+    };
+    emissions?: {
+      available: boolean;
+      source: string;
+      indicator?: string;
+      periodLabel: string;
+      coverage: { yearsWithData: number } | null;
+      points: Array<{ year: number; value: number; unit: string }>;
+      updatedAt?: string | null;
+      note: string;
+    };
+    observations?: {
+      available: boolean;
+      source: string;
+      periodLabel: string;
+      coverage: { observations: number };
+      byCategory: Array<{ category: string; count: number }>;
+      byTrustLevel: Array<{ trustLevel: string; count: number }>;
+      note: string;
+    };
+  };
+}
+
 // ─── Common Query Params ──────────────────────────────────────────────────────
 
 export interface PaginationParams {
@@ -390,6 +454,7 @@ export interface DivisionWithClimate extends DivisionSummary {
   avgPm10_30d: number | null;
   avgUvIndex30d: number | null;
   climateUpdatedAt: string | null;
+  _count?: { districts: number };
 }
 
 export interface DistrictSummary {
@@ -460,6 +525,15 @@ export interface CitizenReport {
   district: DistrictSummary | null;
 }
 
+export interface CitizenReportListItem extends CitizenReport {
+  mediaCount: number;
+}
+
+/** GET /reports — public list; `counts` ignores the status filter so each segment keeps its own total. */
+export interface CitizenReportListResponse extends PaginatedEnvelope<CitizenReportListItem> {
+  counts: { verified: number; resolved: number; all: number };
+}
+
 export interface CreateReportRequest {
   title: string;
   category: ReportCategory;
@@ -522,6 +596,13 @@ export interface Alert {
   expiresAt: string | null;
   createdAt: string;
   district: DistrictSummary | null;
+  /** Extra areas the alert covers beyond its primary district. */
+  areas?: Array<{
+    id: string;
+    district: { id: string; name: string } | null;
+    upazila: { id: string; name: string } | null;
+    union: { id: string; name: string } | null;
+  }>;
 }
 
 export interface CreateAlertRequest {
@@ -633,6 +714,11 @@ export interface MemberSummary {
   } | null;
 }
 
+/** GET /members — a page of members plus per-role totals for the current search/district filters. */
+export interface MemberListResponse extends PaginatedEnvelope<MemberSummary> {
+  roleCounts: Partial<Record<UserRole, number>>;
+}
+
 /** GET /members/:id — richer than MemberSummary; phone is never included (PII, no public use case). */
 export interface MemberDetail {
   id: string;
@@ -704,6 +790,16 @@ export interface RestorationProject {
   organization: { id: string; name: string } | null;
   district: DistrictSummary | null;
   _count: { participants: number };
+}
+
+export interface RestorationProjectListItem extends RestorationProject {
+  joinedByMe: boolean;
+}
+
+/** GET /restoration/projects — active first; `stats` is platform-wide, `categoryCounts` ignores the category filter. */
+export interface RestorationProjectListResponse extends PaginatedEnvelope<RestorationProjectListItem> {
+  stats: { active: number; planned: number; paused: number; completed: number; participants: number };
+  categoryCounts: Partial<Record<RestorationCategory, number>>;
 }
 
 export interface CreateRestorationProjectRequest {
@@ -1206,7 +1302,7 @@ export interface SatelliteRadiationReading {
   lng: number;
   readingDate: string;
   shortwaveRadiationSum: number | null;
-  district?: { id: string; name: string };
+  district?: { id: string; name: string; division?: { id: string; name: string } };
 }
 
 // ─── Companies ────────────────────────────────────────────────────────────────
@@ -1332,8 +1428,14 @@ export interface CommunityPostSummary {
     id: string;
     question: string;
     endsAt: string | null;
-    options: { _count: { votes: number } }[];
+    options: PollOptionWithCount[];
   } | null;
+}
+
+/** GET /community/posts — `counts` ignores the hasPoll filter; `userVotes` maps pollId -> the caller's option id. */
+export interface CommunityPostListResponse extends PaginatedEnvelope<CommunityPostSummary> {
+  counts: { all: number; posts: number; polls: number };
+  userVotes: Record<string, string>;
 }
 
 export interface PollOptionWithCount {

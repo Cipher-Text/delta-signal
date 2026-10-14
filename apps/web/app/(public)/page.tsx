@@ -9,8 +9,10 @@ import PersonaFooter from '../../components/persona-footer';
 import DataSourcesSection from '../../components/data-sources-section';
 import PublicNav from '../../components/public-nav';
 import PublicFooter from '../../components/public-footer';
+import { redirectIfSignedIn } from '../../lib/redirect-if-signed-in';
 
-export default function HomePage() {
+export default async function HomePage() {
+  await redirectIfSignedIn();
   return (
     <>
       <main>

@@ -6,7 +6,7 @@ Global prefix is `/api/v1` (see `packages/contracts/src/index.ts` for the canoni
 
 Legend: ✓ Implemented | ~ Stub only | ✗ Not started
 
-Registered in `app.module.ts`: `database`, `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `biodiversity`, `observations`, `restoration`, `media`, `ingestion`, `weather`, `flood`, `marine`, `radiation`, `emissions`, `companies`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `gamification`, `community`, `social-content`, and `social-publishing`. `SeedService` is also registered directly in `AppModule` (not its own module) and seeds dev users + a seed organization on first boot.
+Registered in `app.module.ts`: `database`, `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `biodiversity`, `observations`, `restoration`, `media`, `ingestion`, `weather`, `flood`, `marine`, `radiation`, `emissions`, `ecobrief`, `companies`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `gamification`, `community`, `social-content`, and `social-publishing`. `SeedService` is also registered directly in `AppModule` (not its own module) and seeds dev users + a seed organization on first boot.
 
 ## database ✓
 
@@ -285,7 +285,7 @@ Forecasts are now stored per **water level station** (`StationFloodForecast`) ra
 
 Owns the OpenMeteo Satellite Radiation integration: HTTP client, daily persistence, scheduler, ingestion tracking, and public read endpoints.
 
-Fetches three daily variables (`shortwave_radiation_sum` Wh/m², `sunshine_duration` seconds, `daylight_duration` seconds) for all 64 districts. Scheduler runs at 1am (`@Cron('0 0 1 * * *')`) and triggers an initial sync on first boot if the table is empty. Each run creates an `IngestionJob` record.
+Fetches daily sunrise, sunset, daylight duration, sunshine duration, and shortwave radiation sum, plus the satellite API's full native-resolution hourly radiation variable set, from `satellite-api.open-meteo.com/v1/archive` with `models=satellite_radiation_seamless` for all 64 districts. Daily totals are returned directly in MJ/m²; the database currently persists shortwave radiation sum only. Scheduler runs at 1am (`@Cron('0 0 1 * * *')`) and triggers an initial sync on first boot if the table is empty. Each run creates an `IngestionJob` record.
 
 | Method | Path | Access |
 | --- | --- | --- |
@@ -305,13 +305,13 @@ Fetches 11 daily wave/swell/wind-wave variables for all 64 districts. OpenMeteo 
 
 ## emissions ✓
 
-Ingests national GHG data from the World Bank Climate Change API (`api.worldbank.org/v2/country/BGD/indicator/{code}`). All read endpoints are `@Public()`. No user-input write paths exist.
+Ingests national GHG data from the World Bank Climate Change API (`api.worldbank.org/v2/country/BGD/indicator/{code}`). All read endpoints are `@Public()`. No user-input write paths exist. Failed or empty initial syncs are retried daily until total GHG readings are stored; the regular refresh runs every six months.
 
 **Indicators synced:** `EN.GHG.ALL.MT.CE.AR5` (Total GHG), `EN.GHG.CO2.MT.CE.AR5` (CO₂), `EN.GHG.CH4.MT.CE.AR5` (CH₄), `EN.GHG.N2O.MT.CE.AR5` (N₂O). Values in Mt CO₂e, annual, 1976–2024.
 
 **Client:** `WorldBankClient` — paginates through API responses (2 pages × 50 records), 3-attempt retry, 30 s timeout per request.
 
-**Scheduler:** `EmissionsScheduler` — `@Cron('0 0 3 * * 0')` (weekly Sunday 3am); triggers initial sync on empty table via `onModuleInit`.
+**Scheduler:** `EmissionsScheduler` — `@Cron('0 0 3 1 1,7 *')` (January 1 and July 1 at 3am); triggers initial sync on empty table via `onModuleInit`.
 
 **Storage:** `NationalEmissionReading` — one row per `(year, indicatorCode)`; upserts in a single `$transaction` per indicator. Null-value rows (e.g. 2025 projection) are skipped.
 
@@ -320,6 +320,14 @@ Ingests national GHG data from the World Bank Climate Change API (`api.worldbank
 | GET | `/emissions` | Public (`?indicator=`, `?from=`, `?to=`) |
 | GET | `/emissions/indicators` | Public — distinct codes in DB |
 | GET | `/emissions/:year` | Public — all indicators for a year |
+
+## ecobrief ✓
+
+Generates an on-demand environmental data brief from the current database snapshot. It does not save reports or fabricate narrative: summary statements are computed from the selected records. Climate metrics use the latest rolling 30-day district aggregates; biodiversity counts dated GBIF occurrences; national emissions are only included for Bangladesh-wide scope; community observations exclude flagged records and retain trust-level counts.
+
+| Method | Path | Access |
+| --- | --- | --- |
+| GET | `/ecobriefs` | Public (`areaType`, `from`, `to`, optional `areaId` and comma-separated `topics`) |
 
 ## companies ✓
 
@@ -518,4 +526,4 @@ These accounts exist only for local development and should not be created in pro
 
 ## Coverage note
 
-`app.module.ts` registers the modules listed above. The `ingestion` module currently provides job tracking and read endpoints; it has no retry queue or manual trigger endpoint, so recurring cron jobs serve as the retry mechanism. BullMQ queues for email, gamification, and social publishing are wired through `BullModule.forRootAsync` in `AppModule`. Advanced domains not represented by a module — such as structured surveys, carbon accounting, satellite/remote sensing ingestion, and forest registry — remain planned. See `docs/roadmap.md` and `docs/architecture/feature-map.md`.
+`app.module.ts` registers the modules listed above. The `ingestion` module currently provides job tracking and read endpoints; it has no retry queue or manual trigger endpoint, so recurring cron jobs serve as the retry mechanism. BullMQ queues for email, gamification, and social publishing are wired through `BullModule.forRootAsync` in `AppModule`. Advanced domains not represented by a module — such as structured surveys, carbon accounting, satellite/remote sensing ingestion, and forest registry — remain planned. See `docs/planning/roadmap.md` and `docs/architecture/feature-map.md`.

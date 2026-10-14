@@ -28,6 +28,7 @@ export const CRON_LOCK_KEYS = {
   MARINE:           1_008,
   EMISSIONS:        1_009,
   SOCIAL_CONTENT_CLEANUP: 1_010,
+  ALERT_EXPIRY:     1_011,
 } as const;
 
 /**

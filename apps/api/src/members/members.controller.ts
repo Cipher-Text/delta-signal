@@ -3,9 +3,11 @@ import { UserRole } from '@prisma/client';
 import { MembersService } from './members.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('members')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN')
 export class MembersController {
   constructor(private readonly membersService: MembersService) {}
 

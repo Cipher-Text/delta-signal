@@ -13,6 +13,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Public } from '../common/decorators/roles.decorator';
 import { CurrentUser, JwtPayload } from '../common/decorators/current-user.decorator';
+import { OptionalJwtAuthGuard } from '../common/guards/optional-jwt-auth.guard';
 import { CommunityService } from './community.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreatePostCommentDto } from './dto/create-comment.dto';
@@ -24,12 +25,14 @@ export class CommunityController {
   constructor(private readonly communityService: CommunityService) {}
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('posts')
   listPosts(
     @Query('districtId') districtId?: string,
     @Query('hasPoll') hasPoll?: string,
     @Query('page') page?: string,
     @Query('pageSize') pageSize?: string,
+    @CurrentUser() user?: JwtPayload,
   ) {
     const hasPollFilter =
       hasPoll === 'true' ? true : hasPoll === 'false' ? false : undefined;
@@ -38,6 +41,7 @@ export class CommunityController {
       hasPollFilter,
       Number(page ?? 1),
       Number(pageSize ?? 20),
+      user?.sub,
     );
   }
 
@@ -47,6 +51,7 @@ export class CommunityController {
   }
 
   @Public()
+  @UseGuards(OptionalJwtAuthGuard)
   @Get('posts/:id')
   async getPost(@Param('id') id: string, @CurrentUser() user?: JwtPayload) {
     const post = await this.communityService.getPost(id);

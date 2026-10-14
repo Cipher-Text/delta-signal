@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AlertStatus, AlertSeverity, AlertType } from '@prisma/client';
 import { AlertsService } from './alerts.service';
 import { CreateAlertDto } from './dto/create-alert.dto';
@@ -8,6 +8,15 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { CurrentUser, JwtPayload } from '../common/decorators/current-user.decorator';
 import { Public } from '../common/decorators/roles.decorator';
 import { Permissions } from '../common/decorators/permissions.decorator';
+
+/** Parse an optional query value as a Prisma enum member; 400 instead of a 500 from Prisma. */
+function parseEnum<T extends Record<string, string>>(name: string, values: T, raw?: string): T[keyof T] | undefined {
+  if (!raw) return undefined;
+  if (!Object.values(values).includes(raw)) {
+    throw new BadRequestException(`Invalid ${name}: ${raw}`);
+  }
+  return raw as T[keyof T];
+}
 
 @Controller('alerts')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,9 +34,9 @@ export class AlertsController {
     @Query('pageSize') pageSize?: string,
   ) {
     return this.alertsService.list(
-      status as AlertStatus | undefined,
-      severity as AlertSeverity | undefined,
-      alertType as AlertType | undefined,
+      parseEnum('status', AlertStatus, status),
+      parseEnum('severity', AlertSeverity, severity),
+      parseEnum('alertType', AlertType, alertType),
       districtId,
       Number(page ?? 1),
       Number(pageSize ?? 20),

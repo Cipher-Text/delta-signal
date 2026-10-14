@@ -12,4 +12,4 @@ Delta Signal keeps one source note per external data provider. These files docum
 | [OpenMeteo Seasonal Forecast](openmeteo-seasonal.md) | Documented (future integration) | ECMWF sub-seasonal and up-to-7-month ensemble forecasts, anomalies, and extremes |
 | [GBIF](gbif.md) | Implemented | Species taxonomy and occurrence records for Bangladesh |
 
-Planning notes for future providers remain in [../ingestion-plan.md](../ingestion-plan.md).
+Historical planning notes for provider ingestion remain in [../planning/ingestion-plan.md](../planning/ingestion-plan.md).

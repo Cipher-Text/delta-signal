@@ -18,11 +18,21 @@ export async function createRestorationProjectAction(formData: FormData) {
   const organizationId = formData.get('organizationId') ? String(formData.get('organizationId')) : undefined;
   const districtId = formData.get('districtId') ? String(formData.get('districtId')) : undefined;
   const impactSummary = formData.get('impactSummary') ? String(formData.get('impactSummary')) : undefined;
+  // <input type="date"> gives YYYY-MM-DD; store as midnight UTC.
+  const iso = (key: string) => {
+    const v = String(formData.get(key) ?? '');
+    return /^\d{4}-\d{2}-\d{2}$/.test(v) ? `${v}T00:00:00.000Z` : undefined;
+  };
+  const startDate = iso('startDate');
+  const endDate = iso('endDate');
+  if (startDate && endDate && endDate < startDate) {
+    redirect(`/restoration?error=${encodeURIComponent('The end date must be on or after the start date.')}`);
+  }
 
   try {
     await apiPostAuthed<RestorationProject>(
       routes.restoration.create,
-      { title, category, description, organizationId, districtId, impactSummary },
+      { title, category, description, organizationId, districtId, impactSummary, startDate, endDate },
       accessToken,
     );
   } catch (err) {

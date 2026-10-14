@@ -31,8 +31,8 @@ interface CompletenessCtx {
 }
 
 const COMPLETENESS_CHECKS: CompletenessCheck[] = [
-  { key: 'locationDistrict', weight: 20, label: 'Set your primary district',      hint: 'Unlock localised flood alerts, air quality data, and weather summaries.',  href: '/profile?tab=location', check: (c) => !!c.profile?.locationDistrict },
-  { key: 'organization',     weight: 15, label: 'Join an organisation',            hint: 'Collaborate with verified NGOs, agencies, and research groups.',            href: '/profile?tab=location', check: (c) => c.hasOrganization },
+  { key: 'locationDistrict', weight: 20, label: 'Set your primary district',      hint: 'Unlock localised flood alerts, air quality data, and weather summaries.',  href: '/profile?tab=personal#location', check: (c) => !!c.profile?.locationDistrict },
+  { key: 'organization',     weight: 15, label: 'Join an organisation',            hint: 'Collaborate with verified NGOs, agencies, and research groups.',            href: '/organizations', check: (c) => c.hasOrganization },
   { key: 'bio',              weight: 15, label: 'Write a biography',               hint: 'Tell the community about your environmental work and goals.',                href: '/profile?tab=personal', check: (c) => !!c.profile?.bio?.trim() },
   { key: 'phone',            weight: 10, label: 'Add your phone number',           hint: 'Enables direct contact for urgent environmental alerts.',                   href: '/profile?tab=personal', check: (c) => !!c.profile?.phone?.trim() },
   { key: 'occupation',       weight: 10, label: 'Add your occupation',             hint: 'Helps researchers and NGOs find and collaborate with you.',                 href: '/profile?tab=personal', check: (c) => !!c.profile?.occupation?.trim() },

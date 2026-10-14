@@ -64,13 +64,13 @@ export class MembersService {
     // A user with no profile row yet (never opened the profile editor) has
     // no explicit choice on record, so they default to visible — only an
     // *explicit* PRIVATE selection removes someone from the directory.
-    const where: Prisma.UserWhereInput = {
+    const base: Prisma.UserWhereInput = {
       isActive: true,
       NOT: { profile: { is: { profileVisibility: 'PRIVATE' } } },
-      ...(filters.role ? { role: filters.role } : {}),
       ...(filters.district ? { profile: { is: { locationDistrict: filters.district } } } : {}),
       ...(filters.search ? { displayName: { contains: filters.search, mode: 'insensitive' } } : {}),
     };
+    const where: Prisma.UserWhereInput = { ...base, ...(filters.role ? { role: filters.role } : {}) };
 
     return Promise.all([
       this.prisma.user.findMany({
@@ -78,10 +78,18 @@ export class MembersService {
         skip,
         take: pageSize,
         select: MEMBER_SELECT,
-        orderBy: { displayName: 'asc' },
+        orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
       }),
       this.prisma.user.count({ where }),
-    ]).then(([data, total]) => ({ data, total, page, pageSize }));
+      // Per-role totals ignore the role filter itself so every segment keeps its own count.
+      this.prisma.user.groupBy({ by: ['role'], where: base, _count: { _all: true } }),
+    ]).then(([data, total, grouped]) => ({
+      data,
+      total,
+      page,
+      pageSize,
+      roleCounts: Object.fromEntries(grouped.map((g) => [g.role, g._count._all])) as Partial<Record<UserRole, number>>,
+    }));
   }
 
   /**

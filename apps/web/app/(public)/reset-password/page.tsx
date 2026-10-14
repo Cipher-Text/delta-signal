@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { resetPasswordAction } from '../../../lib/auth-actions';
+import { redirectIfSignedIn } from '../../../lib/redirect-if-signed-in';
 
 export default async function ResetPasswordPage(
   props: {
     searchParams: Promise<{ token?: string; error?: string }>;
   }
 ) {
+  await redirectIfSignedIn();
   const searchParams = await props.searchParams;
   const { token, error } = searchParams;
 

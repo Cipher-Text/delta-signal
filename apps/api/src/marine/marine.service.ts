@@ -93,6 +93,27 @@ export class MarineService {
     });
   }
 
+  /** All coastal districts for one forecast day (YYYY-MM-DD, stored as UTC midnight). */
+  getForDate(date: string) {
+    return this.prisma.marineForecast.findMany({
+      where: { forecastDate: new Date(`${date}T00:00:00.000Z`) },
+      include: { district: { select: { id: true, name: true } } },
+      orderBy: { district: { name: 'asc' } },
+    });
+  }
+
+  /** Forecast days available from today (Asia/Dhaka calendar) onward, as YYYY-MM-DD, ascending. */
+  async getForecastDays(): Promise<string[]> {
+    const dhakaToday = new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const rows = await this.prisma.marineForecast.findMany({
+      where: { forecastDate: { gte: new Date(`${dhakaToday}T00:00:00.000Z`) } },
+      distinct: ['forecastDate'],
+      select: { forecastDate: true },
+      orderBy: { forecastDate: 'asc' },
+    });
+    return rows.map((r) => r.forecastDate.toISOString().slice(0, 10));
+  }
+
   getForecast(districtId: string, from: Date, to: Date) {
     return this.prisma.marineForecast.findMany({
       where: { districtId, forecastDate: { gte: from, lte: to } },

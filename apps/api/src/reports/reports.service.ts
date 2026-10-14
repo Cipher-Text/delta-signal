@@ -104,7 +104,11 @@ export class ReportsService {
     ]).then(([data, total]) => ({ data, total, page, pageSize }));
   }
 
-  list(
+  /**
+   * Public list: verified/resolved only, most recently updated first. `counts` ignores the status filter
+   * (but respects category and place) so the Verified / Resolved / All segments each keep their own total.
+   */
+  async list(
     status?: ReportStatus,
     category?: ReportCategory,
     districtId?: string,
@@ -115,24 +119,39 @@ export class ReportsService {
   ) {
     const { page, pageSize } = clampPagination(rawPage, rawPageSize);
     const skip = (page - 1) * pageSize;
-    // Public view: only verified/resolved reports
-    const where = {
-      ...(status ? { status } : { status: { in: [ReportStatus.VERIFIED, ReportStatus.RESOLVED] } }),
+    const publicStatuses = [ReportStatus.VERIFIED, ReportStatus.RESOLVED];
+    const scope = {
       ...(category ? { category } : {}),
       ...(districtId ? { districtId } : {}),
       ...(upazilaId ? { upazilaId } : {}),
       ...(unionId ? { unionId } : {}),
     };
-    return Promise.all([
+    const where = { ...scope, status: status ? status : { in: publicStatuses } };
+
+    const [rows, total, grouped] = await Promise.all([
       this.prisma.citizenReport.findMany({
         where,
         skip,
         take: pageSize,
-        orderBy: { createdAt: 'desc' },
-        select: REPORT_SELECT,
+        orderBy: [{ updatedAt: 'desc' }, { id: 'asc' }],
+        select: { ...REPORT_SELECT, _count: { select: { media: true } } },
       }),
       this.prisma.citizenReport.count({ where }),
-    ]).then(([data, total]) => ({ data, total, page, pageSize }));
+      this.prisma.citizenReport.groupBy({
+        by: ['status'],
+        where: { ...scope, status: { in: publicStatuses } },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const n = (st: ReportStatus) => grouped.find((g) => g.status === st)?._count._all ?? 0;
+    return {
+      data: rows.map(({ _count, ...r }) => ({ ...r, mediaCount: _count.media })),
+      total,
+      page,
+      pageSize,
+      counts: { verified: n(ReportStatus.VERIFIED), resolved: n(ReportStatus.RESOLVED), all: n(ReportStatus.VERIFIED) + n(ReportStatus.RESOLVED) },
+    };
   }
 
   async getById(id: string) {

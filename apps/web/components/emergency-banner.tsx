@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { routes, type Alert, type AlertSeverity, type PaginatedEnvelope } from '@delta-signal/contracts';
 import { apiGet } from '../lib/api';
-import { formatDhakaCompact, formatDhakaDateTime } from '../lib/format';
+import { dhakaDateTime, dhakaDateTimeCompact } from '../lib/format';
 import StatusBadge, { type StatusLevel } from './status-badge';
 
 /**
@@ -49,8 +49,8 @@ export default async function EmergencyBanner() {
         </Link>
         <span className="alert-bar-meta">
           {alert.district ? ` · ${alert.district.name}` : ''} · issued{' '}
-          <time dateTime={alert.issuedAt} title={formatDhakaDateTime(alert.issuedAt)}>
-            {formatDhakaCompact(alert.issuedAt)}
+          <time dateTime={alert.issuedAt} title={dhakaDateTime(alert.issuedAt)}>
+            {dhakaDateTimeCompact(alert.issuedAt)}
           </time>
         </span>
       </span>

@@ -4,9 +4,9 @@ Delta Signal is a civic environmental intelligence platform for Bangladesh. It c
 
 The homepage at `/` is a complete public environmental board. No login required to see what is happening. Login is needed only to contribute, download data, or access advanced workflows.
 
-The authenticated `/dashboard` route is a separate role-scoped analytics workspace for researchers, organizations, government users, moderators, and admins. See [docs/dashboard.md](docs/dashboard.md) for the distinction between the two surfaces.
+The authenticated `/dashboard` route is a separate role-scoped analytics workspace for researchers, organizations, government users, moderators, and admins. See [docs/product/dashboard.md](docs/product/dashboard.md) for the distinction between the two surfaces.
 
-Full product brief: [docs/project-brief.md](docs/project-brief.md)
+Full product brief: [docs/product/project-brief.md](docs/product/project-brief.md)
 
 ---
 
@@ -117,6 +117,14 @@ PostgreSQL 16 must be running locally on port 5432 before running migrations. Co
 ```bash
 openssl rand -base64 48
 ```
+
+To start the apps on your PC while using its installed Redis service, create the root `.env` as above, make sure Redis is running on `127.0.0.1:6379`, then run:
+
+```bash
+./run.sh
+```
+
+`run.sh` checks the local Redis connection before starting the apps. Set `HOST_REDIS_URL` to use a different local Redis address. PostgreSQL with PostGIS must also be running locally; Docker Compose is not started by this script. Stop the Compose app containers before starting locally because both modes use ports 3000–3002.
 
 ### Common commands
 

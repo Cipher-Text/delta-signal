@@ -14,7 +14,7 @@ import {
  *     CAMS AQ model resolution ~40 km; district diameter ~40–60 km — a good match.
  *
  * Using past_days=29&forecast_days=1 gives a true 30-day average in one request per location,
- * eliminating the need for a per-union daily history table.
+ * eliminating the need for a per-union daily history table. These rolling averages refresh weekly.
  *
  * Batch size ≤100 keeps GET URLs under ~1.8 KB — well within OpenMeteo's CDN limits.
  */

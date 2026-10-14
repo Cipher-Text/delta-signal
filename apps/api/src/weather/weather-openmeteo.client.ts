@@ -25,6 +25,7 @@ const DAILY_FORECAST_DAYS = 7;
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [2_000, 5_000];
 const MIN_REQUEST_INTERVAL_MS = 250;
+const RATE_LIMIT_COOLDOWN_MS = 30_000;
 const FETCH_TIMEOUT_MS = 30_000;
 
 @Injectable()
@@ -32,6 +33,7 @@ export class WeatherOpenMeteoClient {
   private readonly logger = new Logger(WeatherOpenMeteoClient.name);
   private requestQueue = Promise.resolve();
   private lastRequestAt = 0;
+  private rateLimitUntilAt = 0;
 
   fetchCurrent(lat: number, lng: number): Promise<OpenMeteoCurrentResponse> {
     const url = `${FORECAST_BASE_URL}?latitude=${lat}&longitude=${lng}&current=${CURRENT_PARAMS}&timezone=auto`;
@@ -96,6 +98,12 @@ export class WeatherOpenMeteoClient {
         clearTimeout(timer);
         if (!response.ok) {
           const retryAfterMs = this.getRetryAfterMs(response);
+          if (response.status === 429) {
+            this.rateLimitUntilAt = Math.max(
+              this.rateLimitUntilAt,
+              Date.now() + (retryAfterMs ?? RATE_LIMIT_COOLDOWN_MS),
+            );
+          }
           const error = new Error(`OpenMeteo request failed: ${response.status} ${response.statusText}`);
           Object.assign(error, { status: response.status, retryAfterMs });
           throw error;
@@ -125,7 +133,9 @@ export class WeatherOpenMeteoClient {
     });
     const previous = this.requestQueue;
     this.requestQueue = previous.then(async () => {
-      const waitMs = MIN_REQUEST_INTERVAL_MS - (Date.now() - this.lastRequestAt);
+      const intervalWaitMs = MIN_REQUEST_INTERVAL_MS - (Date.now() - this.lastRequestAt);
+      const cooldownWaitMs = this.rateLimitUntilAt - Date.now();
+      const waitMs = Math.max(intervalWaitMs, cooldownWaitMs, 0);
       if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
       this.lastRequestAt = Date.now();
       release();

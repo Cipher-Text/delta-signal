@@ -33,7 +33,7 @@ Legend: ✓ Implemented | ~ Stub / planned | ✗ Not started
 | GET  | `/auth/google/callback` | Public | ✓ | Google consent callback; issues 30s exchange code → redirects to `APP_URL/auth/callback?code=…` |
 | POST | `/auth/exchange` | Public | ✓ | Redeems 30s exchange code; returns access + refresh token pair (consumed server-side by Next.js) |
 
-Refresh tokens are opaque, Postgres-backed, and rotated on use — not Redis, not JWTs. Register/login/logout each write an audit event with the caller's IP. Google OAuth users have `authProvider = GOOGLE` and cannot use the email/password login or password-management endpoints. See `docs/flows.md` "Google OAuth Sign-in Flow" for the exchange code pattern.
+Refresh tokens are opaque, Postgres-backed, and rotated on use — not Redis, not JWTs. Register/login/logout each write an audit event with the caller's IP. Google OAuth users have `authProvider = GOOGLE` and cannot use the email/password login or password-management endpoints. See `docs/product/flows.md` "Google OAuth Sign-in Flow" for the exchange code pattern.
 
 ## Users
 
@@ -157,7 +157,15 @@ Source: OpenMeteo Flood API, persisted as `StationFloodForecast` (station-based,
 | GET | `/emissions/indicators` | Public | ✓ | Distinct indicator codes + display names |
 | GET | `/emissions/:year` | Public | ✓ | All 4 indicators for a specific year; 404 if no data |
 
-Source: World Bank Climate Change API (`EN.GHG.ALL`, `EN.GHG.CO2`, `EN.GHG.CH4`, `EN.GHG.N2O` — all in Mt CO₂e). Weekly scheduler (Sunday 3am); initial sync on empty table. See `docs/architecture/modules.md` "emissions" for design notes.
+Source: World Bank Climate Change API (`EN.GHG.ALL`, `EN.GHG.CO2`, `EN.GHG.CH4`, `EN.GHG.N2O` — all in Mt CO₂e). Scheduler runs every six months (January 1 and July 1 at 3am); initial sync on empty table. See `docs/architecture/modules.md` "emissions" for design notes.
+
+## EcoBrief
+
+| Method | Route | Access | Implemented | Description |
+|---|---|---|---|---|
+| GET | `/ecobriefs` | Public | ✓ | Generate an on-demand evidence summary. Requires `areaType` (`COUNTRY`, `DIVISION`, or `DISTRICT`), `from`, and `to`; requires `areaId` for divisions/districts. Optional comma-separated `topics`: `climate`, `biodiversity`, `emissions`, `observations`. Response includes summary statements, section metrics, coverage, source, and limitations. |
+
+Climate values are the latest rolling 30-day aggregates and are not filtered by the selected dates. Biodiversity uses dated GBIF occurrences mapped to districts; emissions are national annual readings only; observations exclude flagged records and include trust-level counts.
 
 ## Reports
 

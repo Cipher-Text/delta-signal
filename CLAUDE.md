@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Follow `docs/DESIGN.md`. Workspace pages follow §3.2 and §31–42.
+Follow `docs/design/DESIGN.md`. Workspace pages follow §3.2 and §31–42.
 
 ## Commands
 
@@ -252,7 +252,7 @@ Complex queries use raw SQL via `prisma.$queryRaw`.
 - Card rendering itself has no scheduler and no env vars of its own — it's synchronous, on-demand generation reusing `MediaModule`'s storage config; the brand logo is read from `apps/admin/public/logo.svg` on disk, not an env var.
 - **`SocialContentCleanupScheduler`** (`social-content-cleanup.scheduler.ts`) — daily cron (`EVERY_DAY_AT_3AM`, `CRON_LOCK_KEYS.SOCIAL_CONTENT_CLEANUP`) hard-deletes every `SocialPostDraft` older than 7 days by `createdAt`, **regardless of status** — this includes `APPROVED`/`ARCHIVED` drafts and any `SocialPublication` history attached to them (the `AuditEvent` trail is the permanent record; this cleanup is storage/DB housekeeping, not the audit log). Deletes each draft's rendered PNGs from object storage first (best-effort, skipped if storage isn't configured), then deletes `SocialPublication` → `SocialRenderedAsset` → `SocialPostDraft` rows in that explicit order inside one transaction — `SocialPublication.renderedAssetId` is `onDelete: Restrict` (checked immediately, not deferred), so relying on DB cascade order between the two sibling cascades off `SocialPostDraft` would be unsafe.
 - Frontend lives entirely in `apps/admin/app/(admin)/social-content/page.tsx` (suggestions panel + connected-accounts panel + create form + status-filterable drafts list, each with a Publish action once `APPROVED`) and `apps/admin/lib/social-content-actions.ts` (10 server actions, one per endpoint).
-- Design-notes docs at the repo root (`SOCIAL_CONTENT_ARCHITECTURE.md`, `SOCIAL_CONTENT_ADMIN_UX.md`, `SOCIAL_CONTENT_CAPABILITY_MATRIX.md`, `PHOTOCARD_TYPES.md`, `IMPLEMENTATION_ROADMAP.md`) were written alongside this feature — read those for design rationale; this file covers only what's load-bearing for future changes.
+- Design-notes docs at the repo root (`docs/planning/social-content/architecture.md`, `docs/planning/social-content/admin-ux.md`, `docs/planning/social-content/capability-matrix.md`, `docs/planning/social-content/photocard-types.md`, `docs/planning/social-content/implementation-roadmap.md`) were written alongside this feature — read those for design rationale; this file covers only what's load-bearing for future changes.
 
 **Social publishing (Phase 1: Facebook Page)** — `apps/api/src/social-publishing/` — human-triggered publishing of an `APPROVED` draft's card to a connected Facebook Page. Deliberately **not** automatic/scheduled: every publish starts from a MODERATOR/ADMIN clicking "Publish" in the admin console, matching the existing approve-then-download pattern.
 

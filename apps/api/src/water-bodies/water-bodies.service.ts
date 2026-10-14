@@ -287,6 +287,7 @@ export class WaterBodiesService implements OnModuleInit {
   async list(query: {
     hydrologicalClass?: HydrologicalClass;
     waterBodyType?: WaterBodyType;
+    waterBodySubtype?: string;
     upazilaId?: string;
     districtId?: string;
     page: number;
@@ -295,6 +296,7 @@ export class WaterBodiesService implements OnModuleInit {
     const where: Prisma.WaterBodyWhereInput = {
       hydrologicalClass: query.hydrologicalClass,
       waterBodyType: query.waterBodyType,
+      waterBodySubtype: query.waterBodySubtype,
       upazilas: query.upazilaId
         ? { some: { upazilaId: query.upazilaId } }
         : query.districtId
@@ -319,6 +321,17 @@ export class WaterBodiesService implements OnModuleInit {
     ]);
 
     return { data, total, page: query.page, limit: query.limit, totalPages: Math.ceil(total / query.limit) };
+  }
+
+  /** Distinct subtypes (Beel, Coastal River, …) for the "Type" filter. */
+  async listSubtypes(): Promise<string[]> {
+    const rows = await this.prisma.waterBody.findMany({
+      where: { waterBodySubtype: { not: null } },
+      distinct: ['waterBodySubtype'],
+      select: { waterBodySubtype: true },
+      orderBy: { waterBodySubtype: 'asc' },
+    });
+    return rows.map((r) => r.waterBodySubtype as string);
   }
 
   findOne(id: string) {
@@ -348,7 +361,10 @@ export class WaterBodiesService implements OnModuleInit {
         orderBy: { serial: 'asc' },
         skip,
         take: query.limit,
-        include: { waterBodies: { include: { waterBody: { select: { id: true, code: true, nameEn: true } } } } },
+        include: {
+          district: { select: { id: true, name: true } },
+          waterBodies: { include: { waterBody: { select: { id: true, code: true, nameEn: true } } } },
+        },
       }),
       this.prisma.waterLevelStation.count({ where }),
     ]);
