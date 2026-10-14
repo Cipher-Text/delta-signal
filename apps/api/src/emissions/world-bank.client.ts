@@ -6,6 +6,11 @@ const PER_PAGE = 50;
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAYS_MS = [500, 1_500];
 const FETCH_TIMEOUT_MS = 30_000;
+const REQUEST_HEADERS = {
+  Accept: 'application/json',
+  // Some API gateways reject requests without an identifying User-Agent.
+  'User-Agent': 'DeltaSignal/1.0 (World Bank Indicators API client)',
+};
 
 /** GHG indicators to sync from the World Bank Climate Change API. */
 export const WORLD_BANK_INDICATORS = [
@@ -57,12 +62,23 @@ export class WorldBankClient {
       const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
       try {
-        const res = await fetch(url, { signal: controller.signal });
-        if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
+        const res = await fetch(url, { signal: controller.signal, headers: REQUEST_HEADERS });
+        if (!res.ok) {
+          const detail = (await res.text()).replace(/\s+/g, ' ').slice(0, 300);
+          const error = new Error(`HTTP ${res.status} from ${url}${detail ? `: ${detail}` : ''}`);
+          // Client errors such as 403 and 404 will not improve with another request.
+          if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429) {
+            throw Object.assign(error, { retryable: false });
+          }
+          throw error;
+        }
         return (await res.json()) as T;
       } catch (err) {
         lastErr = err;
         this.logger.warn(`World Bank fetch attempt ${attempt + 1} failed: ${String(err)}`);
+        if (typeof err === 'object' && err !== null && 'retryable' in err && err.retryable === false) {
+          break;
+        }
       } finally {
         clearTimeout(timer);
       }
