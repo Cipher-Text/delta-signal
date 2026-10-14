@@ -70,6 +70,7 @@ Authenticated citizens submit and view their own application through `POST /rese
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
 | GET | `/locations/divisions` | Public | ✓ | All 8 divisions |
+| GET | `/locations/divisions/:id/activity` | Public | ✓ | Exact counts and the latest three reports/observations for the division's districts |
 | GET | `/locations/districts` | Public | ✓ | All 64 districts (`?divisionId` filter) |
 | GET | `/locations/districts/:id` | Public | ✓ | District detail |
 | GET | `/locations/upazilas` | Public | ✓ | Upazilas (`?districtId` filter) |
@@ -108,8 +109,8 @@ Authenticated citizens submit and view their own application through `POST /rese
 | GET | `/weather/current/:districtId` | Public | ✓ | Latest current-weather reading for one district |
 | GET | `/weather/hourly/:districtId` | Public | ✓ | Hourly forecast (`?from`, `?to`) |
 | GET | `/weather/daily/:districtId` | Public | ✓ | Daily forecast (`?from`, `?to`) |
-| GET | `/weather/air-quality` | Public | ✓ | Latest air quality reading for every district |
-| GET | `/weather/air-quality/:districtId` | Public | ✓ | Latest air quality reading for one district |
+| GET | `/weather/air-quality` | Public | ✓ | Latest air quality reading that has already happened, for every district |
+| GET | `/weather/air-quality/:districtId` | Public | ✓ | Latest air quality reading up to now for one district |
 
 Source: OpenMeteo, via a `@nestjs/schedule` cron scheduler (current every 15min, hourly + AQ every 2h, daily every 12h). See `docs/architecture/modules.md` "weather" for design notes and `docs/integrations/openmeteo.md` for provider details.
 
@@ -163,7 +164,7 @@ Source: World Bank Climate Change API (`EN.GHG.ALL`, `EN.GHG.CO2`, `EN.GHG.CH4`,
 
 | Method | Route | Access | Implemented | Description |
 |---|---|---|---|---|
-| GET | `/ecobriefs` | Public | ✓ | Generate an on-demand evidence summary. Requires `areaType` (`COUNTRY`, `DIVISION`, or `DISTRICT`), `from`, and `to`; requires `areaId` for divisions/districts. Optional comma-separated `topics`: `climate`, `biodiversity`, `emissions`, `observations`. Response includes summary statements, section metrics, coverage, source, and limitations. |
+| GET | `/ecobriefs` | Public | ✓ | Generate an on-demand evidence summary. Requires `areaType` (`COUNTRY`, `DIVISION`, or `DISTRICT`), `from`, and `to`; requires `areaId` for divisions/districts. Optional comma-separated `topics`: `climate`, `biodiversity`, `emissions`, `observations`. Optional `trust` (`all` or `research`) restricts observation counts to research-grade records. Response includes summary statements, section metrics, coverage, source, and limitations. |
 
 Climate values are the latest rolling 30-day aggregates and are not filtered by the selected dates. Biodiversity uses dated GBIF occurrences mapped to districts; emissions are national annual readings only; observations exclude flagged records and include trust-level counts.
 
@@ -171,7 +172,7 @@ Climate values are the latest rolling 30-day aggregates and are not filtered by 
 
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
-| GET | `/reports` | Public (verified/resolved only) | ✓ | Paginated public reports |
+| GET | `/reports` | Public (verified/resolved only) | ✓ | Paginated public reports, newest update first; adds `counts` and per-report `mediaCount` |
 | GET | `/reports/:id` | Public if publishable | ✓ | Report detail + status history |
 | POST | `/reports` | Authenticated | ✓ | Submit report (audited) |
 | PATCH | `/reports/:id/status` | Moderator / Admin | ✓ | Advance status (with audit) |
@@ -191,7 +192,7 @@ Climate values are the latest rolling 30-day aggregates and are not filtered by 
 
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
-| GET | `/observations` | Public | ✓ | Observations (`?category`, `?trustLevel`, `?districtId`); excludes `FLAGGED` by default |
+| GET | `/observations` | Public | ✓ | Observations (`?category`, `?trustLevel`, `?districtId`); excludes `FLAGGED` by default; adds per-trust-level `counts` |
 | GET | `/observations/mine` | Authenticated | ✓ | Caller's own observations, all trust levels |
 | GET | `/observations/nearby` | Public | ✓ | Spatial query by lat/lng + radius |
 | GET | `/observations/:id` | Public | ✓ | Observation detail |
@@ -208,7 +209,7 @@ Note the trust-level path is `/trust`, not `/verification`. Moderators are **not
 
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
-| GET | `/restoration/projects` | Public | ✓ | Projects (`?category`, `?status`, `?districtId`) |
+| GET | `/restoration/projects` | Public | ✓ | Projects (`?category`, `?status`, `?districtId`), active first; adds `stats`, `categoryCounts` and `joinedByMe` (optional bearer token) |
 | GET | `/restoration/projects/:id` | Public | ✓ | Project detail + participants |
 | POST | `/restoration/projects` | Org admin / Admin | ✓ | Create project (audited) |
 | PATCH | `/restoration/projects/:id` | Creator / Admin | ✓ | Update project (audited; ownership checked in the service, not by a route guard) |
@@ -288,6 +289,26 @@ Facebook Page publishing is available for approved cards when publishing credent
 | GET | `/admin/permissions` | Admin | ✓ | All permissions with their current role assignments |
 | POST | `/admin/permissions/roles` | Admin | ✓ | Grant a permission to a role (idempotent) |
 | DELETE | `/admin/permissions/roles` | Admin | ✓ | Revoke a permission from a role |
+
+## Community
+
+| Method | Path | Access | Status | Purpose |
+| --- | --- | --- | --- | --- |
+| GET | `/community/posts` | Public (optional bearer token) | ✓ | Feed: all posts, or `?hasPoll=true\|false`; `?districtId`, paging. Adds `counts` `{all, posts, polls}`, poll option text and counts, and `userVotes` for a signed-in caller |
+| POST | `/community/posts` | Authenticated | ✓ | Create a post; a poll (2–4 options) is limited to Moderator / Admin |
+| GET | `/community/posts/:id` | Public (optional bearer token) | ✓ | Post, comments, poll with `userVotedOptionId` when signed in |
+| DELETE | `/community/posts/:id` | Authenticated | ✓ | Author, Moderator or Admin |
+| POST | `/community/posts/:id/comments` | Authenticated | ✓ | Add a comment |
+| DELETE | `/community/posts/:id/comments/:commentId` | Authenticated | ✓ | Comment author, Moderator or Admin |
+| POST | `/community/posts/:id/poll/vote` | Authenticated | ✓ | Cast or change a vote |
+
+## Members
+
+| Method | Path | Access | Status | Purpose |
+| --- | --- | --- | --- | --- |
+| GET | `/members` | Authenticated | ✓ | Directory (`?role`, `?district`, `?search`, paging), newest first; adds `roleCounts`. Explicitly private profiles are not listed |
+| GET | `/members/districts` | Authenticated | ✓ | Districts represented in the directory |
+| GET | `/members/:id` | Authenticated | ✓ | Member profile; a private profile returns 404; phone is never returned |
 
 ## Analytics
 

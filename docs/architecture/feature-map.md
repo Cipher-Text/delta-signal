@@ -153,24 +153,27 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | --- | --- | --- |
 | `/` | Weather, metrics, datasets, reports, alerts, biodiversity, restoration | **Done** — all sections live or honest empty state |
 | `/locations` | Division climate summaries and administrative geography | **Done** — browsable Bangladesh location hierarchy |
-| `/locations/divisions/:id` | Division climate, alerts, weather/AQ coverage, flood signals, reports, observations, biodiversity, restoration, and district summaries | **Done** — division environmental overview built from existing public data |
-| `/locations/districts/:id` | Current weather, air quality, forecasts, flood/marine signals, alerts, climate, radiation, biodiversity, reports, observations, restoration, and upazilas | **Done** — continuous environmental overview with in-page section navigation |
-| `/locations/upazilas/:id` | Upazila 30-day climate detail and union geography | **Done** — continuous overview with climate provenance and in-page section navigation |
-| `/locations/unions/:id` | Union 30-day climate aggregates and district-level capability context | **Done** — continuous overview with climate provenance and in-page section navigation |
+| `/locations/divisions/:id` | Division climate, districts table, hazards (alerts and stations above usual flow), data coverage, river discharge forecast, and activity counts via `GET /locations/divisions/:id/activity` | **Done** — redesigned overview; PM2.5 categories are not shown for 30-day means |
+| `/locations/districts/:id` | Current weather, latest air-quality hour, 7-day forecast, hazards with one river station, 30-day climate, optional marine (coastal), radiation line, species records, community activity, and upazilas | **Done** — redesigned overview with a section nav (Now, Forecast, Last 30 days, Nature, Upazilas) |
+| `/locations/upazilas/:id` | Upazila 30-day climate detail and union geography | **Done** — one climate-and-air card, unions list, link to the district |
+| `/locations/unions/:id` | Union 30-day climate aggregates and district-level capability context | **Done** — climate-and-air card, "Part of" links up the hierarchy, link to the district |
 | `/data` | `GET /datasets`, `GET /providers` | **Done** |
-| `/reports` | `GET /reports` | **Done** — public verified/resolved only; submission form; rows link to detail |
+| `/reports` | `GET /reports`, `GET /reports/mine` | **Done** — verified/resolved segments with counts, filters, report cards, "Your reports", how-review-works; three-step report drawer with optional location and photos |
 | `/reports/:id` | `GET /reports/:id`, `/comments`, `/media` | **Done** — description, status history, comments, media |
 | `/alerts` | `GET /alerts` | **Done** — clickable cards and history rows |
 | `/alerts/:id` | `GET /alerts/:id` | **Done** — description, instructions, subscription CTA |
-| `/observations` | `GET /observations` | **Done** — submission form; rows link to detail |
+| `/observations` | `GET /observations`, `GET /observations/mine` | **Done** — trust-level segments with counts, filters, observation cards, "Your observations", trust-level explainer; three-step drawer (type with species, when and where, details) |
 | `/observations/:id` | `GET /observations/:id` | **Done** — trust level, description, details grid |
 | `/biodiversity` | `GET /biodiversity/species`, `GET /biodiversity/occurrences` | **Done** — name search; rows link to detail |
 | `/biodiversity/species/:id` | `GET /biodiversity/species/:id`, `/occurrences?speciesId` | **Done** — taxonomy, per-species occurrences |
-| `/restoration` | `GET /restoration/projects` | **Done** — creation form, join action; title links to detail |
+| `/restoration` | `GET /restoration/projects` | **Done** — stats tiles, category segments with counts, project cards (active first), join with "Joined" state, register drawer with dates |
 | `/restoration/:id` | `GET /restoration/projects/:id` | **Done** — description, details grid, join form |
-| `/community` | `GET /community/posts` | **Done** — post list table with poll tag, create form, optional district filter |
+| `/community` | `GET /community/posts` | **Done** — one feed (All / Discussions / Polls with counts), composer, in-feed poll voting, post menu with delete, guidelines sidebar |
 | `/community/:id` | `GET /community/posts/:id` | **Done** — post body, poll with vote bars + vote form, flat comment list, add/delete comment |
-| `/profile` | `GET /auth/profile`, `GET /reports/mine`, `GET /observations/mine`, `GET /notifications/subscriptions` | **Done** — live report + observation history; alert subscription management |
+| `/profile` | `GET /auth/profile`, `GET /reports/mine`, `GET /observations/mine`, `GET /notifications/subscriptions`, `GET /gamification/me` | **Done** — summary column (identity, profile strength with badges, contributions) beside three tabs (Profile, Alert emails, Security) |
+| `/members` | `GET /members`, `GET /members/districts` | **Done** — role segments with counts, search and district filter, newest first |
+| `/organizations` | `GET /organizations` | **Done** — type segments with counts, verified-only and search filters, card grid |
+| `/ecobrief` | `GET /ecobriefs` | **Done** — journal-style report (abstract, methods, results with tables and figures, limitations, citation, appendices); CSV, JSON, print/PDF; research-grade observation filter |
 | `/industrial-sites` | `GET /facilities`, `GET /companies` | **Done** (2026-09-02) — tabbed: sites tab (filter by type, compliance, district) + companies tab (filter by type, district); `?tab=companies` switches views |
 | `/industrial-sites/:id` | `GET /facilities/:id` | **Done** — compliance badge, facility details grid, linked citizen reports, OpenStreetMap link |
 | `/industrial-sites/companies/:id` | `GET /companies/:id` | **Done** — company type badge, subsidiaries table, facilities table |

@@ -2768,6 +2768,27 @@ Fill in once and keep current. AI agents use only these.
 
 # 61. Changelog
 
+## 2.2 — October 2026
+
+- Workspace list pages use one pattern: a segmented control with live counts
+  that ignore the segment's own filter, selects that submit on change,
+  "Filtered by" chips with "Clear all", a count line, then cards or rows
+  (§3.2, §31–42).
+- Create flows are drawers (three-step wizard for reports and observations,
+  single drawer for restoration, collapsing composer for community), not
+  forms at the bottom of the page.
+- Detail pages (division, district, upazila, union) follow the reference:
+  breadcrumb, header with source and freshness, 30-day tiles with units set
+  small, tables on desktop and lists on mobile. PM2.5 categories apply to
+  hourly or 24-hour values only, never to 30-day means (§21A); UV shows its
+  WHO band.
+- Profile is a summary column plus three tabs (Profile, Alert emails,
+  Security); location is a section of the Profile tab.
+- The user menu has two items: Profile and Sign out.
+- EcoBrief is laid out as a short journal article: abstract, numbered
+  sections, ruled tables and captioned figures, limitations, citation and
+  references; figures never rely on colour alone, and it prints cleanly.
+
 ## 2.1 — October 2026
 
 - Public page server HTML requirements: nav, one h1, meta description (§3.1).

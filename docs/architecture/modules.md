@@ -4,9 +4,11 @@ All NestJS modules live under `apps/api/src/`. The `DatabaseModule` is global an
 
 Global prefix is `/api/v1` (see `packages/contracts/src/index.ts` for the canonical route map). `JwtAuthGuard`, `RolesGuard`, and `PermissionsGuard` are applied globally in `main.ts`; `ThrottlerGuard` is registered via `APP_GUARD` in `AppModule`. Every route is authenticated unless marked `@Public()`. Permission-gated routes additionally require a DB-backed permission grant checked by `PermissionsGuard`.
 
+`OptionalJwtAuthGuard` (`common/guards/optional-jwt-auth.guard.ts`) authenticates a valid bearer token without ever rejecting. `@Public()` routes skip the global guard, so `request.user` stays empty on them; a public handler that also needs to know who is asking (community list and detail, restoration list) adds this guard.
+
 Legend: ✓ Implemented | ~ Stub only | ✗ Not started
 
-Registered in `app.module.ts`: `database`, `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `biodiversity`, `observations`, `restoration`, `media`, `ingestion`, `weather`, `flood`, `marine`, `radiation`, `emissions`, `ecobrief`, `companies`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `gamification`, `community`, `social-content`, and `social-publishing`. `SeedService` is also registered directly in `AppModule` (not its own module) and seeds dev users + a seed organization on first boot.
+Registered in `app.module.ts`: `database`, `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `biodiversity`, `observations`, `restoration`, `members`, `media`, `ingestion`, `weather`, `flood`, `marine`, `radiation`, `emissions`, `ecobrief`, `companies`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `gamification`, `community`, `social-content`, and `social-publishing`. `SeedService` is also registered directly in `AppModule` (not its own module) and seeds dev users + a seed organization on first boot.
 
 ## database ✓
 
@@ -94,6 +96,7 @@ Seeded on first boot via `OnModuleInit`: 8 divisions, 64 districts (all with Geo
 | Method | Path | Access |
 | --- | --- | --- |
 | GET | `/locations/divisions` | Public |
+| GET | `/locations/divisions/:id/activity` | Public — exact counts (verified reports, research-grade observations, species records, restoration projects) and the latest three reports and observations for the division's districts |
 | GET | `/locations/districts` | Public (`?divisionId`) |
 | GET | `/locations/districts/:id` | Public |
 | GET | `/locations/upazilas` | Public (`?districtId`) |
@@ -157,10 +160,10 @@ Submission writes a `REPORT_SUBMIT` audit event. Every status transition writes 
 
 | Method | Path | Access |
 | --- | --- | --- |
-| GET | `/reports` | Public — verified/resolved only (`?status`, `?category`, `?districtId`, `?page`, `?pageSize`) |
+| GET | `/reports` | Public — verified/resolved only (`?status`, `?category`, `?districtId`, `?page`, `?pageSize`). Ordered by last update. Returns `counts` `{verified, resolved, all}` (ignores the status filter so each segment keeps its own total) and `mediaCount` per report |
 | GET | `/reports/mine` | Authenticated — caller's own reports, all statuses |
 | GET | `/reports/:id` | Public |
-| POST | `/reports` | Authenticated |
+| POST | `/reports` | Authenticated — accepts optional `lat`/`lng`. The web form attaches up to three JPG/PNG photos best-effort after creation (`POST /media/upload?folder=reports`, then `POST /reports/:id/media`); a failed upload never loses the report |
 | PATCH | `/reports/:id/status` | Moderator / Admin |
 | GET | `/reports/:id/comments` | Public — non-internal only |
 | GET | `/reports/:id/comments/all` | Moderator / Admin — includes internal notes |
@@ -197,11 +200,11 @@ Trust levels: `RESEARCH_GRADE | COMMUNITY | UNVERIFIED | FLAGGED`
 
 | Method | Path | Access |
 | --- | --- | --- |
-| GET | `/observations` | Public (`?category`, `?trustLevel`, `?districtId`, `?page`, `?pageSize`) |
+| GET | `/observations` | Public (`?category`, `?trustLevel`, `?districtId`, `?page`, `?pageSize`). Ordered by observed time. Returns `counts` `{researchGrade, community, unverified, all}` (ignores the trust filter, never counts `FLAGGED`) |
 | GET | `/observations/mine` | Authenticated — caller's own observations, all trust levels |
 | GET | `/observations/nearby` | Public — spatial query by lat/lng + radius |
 | GET | `/observations/:id` | Public |
-| POST | `/observations` | Authenticated |
+| POST | `/observations` | Authenticated — accepts `species` (biodiversity), `observedAt`, `lat`/`lng` |
 | PATCH | `/observations/:id` | Owner / Admin |
 | PATCH | `/observations/:id/trust` | Researcher / Admin |
 | DELETE | `/observations/:id` | Owner / Admin |
@@ -234,7 +237,7 @@ Target metrics: `TREES_PLANTED | AREA_RESTORED_HA | SEEDLINGS_SURVIVED | SPECIES
 
 | Method | Path | Access |
 | --- | --- | --- |
-| GET | `/restoration/projects` | Public (`?category`, `?status`, `?districtId`, `?page`, `?pageSize`) |
+| GET | `/restoration/projects` | Public (`?category`, `?status`, `?districtId`, `?page`, `?pageSize`). Active first, then planned, paused, completed (newest first within each; ordered in SQL so pagination is stable). Returns platform-wide `stats` `{active, planned, paused, completed, participants}`, `categoryCounts` (respect the status/district filters, not the category), and `joinedByMe` per project for a signed-in caller |
 | GET | `/restoration/projects/:id` | Public |
 | POST | `/restoration/projects` | Organization Admin / Admin |
 | PATCH | `/restoration/projects/:id` | Authenticated — creator or Admin only |
@@ -262,8 +265,8 @@ Scheduler cadence: current every 15 min (`0 */15 * * * *`), hourly + air quality
 | GET | `/weather/current/:districtId` | Public |
 | GET | `/weather/hourly/:districtId` | Public (`?from`, `?to`) |
 | GET | `/weather/daily/:districtId` | Public (`?from`, `?to`) |
-| GET | `/weather/air-quality` | Public — latest reading for every district |
-| GET | `/weather/air-quality/:districtId` | Public |
+| GET | `/weather/air-quality` | Public — latest reading for every district that has already happened (forecast hours in the future are ignored) |
+| GET | `/weather/air-quality/:districtId` | Public — same rule: latest hour up to now |
 
 Also consumed by `DatasetsModule` to serve `/datasets/weather/current` and `/datasets/air-quality/current`, and by `apps/web`'s `map-section.tsx` (public homepage "Current conditions" sidebar, with fallback to static data if the API is unreachable). `WeatherOpenMeteoClient` is exported from `WeatherModule` and reused by `LocationClimateModule` for batch union-level fetches.
 
@@ -327,7 +330,7 @@ Generates an on-demand environmental data brief from the current database snapsh
 
 | Method | Path | Access |
 | --- | --- | --- |
-| GET | `/ecobriefs` | Public (`areaType`, `from`, `to`, optional `areaId`, comma-separated `topics`, and `trust=all|research` for observations) |
+| GET | `/ecobriefs` | Public (`areaType`, `from`, `to`, optional `areaId`, comma-separated `topics`, and `trust=all\|research` for observations) |
 
 The response is shaped like a short journal report: `summary` (abstract), `methods` (sources with licences, retrieval time), per-topic sections with statistics and tables, `limitations`, and a `reportId` (`EB-XXXXXXXX`, a hash of the query so the same query over unchanged data gives the same ID). Climate is always the latest 30-day snapshot (`periodAligned: false`) because daily history is not retained. Species rows that share a scientific name are folded into one. The web page renders it as an article (abstract, methods, numbered results with tables and figures, limitations, citation, references, appendices) with CSV, JSON and print/PDF output.
 
@@ -475,18 +478,28 @@ Owns profile completeness scoring and the badge system for citizen engagement in
 
 `GET /gamification/me` returns: completeness score (0–100), list of missing-field prompts, earned badges, contribution points, and current level. Profile completeness runs 10 weighted checks across `UserProfile`, `UserSocialLink`, `OrganizationMembership`, `CitizenReport`, and `Observation`. Levels: Newcomer (0) → Contributor (100) → Advocate (300) → Champion (600) → Environmental Leader (1200+). Badges: 5 categories × 4 tiers (Bronze 25 pts / Silver 75 pts / Gold 150 pts / Emerald 300 pts) — Civic Guardian (verified reports), Water Sentinel (water quality observations), Clean Air Defender (air quality contributions), Biodiversity Explorer (research-grade species), Restoration Pioneer (ecological restoration projects). Badge counts are computed via 6 parallel Prisma queries. `evaluateBadges()` enqueues a BullMQ `gamification` job deduped by `jobId: badge-eval:{userId}`; actual evaluation runs in `GamificationProcessor.performEvaluation()`. Earned badge IDs are stored in `UserProfile.earnedBadges` (String[]) and contribution points in `UserProfile.contributionPoints` (Int).
 
+## members ✓
+
+Public-profile member directory, for signed-in users (no `@Public()`). Users are listed unless they explicitly chose a `PRIVATE` profile; a user who never opened the profile editor is visible by default.
+
+| Method | Path | Access |
+| --- | --- | --- |
+| GET | `/members` | Authenticated (`?role`, `?district`, `?search`, `?page`, `?pageSize`). Newest first. Returns `roleCounts` (per role, respecting search and district but not the role filter itself) |
+| GET | `/members/districts` | Authenticated — districts represented in the directory |
+| GET | `/members/:id` | Authenticated — a `PRIVATE` profile returns 404 (indistinguishable from a missing user); `phone` is never returned; social links follow `linksVisibility` |
+
 ## community ✓
 
 Owns community posts, comments, and polls — citizen-led discussion and structured polling.
 
 | Method | Path | Access |
 | --- | --- | --- |
-| GET | `/community/posts` | Public |
+| GET | `/community/posts` | Public — all posts, or only those with / without a poll (`?hasPoll=true\|false`); `?districtId`, paging. Returns `counts` `{all, posts, polls}` (respect the district filter), poll options with text and vote counts, and `userVotes` (pollId → option) for a signed-in caller |
 | POST | `/community/posts` | Authenticated |
-| GET | `/community/posts/:id` | Public (guests see poll results; `userVotedOptionId` included for authenticated callers) |
-| DELETE | `/community/posts/:id` | Authenticated — author or ADMIN |
+| GET | `/community/posts/:id` | Public (guests see poll results; `userVotedOptionId` is included when a valid bearer token is sent) |
+| DELETE | `/community/posts/:id` | Authenticated — author, MODERATOR or ADMIN |
 | POST | `/community/posts/:id/comments` | Authenticated |
-| DELETE | `/community/posts/:id/comments/:commentId` | Authenticated — comment author or ADMIN |
+| DELETE | `/community/posts/:id/comments/:commentId` | Authenticated — comment author, MODERATOR or ADMIN |
 | POST | `/community/posts/:id/poll/vote` | Authenticated |
 
 `CommunityPost` carries `title`, `body` (TEXT), optional `districtId`, and an optional 1:1 `Poll`. `PostComment` is flat (no nested replies). `PollVote` has a `@@unique([pollId, userId])` constraint — voting again updates the existing row (upsert), enabling vote-changing. Poll `endsAt` is optional; closed polls still display results but reject new votes. Author and ADMIN can delete posts and comments; deletions are cascaded. Paginated post list ordered by `createdAt DESC`. Audit actions: `COMMUNITY_POST_CREATE`, `COMMUNITY_POST_DELETE`, `COMMUNITY_COMMENT_ADD`, `COMMUNITY_COMMENT_DELETE`, `COMMUNITY_POLL_VOTE`.

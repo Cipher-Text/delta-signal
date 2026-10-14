@@ -62,7 +62,7 @@ Global setup in `apps/api/src/main.ts`:
 - `JwtAuthGuard` + `RolesGuard` + `PermissionsGuard` registered via `useGlobalGuards`; `ThrottlerGuard` registered via `APP_GUARD` in `AppModule` (needs DI)
 - Rate limits: global 120 req / 60 s; auth endpoints tightened — login/register 5 req / 60 s, refresh 20 req / 60 s
 
-**Feature modules** (`apps/api/src/`): `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `observations`, `restoration`, `biodiversity`, `weather`, `flood`, `radiation`, `marine`, `emissions`, `companies`, `facilities`, `community`, `social-content`, `social-publishing`, `gamification`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `ingestion`, `media`, `database`, `common`. Also registered in `AppModule`: a `SeedService` (seeds dev users + organization on boot).
+**Feature modules** (`apps/api/src/`): `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `observations`, `restoration`, `biodiversity`, `weather`, `flood`, `radiation`, `marine`, `emissions`, `companies`, `facilities`, `community`, `members`, `ecobrief`, `social-content`, `social-publishing`, `gamification`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `ingestion`, `media`, `database`, `common`. Also registered in `AppModule`: a `SeedService` (seeds dev users + organization on boot).
 
 Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.ts` → `dto/` folder.
 
@@ -70,6 +70,7 @@ Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.
 - `JwtAuthGuard` (extends `AuthGuard('jwt')`) — checks `@Public()` reflector metadata; skips JWT validation if present
 - `RolesGuard` — checks `@Roles(...)` metadata against `request.user.role`; skips if no `@Roles` decorator applied
 - `PermissionsGuard` — checks `@RequirePermissions(...)` metadata against DB-backed role-permission grants; ADMIN bypasses all permission checks; results are cached per role for 5 minutes
+- `OptionalJwtAuthGuard` (`common/guards/optional-jwt-auth.guard.ts`) — authenticates a valid bearer token but never rejects. `@Public()` routes skip the global guard, so `request.user` is empty on them; a public handler that also needs the caller (community list/detail, restoration list) adds this guard
 - `@Public()` — `SetMetadata(PUBLIC_KEY, true)` — bypasses `JwtAuthGuard` entirely
 - `@Roles('ADMIN', ...)` — role gate; values must be UPPERCASE matching Prisma enum exactly
 - `@RequirePermissions('organizations.manage', ...)` — fine-grained permission gate backed by `Permission`/`RolePermission` models
@@ -122,11 +123,14 @@ Notable schema decisions:
 
 ### Frontend (apps/web)
 
-Next.js 15 App Router, Server Components throughout — no `useState`, no Redux, no Zustand. All form mutations use Server Actions. State lives in the URL or httpOnly cookies.
+Next.js 15 App Router, Server Components throughout — no Redux, no Zustand. All form mutations use Server Actions. State lives in the URL or httpOnly cookies. Small client islands exist only where interaction needs them: create drawers and wizards, auto-submitting selects, the profile form's unsaved-changes bar, in-feed poll voting, password rules, EcoBrief downloads. Server Actions accept up to 20 MB (`next.config.mjs`, report photos).
 
 Route groups:
-- `(public)` — `/`, `/login`, `/register`
-- `(app)` — authenticated pages behind a sidebar shell: `/dashboard`, `/profile`, `/alerts`, `/alerts/:id`, `/observations`, `/observations/:id`, `/biodiversity`, `/biodiversity/species/:id`, `/community`, `/reports`, `/reports/:id`, `/locations`, `/locations/divisions/:id`, `/locations/districts/:id`, `/locations/upazilas/:id`, `/locations/unions/:id`, `/restoration`, `/restoration/:id`, `/data`, `/data/:id`, `/organizations`, `/organizations/:id`, `/industrial-sites` (tabbed: `?tab=companies` or default sites), `/industrial-sites/:id`, `/industrial-sites/companies/:id`, `/water-bodies`, `/water-bodies/:slug`, `/water-bodies/stations`, `/marine`, `/radiation`, `/emissions`, `/members` (auth-only — the only `(app)` page with no guest-readable API fallback, protected in `middleware.ts`)
+- `(public)` — `/`, `/register`, `/forgot-password`, `/reset-password` (each redirects signed-in users to `/dashboard` via `redirectIfSignedIn()`); landing page and `/methodology`
+- `(auth)` — `/login`, a split-panel layout of its own (Google button, seed-account shortcuts, "Keep me signed in" via the `ng_session_only` cookie marker)
+- `(app)` — authenticated pages behind the sidebar + top bar shell (grouped nav, collapse state in cookie `ds_sidebar`, bell popover of active alerts, global search at `/search`): `/dashboard`, `/profile`, `/search`, `/alerts`, `/alerts/:id`, `/observations`, `/observations/:id`, `/biodiversity`, `/biodiversity/species/:id`, `/community`, `/community/:id`, `/reports`, `/reports/:id`, `/locations`, `/locations/divisions/:id`, `/locations/districts/:id`, `/locations/upazilas/:id`, `/locations/unions/:id`, `/restoration`, `/restoration/:id`, `/data`, `/data/:id`, `/ecobrief`, `/organizations`, `/organizations/:id`, `/industrial-sites` (tabbed: `?tab=companies` or default sites), `/industrial-sites/:id`, `/industrial-sites/companies/:id`, `/water-bodies` (tabbed: `?tab=stations`), `/water-bodies/:slug`, `/marine`, `/radiation`, `/emissions`, `/members`, `/members/:id`, `/researcher-application` (`/members` is auth-only — the only `(app)` page with no guest-readable API fallback, protected in `middleware.ts`)
+
+The user menu has two items: Profile and Sign out. Theme is the top-bar icon button.
 
 Edge middleware (`middleware.ts`) guards `/profile` and auto-refreshes expired access tokens before page render.
 
@@ -134,16 +138,18 @@ Fetch helpers: `apiGet` (cached), `apiGetAuthed`, `apiPost`, `apiPostAuthed` (ne
 
 **`DistrictSelect` component** (`apps/web/components/district-select.tsx`) — Server Component that renders a `<select>` with districts grouped by division via `<optgroup>`. Accepts `DistrictWithDivision[]` (includes `division?: { id, name }`). Used on profile, reports, observations, restoration pages.
 
-**List-page design system** — every filtered/paginated `(app)` list page (alerts, biodiversity, community, data, emissions, industrial-sites, locations, marine, members, observations, organizations, radiation, reports, restoration, water-bodies) follows one convention, enforced by three shared Server Components rather than copy-pasted per page:
+**List-page design system** — every filtered/paginated `(app)` list page follows one convention, built from shared pieces plus page-specific `dt-`/`org-`/`mem-`/`rs-`/`rp-`/`cm-` classes (all on `--ds-*` tokens in `globals.css`):
 
-- **`PageHeader`** (`components/page-header.tsx`) — `{ eyebrow?, title, description?, action? }`. Renders the page's `<h1>` inside `.panel-header`. `eyebrow` is **optional and used only when it carries real information** (data freshness — emissions' "Last synced …" — or current filter scope — marine/radiation's "Viewing {district}" — or a genuine category — organizations/members' "Directory") — never filler text repeating the title. `action` is a right-aligned slot for a secondary CTA (water-bodies' link to `/water-bodies/stations`). Nested h2 sub-panel headers (e.g. "Create a post", "Alert history") stay hand-written `.panel-header` divs — `PageHeader` is for the page-level `<h1>` only.
-- **Filter UI**: a dominant categorical filter with a small fixed value set renders as `Link` chips in a `.toolbar`; a true view/tab switch (not a filter) — community's Posts/Polls, industrial-sites' Sites/Companies — renders as `<nav className="tab-nav">`, not chips. Any additional filters (status, district, date range, search) go in one `<form method="get" className="toolbar">` using `.select-field`/`.search-field`, ending in an "Apply" `.button` and, when a filter is active, a "Reset" `<Link>` (never a raw `<a>` — that forces a full page reload instead of client-side nav).
-- **`ListResultToolbar`** (`components/list-result-toolbar.tsx`) — `{ total, label }`. Always placed once, after the filter UI and before the content, never inline in the header or duplicated.
-- **Content layout**: `.table` (row/record shape) is the default and used by every list page, including the entity directories (organizations, members). `.content-grid` of `.content-card` exists as an alternative for card-shaped browsing (organizations still uses it) but isn't mandatory — members intentionally uses `.table` instead for a denser, scannable directory.
-- **`ListPagination`** (`components/list-pagination.tsx`) — `{ pathname, page, pageSize, total, query, pageParam? }`. Always used for paginated lists, even when the upstream API's field names differ (water-bodies' API returns `limit`/`totalPages` instead of `pageSize`) — the component's contract is just three numbers, so hand-rolling Prev/Next markup is never necessary. `pageParam` lets a page host two independent paginated lists (biodiversity's `speciesPage`/`occurrencePage`).
-- **Empty state**: every list/table renders `.empty-state` for zero results with a page-specific, actionable message.
+- **`PageHeader`** (`components/page-header.tsx`) — `{ eyebrow?, title, description?, action? }`. The page `<h1>`. `eyebrow` only when it carries real information. `action` is a right-aligned slot (a create button or drawer trigger).
+- **Segments with counts**: the dominant categorical filter is a `.dt-seg` of `Link`s (`aria-current="true"`), each showing a live count. Counts come from the API next to the page of results (`counts`, `roleCounts`, `stats`, `categoryCounts`), computed *ignoring the segment's own filter but respecting the others*, so every segment keeps its own total. A true view switch (industrial-sites' Sites/Companies, water-bodies' tabs) is `dt-tabs`.
+- **Secondary filters**: selects that submit on change (`AutoSubmitSelect`, remounted by `key` so soft navigation refreshes the value) and a name search that submits on Enter, in a `GET` form. Active filters show as "Filtered by" `dt-chip` links with a `dt-clear` "Clear all". Never an Apply button.
+- **Count line** (`N things · sort order`) sits once above the content; **`ListPagination`** (`{ pathname, page, pageSize, total, query, pageParam? }`) below it.
+- **Content**: cards or rows as the design shows (members: table on desktop, list on mobile; reports/observations/community: cards with a sidebar of "Your …" and an explainer; restoration/organizations: card grids). Mobile hides the table and shows a list; page text has a long and a short subtitle swapped by CSS.
+- **Create flows** are drawers, not bottom-of-page forms: reports and observations use a three-step drawer (what → where → details) with geolocation; restoration a single right-hand drawer with a live description counter; community a collapsing composer (the Poll toggle appears only for moderators/admins).
+- **Empty state**: `EmptyState` with a page-specific message and, when filters are active, a clear-filters action.
+- **Best-effort extras**: report photos attach after the report is created; a failed upload shows a notice, never loses the report.
 
-**Profile page tabs** (URL param `?tab=...`): `personal` (bio, phone, occupation, expertise, research interests, social links, institution, education), `location` (district, country, visibility), `achievements` (profile completeness widget, badge showcase, contribution points, level), `alerts` (severity subscriptions), `security` (password change, session management).
+**Profile page** (`/profile`, URL param `?tab=`): a sticky left column (identity card with photo upload, profile-strength card with remaining steps and a compact badge list, contributions card) beside three tabs — `personal` (sectioned form: About you, Location, Professional details, Expertise and interests, Professional links as a per-platform list, Privacy; an "unsaved changes" bar with Discard/Save appears once something is edited; organization memberships below), `alerts` (subscriptions and an area + minimum-severity form with a live preview), `security` (account facts, password form with show/hide and a live rule checklist). Old `?tab=location`, `contributions` and `achievements` fall back to `personal`.
 
 `apps/web` depends on `@delta-signal/contracts` for route constants and DTOs. `apps/api` has `@delta-signal/contracts` as a **devDependency only** — it is never imported in production code, but `apps/api/src/common/contract-types.typecheck.ts` uses it for compile-time contract enforcement: every service return type is asserted against its contract type via `tsc --noEmit` in CI. A service dropping a required field or changing a field type will produce a `TS2322` error and fail the build.
 
@@ -240,6 +246,14 @@ Complex queries use raw SQL via `prisma.$queryRaw`.
 
 `apps/api/src/community/` — lightweight district-scoped discussion boards: posts, comments, optional polls. Models: `CommunityPost`, `PostComment`, `Poll`, `PollOption`, `PollVote`. Deletion permissions are checked inline in `CommunityService` (not guard-based): `deletePost()` and `deleteComment()` both allow the author, `ADMIN`, or **`MODERATOR`** to delete — MODERATOR was widened to delete any post/comment (previously author-or-ADMIN only). Exposed to `apps/web` at `/community`.
 
+### Members, Community feed, Restoration, Reports and Observations lists
+
+The list endpoints return counts beside the page (types in the shared block of `docs/api/page-data-reference.md`): `GET /members` → `roleCounts`; `GET /community/posts` → `counts` and `userVotes`; `GET /restoration/projects` → `stats`, `categoryCounts`, `joinedByMe`, active-first order; `GET /reports` → `counts`, `mediaCount`, last-updated order; `GET /observations` → trust `counts`. `GET /locations/divisions/:id/activity` returns a division's exact activity counts and latest records. `GET /weather/air-quality*` returns the latest hour that has already happened, never a forecast hour.
+
+### EcoBrief module
+
+`apps/api/src/ecobrief/` — `GET /ecobriefs` (public) generates a journal-style environmental data report from the current database for a country, division or district and a date range: `summary` (abstract), `methods` (sources with licences), sections for climate (latest 30-day snapshot, `periodAligned: false` — daily history is not retained), biodiversity (GBIF occurrences folded by scientific name), emissions (national only, total and per gas) and observations (`trust=research` keeps research-grade only), `limitations`, and a `reportId` hashed from the query. The page (`apps/web/app/(app)/ecobrief`, components under `components/ecobrief/`) renders it as an article with numbered tables and figures, a citation block, appendices, CSV (with a metadata preamble), JSON and print/PDF (`@media print`). No model-written narrative.
+
 ### Social Content module
 
 `apps/api/src/social-content/` — editorial tool (admin-only, no `apps/web` surface) for producing shareable social-media cards from live platform data, plus a nationwide ranking engine that surfaces what's currently worth posting about.
@@ -265,15 +279,16 @@ Complex queries use raw SQL via `prisma.$queryRaw`.
 
 ### Testing
 
-183 unit tests in 16 spec files under `apps/api/src/` (all fully mocked — no DB, no running server):
+199 unit tests in 18 spec files under `apps/api/src/` (all fully mocked — no DB, no running server):
 - `roles.guard.spec.ts` — all 6 roles, case-sensitivity regression (9 tests)
 - `jwt-auth.guard.spec.ts` — `@Public()` bypass, error handling (5 tests)
 - `auth.service.spec.ts` — register/login/refresh/logout, token rotation, audit events, `USER_LOGIN_FAILED` in all three failure branches (24 tests)
 - `refresh-token.util.spec.ts` — opaque format, hash isolation (7 tests)
 - `env.validation.spec.ts` — placeholder rejection, 31/32-char boundary (7 tests)
-- `reports.service.spec.ts` — status transitions, badge trigger, comment visibility, list filtering
-- `observations.service.spec.ts` — future date rejection, owner/trust guards, FLAGGED exclusion, badge trigger
+- `reports.service.spec.ts` — status transitions, badge trigger, comment visibility, list filtering, per-status counts and `mediaCount`
+- `observations.service.spec.ts` — future date rejection, owner/trust guards, FLAGGED exclusion, badge trigger, per-trust counts
 - `restoration.service.spec.ts` — permission checks, P2002 idempotency, org validation, badge trigger
+- `ecobrief.service.spec.ts` — stable report ID, climate snapshot flag and statistics, species folded by scientific name, research-grade filter, sources with licences
 - `notifications.service.spec.ts` — deduplication, severity filtering, PENDING delivery record, ConflictException
 - `gamification.service.spec.ts` — earnedKeysForCategory, computeLevel, enqueue dedup, performEvaluation early-exit
 - `media.service.spec.ts` — MIME allowlist, size limit, key generation, presign TTL
