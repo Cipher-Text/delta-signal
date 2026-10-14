@@ -1531,9 +1531,8 @@ model MarineForecast {
 
 // ─── Satellite Radiation (OpenMeteo Satellite API) ───────────────────────────
 // Daily solar radiation totals per district. shortwaveRadiationSum in MJ/m²,
-// aggregated from native 10-minute W/m² samples (Σ W/m² × step_s / 1,000,000).
-// sunshine_duration and daylight_duration are not available from the satellite
-// archive API and are intentionally omitted.
+// returned directly by Open-Meteo in MJ/m². The API also returns sunshine and
+// daylight duration, but those values are not currently persisted.
 
 model SatelliteRadiationReading {
   id                    String   @id @default(cuid())

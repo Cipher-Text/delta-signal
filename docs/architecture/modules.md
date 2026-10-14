@@ -285,7 +285,7 @@ Forecasts are now stored per **water level station** (`StationFloodForecast`) ra
 
 Owns the OpenMeteo Satellite Radiation integration: HTTP client, daily persistence, scheduler, ingestion tracking, and public read endpoints.
 
-Fetches three daily variables (`shortwave_radiation_sum` Wh/m², `sunshine_duration` seconds, `daylight_duration` seconds) for all 64 districts. Scheduler runs at 1am (`@Cron('0 0 1 * * *')`) and triggers an initial sync on first boot if the table is empty. Each run creates an `IngestionJob` record.
+Fetches daily sunrise, sunset, daylight duration, sunshine duration, and shortwave radiation sum, plus the satellite API's full native-resolution hourly radiation variable set, from `satellite-api.open-meteo.com/v1/archive` with `models=satellite_radiation_seamless` for all 64 districts. Daily totals are returned directly in MJ/m²; the database currently persists shortwave radiation sum only. Scheduler runs at 1am (`@Cron('0 0 1 * * *')`) and triggers an initial sync on first boot if the table is empty. Each run creates an `IngestionJob` record.
 
 | Method | Path | Access |
 | --- | --- | --- |

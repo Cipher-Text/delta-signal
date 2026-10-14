@@ -320,8 +320,8 @@ Three new domains implemented in a single pass.
 
 ### OpenMeteo Satellite Radiation (`apps/api/src/radiation/`)
 
-- **Endpoint:** `satellite-api.open-meteo.com/v1/satellite`
-- **Variables fetched:** `shortwave_radiation_sum`, `sunshine_duration`, `daylight_duration` (all daily)
+- **Endpoint:** `satellite-api.open-meteo.com/v1/archive` with `models=satellite_radiation_seamless`
+- **Variables fetched:** daily sunrise, sunset, daylight duration, sunshine duration, and shortwave radiation sum, plus all native-resolution hourly radiation variables. Daily shortwave totals are returned directly in MJ/m²; currently only that field is persisted.
 - **Forecast window:** 7 days
 - **Storage:** `SatelliteRadiationReading` — one row per district per day; unique `(districtId, readingDate)`; upserts in a single `$transaction` per district
 - **Scheduler:** `RadiationScheduler` — `@Cron('0 0 1 * * *')` (daily at 1am); initial sync on first boot if table is empty
