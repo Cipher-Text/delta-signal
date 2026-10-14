@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, OnModuleInit, Logger } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { ObservationTrustLevel, Prisma, ReportStatus } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { SEED_DATA } from './seed/bangladesh';
 
@@ -129,6 +129,51 @@ export class LocationsService implements OnModuleInit {
       orderBy: { name: 'asc' },
       include: { _count: { select: { districts: true } } },
     });
+  }
+
+  /**
+   * Public activity roll-up for one division: exact counts plus the latest few records, so the page does not
+   * download and filter whole lists. Reports are verified ones; observations exclude flagged records.
+   */
+  async getDivisionActivity(divisionId: string) {
+    const division = await this.prisma.division.findUnique({ where: { id: divisionId }, select: { id: true } });
+    if (!division) throw new NotFoundException('Division not found');
+
+    const inDivision = { districtId: { in: await this.districtIdsOf(divisionId) } };
+    const reportWhere = { ...inDivision, status: ReportStatus.VERIFIED };
+    const observationWhere = { ...inDivision, trustLevel: { not: ObservationTrustLevel.FLAGGED } };
+
+    const [verifiedReports, researchObservations, occurrences, restorationProjects, reports, observations] = await Promise.all([
+      this.prisma.citizenReport.count({ where: reportWhere }),
+      this.prisma.observation.count({ where: { ...inDivision, trustLevel: ObservationTrustLevel.RESEARCH_GRADE } }),
+      this.prisma.occurrence.count({ where: inDivision }),
+      this.prisma.restorationProject.count({ where: inDivision }),
+      this.prisma.citizenReport.findMany({
+        where: reportWhere,
+        orderBy: { updatedAt: 'desc' },
+        take: 3,
+        select: { id: true, title: true, category: true, updatedAt: true, district: { select: { id: true, name: true } } },
+      }),
+      this.prisma.observation.findMany({
+        where: observationWhere,
+        orderBy: { observedAt: 'desc' },
+        take: 3,
+        select: {
+          id: true, category: true, species: true, description: true, trustLevel: true, observedAt: true,
+          district: { select: { id: true, name: true } },
+        },
+      }),
+    ]);
+
+    return {
+      counts: { verifiedReports, researchObservations, occurrences, restorationProjects },
+      recent: { reports, observations },
+    };
+  }
+
+  private async districtIdsOf(divisionId: string): Promise<string[]> {
+    const rows = await this.prisma.district.findMany({ where: { divisionId }, select: { id: true } });
+    return rows.map((r) => r.id);
   }
 
   getDistricts(divisionId?: string) {

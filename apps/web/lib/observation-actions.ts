@@ -15,11 +15,29 @@ export async function submitObservationAction(formData: FormData) {
   const category = String(formData.get('category') ?? '');
   const description = String(formData.get('description') ?? '');
   const districtId = formData.get('districtId') ? String(formData.get('districtId')) : undefined;
+  const species = String(formData.get('species') ?? '').trim() || undefined;
+  const num = (key: string) => {
+    const v = formData.get(key);
+    return v === null || v === '' ? undefined : Number(v);
+  };
+  const lat = num('lat');
+  const lng = num('lng');
+  // Date and time are entered in Bangladesh time (UTC+6).
+  const date = String(formData.get('date') ?? '');
+  const time = String(formData.get('time') ?? '');
+  const observedAt = /^\d{4}-\d{2}-\d{2}$/.test(date) && /^\d{2}:\d{2}$/.test(time) ? new Date(`${date}T${time}:00+06:00`).toISOString() : undefined;
 
   try {
     await apiPostAuthed<Observation>(
       routes.observations.create,
-      { category, description, districtId },
+      {
+        category,
+        description,
+        districtId,
+        species: category === 'BIODIVERSITY' ? species : undefined,
+        observedAt,
+        ...(Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : {}),
+      },
       accessToken,
     );
   } catch (err) {

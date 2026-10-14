@@ -12,6 +12,11 @@ export class LocationsController {
     return this.locationsService.getDivisions();
   }
 
+  @Get('divisions/:id/activity')
+  getDivisionActivity(@Param('id') id: string) {
+    return this.locationsService.getDivisionActivity(id);
+  }
+
   @Get('districts')
   getDistricts(@Query('divisionId') divisionId?: string) {
     return this.locationsService.getDistricts(divisionId);

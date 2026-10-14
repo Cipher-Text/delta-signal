@@ -18,6 +18,7 @@ function mockPrisma() {
       findUnique: jest.fn(),
       findMany:   jest.fn().mockResolvedValue([]),
       count:      jest.fn().mockResolvedValue(0),
+      groupBy:    jest.fn().mockResolvedValue([]),
       create:     jest.fn(),
       update:     jest.fn(),
       delete:     jest.fn(),
@@ -124,6 +125,25 @@ describe('ObservationsService', () => {
           where: expect.objectContaining({
             trustLevel: ObservationTrustLevel.RESEARCH_GRADE,
           }),
+        }),
+      );
+    });
+  });
+
+  describe('list — counts', () => {
+    it('counts per trust level ignoring the trust filter, never including FLAGGED', async () => {
+      const { service, prisma } = build();
+      prisma.observation.groupBy.mockResolvedValue([
+        { trustLevel: ObservationTrustLevel.RESEARCH_GRADE, _count: { _all: 2 } },
+        { trustLevel: ObservationTrustLevel.UNVERIFIED, _count: { _all: 5 } },
+      ]);
+
+      const res = await service.list(ObservationCategory.BIODIVERSITY, ObservationTrustLevel.UNVERIFIED);
+
+      expect(res.counts).toEqual({ researchGrade: 2, community: 0, unverified: 5, all: 7 });
+      expect(prisma.observation.groupBy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { category: ObservationCategory.BIODIVERSITY, trustLevel: { not: ObservationTrustLevel.FLAGGED } },
         }),
       );
     });

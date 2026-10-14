@@ -84,6 +84,7 @@ export const routes = {
 
   locations: {
     divisions: `${apiPrefix}/locations/divisions`,
+    divisionActivity: (id: string) => `${apiPrefix}/locations/divisions/${id}/activity`,
     districts: `${apiPrefix}/locations/districts`,
     district: (id: string) => `${apiPrefix}/locations/districts/${id}`,
     upazilas: `${apiPrefix}/locations/upazilas`,
@@ -457,6 +458,23 @@ export interface DivisionWithClimate extends DivisionSummary {
   _count?: { districts: number };
 }
 
+/** GET /locations/divisions/:id/activity — exact counts and the latest few public records for a division. */
+export interface DivisionActivity {
+  counts: { verifiedReports: number; researchObservations: number; occurrences: number; restorationProjects: number };
+  recent: {
+    reports: Array<{ id: string; title: string; category: ReportCategory; updatedAt: string; district: { id: string; name: string } | null }>;
+    observations: Array<{
+      id: string;
+      category: ObservationCategory;
+      species: string | null;
+      description: string;
+      trustLevel: ObservationTrustLevel;
+      observedAt: string;
+      district: { id: string; name: string } | null;
+    }>;
+  };
+}
+
 export interface DistrictSummary {
   id: string;
   name: string;
@@ -643,12 +661,19 @@ export interface Observation {
   district: DistrictSummary | null;
 }
 
+/** GET /observations — public list; `counts` ignores the trust filter and never includes flagged records. */
+export interface ObservationListResponse extends PaginatedEnvelope<Observation> {
+  counts: { researchGrade: number; community: number; unverified: number; all: number };
+}
+
 export interface CreateObservationRequest {
   category: ObservationCategory;
   description: string;
   districtId?: string;
   lat?: number;
   lng?: number;
+  species?: string;
+  observedAt?: string;
 }
 
 export interface UpdateObservationTrustRequest {

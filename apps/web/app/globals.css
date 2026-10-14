@@ -7611,3 +7611,107 @@ a.mem-row:hover { background: var(--ds-surface-2); }
   .rp-tiles { grid-template-columns: minmax(0, 1fr); }
 }
 .rp-summary, .rp-title { overflow-wrap: anywhere; }
+
+/* ── Observations (Web UI Reference) ────────────────────────────── */
+.ob-trust { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border: 1px solid var(--ds-text-2); border-radius: 999px; color: var(--ds-text); font-size: 0.75rem; font-weight: 600; box-sizing: border-box; }
+.ob-trust[data-dotted="true"] { border-style: dashed; color: var(--ds-text-2); }
+.ob-trust .nav-icon { width: 12px; height: 12px; }
+.ob-tile { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; padding: 8px 12px; }
+.ob-tile small { color: var(--ds-text-2); font-size: 0.75rem; font-weight: 400; }
+@media (max-width: 768px) {
+  .rp-page .ds-state, .rs-page .ds-state, .mem-page .ds-state, .org-page .ds-state { flex-direction: column; align-items: stretch; }
+  .rp-page .ds-state .pf-btn-outline, .rs-page .ds-state .pf-btn-outline { width: 100%; justify-content: center; }
+}
+
+/* ── Division details (Web UI Reference) ────────────────────────── */
+.dv-page { display: flex; flex-direction: column; gap: var(--ds-space-16); min-width: 0; }
+.dv-page > * { min-width: 0; max-width: 100%; }
+.dv-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--ds-space-12); }
+.dv-head h1 { margin: 0; font-size: 1.625rem; font-weight: 650; letter-spacing: -0.01em; color: var(--ds-text); }
+.dv-head p { margin: 4px 0 0; color: var(--ds-text-2); font-size: var(--ds-text-nav); }
+.dv-fresh { color: var(--ds-text-2); font-size: 0.8125rem; }
+.dv-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ds-space-16); }
+.dv-tile { display: flex; flex-direction: column; gap: 4px; padding: var(--ds-space-16) var(--ds-space-20); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-card); background: var(--ds-surface); }
+.dv-tile-label { color: var(--ds-text-2); font-size: 0.8125rem; }
+.dv-tile-value { font-size: 1.75rem; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ds-text); white-space: nowrap; }
+.dv-tile-value small { margin-left: 2px; color: var(--ds-text-2); font-size: 0.9375rem; font-weight: 500; }
+.dv-tile-sub { color: var(--ds-text-2); font-size: 0.8125rem; }
+.dv-split { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: var(--ds-space-16); align-items: start; }
+.dv-side { display: flex; flex-direction: column; gap: var(--ds-space-16); }
+.dv-card { padding: var(--ds-space-20); border: 1px solid var(--ds-border); border-radius: var(--ds-radius-card); background: var(--ds-surface); min-width: 0; }
+.dv-card h2 { margin: 0; font-size: 1rem; font-weight: 600; color: var(--ds-text); }
+.dv-card-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 16px; margin-bottom: var(--ds-space-12); }
+.dv-card-head > span, .dv-card-head > div > span { color: var(--ds-text-2); font-size: 0.8125rem; display: block; margin-top: 2px; }
+.dv-card-head > div > span { max-width: 62ch; }
+.dv-link { color: var(--ds-link); font-size: var(--ds-text-nav); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.dv-link:hover { text-decoration: underline; }
+.dv-actions { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.dv-note { margin: var(--ds-space-12) 0 0; color: var(--ds-text-2); font-size: 0.8125rem; }
+.dv-empty { margin: 0; color: var(--ds-text-2); font-size: var(--ds-text-nav); }
+
+.dv-table { border: 1px solid var(--ds-border); border-radius: var(--ds-radius-control); overflow: hidden; }
+.dv-row { display: grid; align-items: center; gap: var(--ds-space-12); min-height: 48px; padding: 6px var(--ds-space-16); color: var(--ds-text); font-size: var(--ds-text-nav); text-decoration: none; }
+.dv-row > div { min-width: 0; }
+.dv-row + .dv-row { border-top: 1px solid var(--ds-border); }
+.dv-row--districts { grid-template-columns: minmax(0, 1.4fr) 72px 72px minmax(0, 1.2fr) 52px 20px; }
+.dv-row--stations { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) 120px 90px; }
+.dv-row--head { min-height: 40px; background: var(--ds-surface-2); color: var(--ds-text-2); font-size: 0.8125rem; font-weight: 600; }
+a.dv-row:hover { background: var(--ds-surface-2); }
+.dv-num { text-align: right; font-variant-numeric: tabular-nums; }
+.dv-strong { font-weight: 600; }
+.dv-muted { color: var(--ds-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dv-chev { display: flex; justify-content: flex-end; color: var(--ds-text-2); }
+.dv-chev .nav-icon { width: 16px; height: 16px; }
+.dv-pm { display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.dv-bar { flex: 1; max-width: 70px; height: 6px; border-radius: 3px; background: var(--ds-surface-2); overflow: hidden; }
+.dv-bar span { display: block; height: 100%; background: var(--ds-text-2); }
+.dv-ratio { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 999px; background: var(--ds-surface-2); color: var(--ds-text-2); font-size: 0.8125rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dv-ratio[data-hi="true"] { background: #fbefd0; color: #7a5200; }
+.dv-list { display: none; margin: 0; padding: 0; list-style: none; border: 1px solid var(--ds-border); border-radius: var(--ds-radius-control); overflow: hidden; }
+.dv-list li + li { border-top: 1px solid var(--ds-border); }
+.dv-list a, .dv-list-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; color: var(--ds-text); text-decoration: none; }
+.dv-list-main { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+.dv-list-main small { color: var(--ds-text-2); font-size: 0.8125rem; }
+.dv-list-temp { font-variant-numeric: tabular-nums; font-weight: 600; }
+.dv-list .nav-icon { width: 16px; height: 16px; color: var(--ds-text-2); }
+
+.dv-card .dv-hazard { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-top: 1px solid var(--ds-border); }
+.dv-card h2 + .dv-hazard { margin-top: 8px; }
+.dv-hazard > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.dv-hazard strong { font-size: var(--ds-text-nav); font-weight: 600; }
+.dv-hazard strong a { color: var(--ds-text); }
+.dv-hazard small { color: var(--ds-text-2); font-size: 0.8125rem; line-height: 1.5; }
+.dv-hazard small a { color: var(--ds-link); }
+.dv-hazard-icon { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--ds-surface-2); color: var(--ds-text-2); }
+.dv-hazard-icon .nav-icon { width: 16px; height: 16px; }
+.dv-hazard-icon--ok { background: var(--ds-tint-biodiversity-bg); color: var(--ds-tint-biodiversity-icon); }
+.dv-hazard-icon--warn { background: #fbefd0; color: #7a5200; }
+.dv-hazard-icon--bad { background: #fbeaea; color: #a13030; }
+.dv-coverage { margin: var(--ds-space-12) 0 0; }
+.dv-coverage > div { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-top: 1px solid var(--ds-border); font-size: var(--ds-text-nav); }
+.dv-coverage dt { color: var(--ds-text-2); }
+.dv-coverage dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 500; }
+.dv-recent { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--ds-space-20); margin-top: var(--ds-space-8); }
+.dv-recent h3 { margin: 0 0 8px; font-size: 0.875rem; font-weight: 600; }
+.dv-recent ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.dv-recent li { display: flex; flex-direction: column; gap: 2px; }
+.dv-recent a { color: var(--ds-link); font-weight: 500; }
+.dv-recent small { color: var(--ds-text-2); font-size: 0.8125rem; }
+
+@media (max-width: 1000px) { .dv-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dv-split { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 768px) {
+  .dv-head { align-items: flex-start; }
+  .dv-table { display: none; }
+  .dv-list { display: block; }
+  .dv-tile { padding: var(--ds-space-12) var(--ds-space-16); }
+  .dv-tile-value { font-size: 1.5rem; }
+}
+.dv-bar { min-width: 36px; }
+@media (max-width: 768px) {
+  /* Mobile order (mock): hazards first, then districts, then coverage. */
+  .dv-split { display: flex; flex-direction: column; }
+  .dv-side { display: contents; }
+  #hazards { order: 1; }
+  #districts { order: 2; }
+  .dv-side > section:not(#hazards) { order: 3; }
+}

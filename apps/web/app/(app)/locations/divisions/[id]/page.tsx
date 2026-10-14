@@ -2,168 +2,324 @@ import Link from 'next/link';
 import {
   routes,
   type Alert,
-  type CitizenReport,
   type CurrentWeatherReading,
   type DistrictWithClimate,
+  type DivisionActivity,
   type DivisionWithClimate,
   type HourlyAirQualityReading,
-  type Observation,
-  type Occurrence,
   type PaginatedEnvelope,
-  type RestorationProject,
   type StationFloodForecast,
 } from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
-import { LocationHeader, LocationSectionNav, LocationSourceNote } from '../../../../../components/location-page';
-import { relativeTime, titleCase } from '../../../../../lib/format';
+import { LocationSectionNav, LocationSourceNote } from '../../../../../components/location-page';
+import NavIcon from '../../../../../components/nav-icons';
+import { canonicalDivision } from '../../../../../lib/alerts';
+import { calendarDay, dhakaDate, pluralize, relativeTime, titleCase } from '../../../../../lib/format';
 
-function aqiClass(pm25: number | null): { label: string; css: string } {
-  if (pm25 === null) return { label: 'No data', css: 'aqi-none' };
-  if (pm25 <= 12)    return { label: 'Good',       css: 'aqi-good' };
-  if (pm25 <= 35.4)  return { label: 'Moderate',   css: 'aqi-moderate' };
-  if (pm25 <= 55.4)  return { label: 'Unhealthy*', css: 'aqi-sensitive' };
-  if (pm25 <= 150.4) return { label: 'Unhealthy',  css: 'aqi-unhealthy' };
-  return               { label: 'Hazardous',        css: 'aqi-hazardous' };
-}
+/** District names as the mock spells them (seed names differ). */
+const DISPLAY_NAME: Record<string, string> = { Barisal: 'Barishal', Chittagong: 'Chattogram', Comilla: 'Cumilla', Jessore: 'Jashore', Bogra: 'Bogura' };
+const shown = (name: string) => DISPLAY_NAME[name] ?? name;
 
-const SEVERITY_BADGE: Record<string, string> = {
-  EMERGENCY: 'danger', WARNING: 'warning', WATCH: 'warning', INFO: 'info',
-};
-
-const TRUST_BADGE: Record<string, string> = {
-  RESEARCH_GRADE: 'success', COMMUNITY: 'info', UNVERIFIED: 'muted',
-};
+/** A station is "above usual" at 1.5× its median or more. Ratios under 1 m³/s medians are noise, so they are not computed. */
+const ABOVE_USUAL = 1.5;
+const MIN_MEDIAN = 1;
+const PM_SCALE = 60;
 
 async function tryGet<T>(url: string, revalidate = 900): Promise<T | null> {
-  try { return await apiGet<T>(url, revalidate); } catch { return null; }
+  try {
+    return await apiGet<T>(url, revalidate);
+  } catch {
+    return null;
+  }
 }
 
+const num = (v: number | null, digits = 1) => (v == null ? '—' : v.toFixed(digits));
+
+function Tile({ label, value, unit, sub }: { label: string; value: string; unit?: string; sub: string }) {
+  return (
+    <div className="dv-tile">
+      <span className="dv-tile-label">{label}</span>
+      <span className="dv-tile-value">
+        {value}
+        {unit && value !== '—' && <small>{unit}</small>}
+      </span>
+      <span className="dv-tile-sub">{sub}</span>
+    </div>
+  );
+}
+
+/** Division overview (Web UI Reference): header, 30-day tiles, districts, hazards now, coverage, river discharge, activity. */
 export default async function DivisionPage(props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+  const { id } = await props.params;
   const [divisions, districts] = await Promise.all([
     apiGet<DivisionWithClimate[]>(routes.locations.divisions, 900),
-    apiGet<DistrictWithClimate[]>(`${routes.locations.districts}?divisionId=${params.id}`, 900),
+    apiGet<DistrictWithClimate[]>(`${routes.locations.districts}?divisionId=${id}`, 900),
   ]);
-  const division = divisions.find((d) => d.id === params.id);
+  const division = divisions.find((d) => d.id === id);
   if (!division) return <p className="empty-state">Division not found.</p>;
 
-  const districtIds = new Set(districts.map((district) => district.id));
-  const [alertsRes, weather, airQuality, flood, reportsRes, observationsRes, occurrencesRes, restorationRes] = await Promise.all([
+  const districtIds = new Set(districts.map((d) => d.id));
+  const [alertsRes, weather, airQuality, flood, activity] = await Promise.all([
     tryGet<PaginatedEnvelope<Alert>>(`${routes.alerts.list}?status=ACTIVE&pageSize=100`, 300),
     tryGet<CurrentWeatherReading[]>(routes.weather.current, 300),
     tryGet<HourlyAirQualityReading[]>(routes.weather.airQuality, 900),
     tryGet<StationFloodForecast[]>(routes.flood.forecast, 3600),
-    tryGet<PaginatedEnvelope<CitizenReport>>(`${routes.reports.list}?status=VERIFIED&pageSize=100`, 900),
-    tryGet<PaginatedEnvelope<Observation>>(`${routes.observations.list}?pageSize=100`, 900),
-    tryGet<PaginatedEnvelope<Occurrence>>(`${routes.biodiversity.occurrences}?pageSize=100`, 900),
-    tryGet<PaginatedEnvelope<RestorationProject>>(`${routes.restoration.projects}?pageSize=100`, 900),
+    tryGet<DivisionActivity>(routes.locations.divisionActivity(id), 600),
   ]);
 
-  const activeAlerts = (alertsRes?.data ?? []).filter((alert) => !alert.district || districtIds.has(alert.district.id));
-  const divisionWeather = (weather ?? []).filter((reading) => districtIds.has(reading.districtId));
-  const divisionAirQuality = (airQuality ?? []).filter((reading) => districtIds.has(reading.districtId));
-  const divisionFlood = (flood ?? []).filter((reading) => reading.station?.districtId && districtIds.has(reading.station.districtId));
-  const divisionReports = (reportsRes?.data ?? []).filter((report) => report.districtId && districtIds.has(report.districtId));
-  const divisionObservations = (observationsRes?.data ?? []).filter((observation) => observation.districtId && districtIds.has(observation.districtId));
-  const divisionOccurrences = (occurrencesRes?.data ?? []).filter((occurrence) => occurrence.districtId && districtIds.has(occurrence.districtId));
-  const divisionRestoration = (restorationRes?.data ?? []).filter((project) => project.districtId && districtIds.has(project.districtId));
-  const aqi = aqiClass(division.avgPm25_30d);
-  const emergency = activeAlerts.find((alert) => alert.severity === 'EMERGENCY');
-  const floodStations = new Set(divisionFlood.map((reading) => reading.stationId));
-  const districtsWithWeather = new Set(divisionWeather.map((reading) => reading.districtId)).size;
-  const districtsWithAirQuality = new Set(divisionAirQuality.map((reading) => reading.districtId)).size;
+  // Alerts: nationwide ones (no district) count too, as does any alert whose extra areas touch this division.
+  const alerts = (alertsRes?.data ?? []).filter(
+    (a) => !a.district || districtIds.has(a.district.id) || (a.areas ?? []).some((x) => x.district && districtIds.has(x.district.id)),
+  );
+  const weatherCover = new Set((weather ?? []).filter((r) => districtIds.has(r.districtId)).map((r) => r.districtId)).size;
+  const airCover = new Set((airQuality ?? []).filter((r) => districtIds.has(r.districtId)).map((r) => r.districtId)).size;
+
+  const stations = (flood ?? [])
+    .filter((r) => r.station?.districtId && districtIds.has(r.station.districtId))
+    .map((r) => {
+      const median = r.riverDischargeMedian;
+      const ratio = r.riverDischarge != null && median != null && median >= MIN_MEDIAN ? r.riverDischarge / median : null;
+      return { id: r.stationId, name: r.station?.name ?? '—', river: r.station?.riverName ?? '—', q: r.riverDischarge, ratio, date: r.forecastDate };
+    })
+    .sort((a, b) => (b.ratio ?? -1) - (a.ratio ?? -1) || (b.q ?? 0) - (a.q ?? 0));
+  const above = stations.filter((s) => s.ratio != null && s.ratio >= ABOVE_USUAL);
+  const topStation = above[0];
+  const forecastDay = stations[0]?.date ? calendarDay(stations[0].date.slice(0, 10)).short : null;
+
+  const counts = activity?.counts;
+  const recent = activity?.recent;
+  const hasActivity = !!counts && counts.verifiedReports + counts.researchObservations + counts.occurrences + counts.restorationProjects > 0;
+  const name = canonicalDivision(division.name);
+  const area = division.areaSqKm != null ? ` · ${Math.round(division.areaSqKm).toLocaleString()} km²` : '';
 
   return (
-    <>
-      <LocationBreadcrumb crumbs={[{ label: 'Locations', href: '/locations' }, { label: division.name }]} />
-      {emergency && <Link className="alert-strip danger" href={`/alerts/${emergency.id}`} role="alert">{emergency.title} — {emergency.district?.name ?? `${division.name} Division`} →</Link>}
+    <div className="dv-page">
+      <LocationBreadcrumb crumbs={[{ label: 'Locations', href: '/locations' }, { label: name }]} />
 
-      <LocationHeader
-        level="Division"
-        parentLabel="Bangladesh"
-        name={division.name}
-        bnName={division.bnName}
-        summary={`${districts.length} district${districts.length !== 1 ? 's' : ''}${division.areaSqKm != null ? ` · ${division.areaSqKm.toLocaleString()} km²` : ''}`}
-        statusLabel={`${aqi.label} · 30-day PM2.5`}
-        statusClass={aqi.css}
-        freshness={division.climateUpdatedAt ? `Climate updated ${relativeTime(division.climateUpdatedAt)}` : 'Climate update time unavailable'}
-      />
+      <header className="dv-head">
+        <div>
+          <h1>{name} division</h1>
+          <p>{pluralize(districts.length, 'district')}{area}</p>
+        </div>
+        <span className="dv-fresh">
+          Climate: Open-Meteo, 30-day summary
+          {division.climateUpdatedAt ? ` · updated ${relativeTime(division.climateUpdatedAt)}` : ''}
+        </span>
+      </header>
 
       <LocationSectionNav
-        label="Division sections"
-        items={[{ id: 'overview', label: 'Overview' }, { id: 'hazards', label: 'Hazards' }, { id: 'activity', label: 'Activity' }, { id: 'districts', label: 'Districts' }]}
+        label="On this page"
+        items={[{ id: 'overview', label: 'Overview' }, { id: 'districts', label: 'Districts' }, { id: 'hazards', label: 'Hazards' }, { id: 'activity', label: 'Activity' }]}
       />
 
-      <div id="overview" className="metric-grid">
-        <div className="metric"><span>Avg temperature</span><strong>{division.avgTemp30d != null ? `${division.avgTemp30d.toFixed(1)}°C` : '—'}</strong><small>{division.minTemp30d != null && division.maxTemp30d != null ? `${division.minTemp30d.toFixed(1)}–${division.maxTemp30d.toFixed(1)}°C range` : '30-day average'}</small></div>
-        <div className="metric"><span>Total precipitation</span><strong>{division.totalPrecip30d != null ? <>{division.totalPrecip30d.toFixed(0)}<small style={{ fontSize: '1rem' }}>mm</small></> : '—'}</strong><small>Last 30 days</small></div>
-        <div className="metric"><span>Avg humidity</span><strong>{division.avgHumidity30d != null ? `${division.avgHumidity30d.toFixed(0)}%` : '—'}</strong><small>30-day average</small></div>
-        <div className="metric"><span>PM2.5</span><strong>{division.avgPm25_30d != null ? <>{division.avgPm25_30d.toFixed(0)}<small style={{ fontSize: '1rem' }}> µg/m³</small></> : '—'}</strong><small>30-day average · OpenMeteo</small></div>
+      <div id="overview" className="dv-tiles">
+        <Tile
+          label="Temperature"
+          value={num(division.avgTemp30d)}
+          unit=" °C"
+          sub={division.minTemp30d != null && division.maxTemp30d != null ? `30-day mean · range ${num(division.minTemp30d)}–${num(division.maxTemp30d)}` : '30-day mean'}
+        />
+        <Tile label="Rainfall" value={num(division.totalPrecip30d, 0)} unit=" mm" sub="30-day total, district average" />
+        <Tile label="Humidity" value={num(division.avgHumidity30d, 0)} unit=" %" sub="30-day mean" />
+        <Tile label="PM2.5" value={num(division.avgPm25_30d, 0)} unit=" µg/m³" sub="30-day mean" />
       </div>
 
-      <div className="content-grid" style={{ marginTop: 18 }}>
-        <article id="hazards" className="panel">
-          <div className="panel-header"><div><h2>Active alerts</h2><p>Operational warnings affecting this division</p></div><Link href="/alerts" className="button ghost">View all</Link></div>
-          {activeAlerts.length > 0 ? <div className="table" role="table" aria-label="Active division alerts"><div className="table-row table-head" role="row"><span>Alert</span><span>Severity</span><span>Issued</span></div>{activeAlerts.slice(0, 5).map((alert) => <Link className="table-row table-row-link" role="row" key={alert.id} href={`/alerts/${alert.id}`}><strong>{alert.title}</strong><span className={`tag ${SEVERITY_BADGE[alert.severity] ?? 'info'}`}>{titleCase(alert.severity)}</span><span>{relativeTime(alert.issuedAt)}</span></Link>)}</div> : <p className="empty-state">No active alerts for this division.</p>}
-        </article>
-        <article className="panel">
-          <div className="panel-header"><div><h2>Signal coverage</h2><p>Latest available records by district</p></div></div>
-          <div className="access-grid">
-            <div className="access-grid-row"><span>Weather readings</span><strong>{districtsWithWeather}/{districts.length} districts</strong></div>
-            <div className="access-grid-row"><span>Air-quality readings</span><strong>{districtsWithAirQuality}/{districts.length} districts</strong></div>
-            <div className="access-grid-row"><span>Flood stations</span><strong>{floodStations.size}</strong></div>
-            <div className="access-grid-row"><span>Verified reports</span><strong>{divisionReports.length}</strong></div>
-            <div className="access-grid-row"><span>Research observations</span><strong>{divisionObservations.length}</strong></div>
+      <div className="dv-split">
+        <section id="districts" className="dv-card" aria-labelledby="dt-h">
+          <div className="dv-card-head">
+            <h2 id="dt-h">Districts</h2>
+            <span>30-day summary · select a district for details</span>
           </div>
-          <p className="muted" style={{ fontSize: '0.78rem', marginTop: 12 }}>Counts reflect the latest records returned by the public APIs.</p>
-        </article>
+          {districts.length === 0 ? (
+            <p className="dv-empty">No districts found for this division.</p>
+          ) : (
+            <>
+              <div className="dv-table" role="table" aria-label={`Districts in ${name} division`}>
+                <div className="dv-row dv-row--districts dv-row--head" role="row">
+                  <div role="columnheader">District</div>
+                  <div role="columnheader" className="dv-num">Temp °C</div>
+                  <div role="columnheader" className="dv-num">Rain mm</div>
+                  <div role="columnheader">PM2.5 µg/m³</div>
+                  <div role="columnheader" className="dv-num">UV</div>
+                  <div role="columnheader" />
+                </div>
+                {districts.map((d) => (
+                  <Link key={d.id} href={`/locations/districts/${d.id}`} className="dv-row dv-row--districts" role="row">
+                    <div role="cell" className="dv-strong">{shown(d.name)}</div>
+                    <div role="cell" className="dv-num">{num(d.avgTemp30d)}</div>
+                    <div role="cell" className="dv-num">{num(d.totalPrecip30d, 0)}</div>
+                    <div role="cell" className="dv-pm">
+                      <span className="dv-bar" aria-hidden="true"><span style={{ width: `${Math.min(100, ((d.avgPm25_30d ?? 0) / PM_SCALE) * 100)}%` }} /></span>
+                      {num(d.avgPm25_30d, 0)}
+                    </div>
+                    <div role="cell" className="dv-num">{num(d.avgUvIndex30d)}</div>
+                    <div role="cell" className="dv-chev"><NavIcon name="chevron-right" /></div>
+                  </Link>
+                ))}
+              </div>
+              <ul className="dv-list">
+                {districts.map((d) => (
+                  <li key={d.id}>
+                    <Link href={`/locations/districts/${d.id}`}>
+                      <span className="dv-list-main">
+                        <strong>{shown(d.name)}</strong>
+                        <small>{num(d.totalPrecip30d, 0)} mm rain · PM2.5 {num(d.avgPm25_30d, 0)} · UV {num(d.avgUvIndex30d)}</small>
+                      </span>
+                      <span className="dv-list-temp">{num(d.avgTemp30d)} °C</span>
+                      <NavIcon name="chevron-right" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          <p className="dv-note">PM2.5 categories apply to 24-hour values, so none are shown for 30-day means.</p>
+        </section>
+
+        <div className="dv-side">
+          <section id="hazards" className="dv-card" aria-labelledby="hz-h">
+            <h2 id="hz-h">Hazards now</h2>
+            {alerts.length === 0 ? (
+              <div className="dv-hazard">
+                <span className="dv-hazard-icon dv-hazard-icon--ok"><NavIcon name="check" /></span>
+                <div>
+                  <strong>No active alerts</strong>
+                  <small>For {name} division · <Link href="/alerts">All alerts</Link></small>
+                </div>
+              </div>
+            ) : (
+              alerts.slice(0, 3).map((a) => (
+                <div key={a.id} className="dv-hazard">
+                  <span className={`dv-hazard-icon dv-hazard-icon--${a.severity === 'EMERGENCY' || a.severity === 'WARNING' ? 'bad' : 'warn'}`}><NavIcon name="alerts" /></span>
+                  <div>
+                    <strong><Link href={`/alerts/${a.id}`}>{a.title}</Link></strong>
+                    <small>{titleCase(a.severity)} · {a.district ? shown(a.district.name) : 'Nationwide'} · <Link href="/alerts">All alerts</Link></small>
+                  </div>
+                </div>
+              ))
+            )}
+            {stations.length > 0 && (
+              <div className="dv-hazard">
+                <span className={`dv-hazard-icon dv-hazard-icon--${above.length ? 'warn' : 'ok'}`}><NavIcon name="water-bodies" /></span>
+                <div>
+                  <strong>{above.length} of {stations.length} stations above usual</strong>
+                  <small>
+                    {topStation ? `${topStation.name} on the ${topStation.river} · ` : ''}
+                    {forecastDay ? `forecast for ${forecastDay} · ` : ''}not an official warning
+                  </small>
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section className="dv-card" aria-labelledby="cv-h">
+            <h2 id="cv-h">Data coverage</h2>
+            <dl className="dv-coverage">
+              <div><dt>Weather readings</dt><dd>{weatherCover} / {districts.length} districts</dd></div>
+              <div><dt>Air quality readings</dt><dd>{airCover} / {districts.length} districts</dd></div>
+              <div><dt>Flood stations</dt><dd>{stations.length}</dd></div>
+              <div><dt>Verified reports</dt><dd>{counts?.verifiedReports ?? '—'}</dd></div>
+              <div><dt>Research observations</dt><dd>{counts?.researchObservations ?? '—'}</dd></div>
+            </dl>
+          </section>
+        </div>
       </div>
 
-      {divisionFlood.length > 0 && <article className="panel" style={{ marginTop: 18 }}><div className="panel-header"><div><h2>Flood and water signals</h2><p>Station-based simulated river discharge · not an official warning</p></div><Link href="/water-bodies/stations" className="button ghost">View stations</Link></div><div className="table" role="table" aria-label="Division flood signals"><div className="table-row table-head" role="row"><span>Station</span><span>River</span><span>Forecast date</span><span>Discharge</span></div>{divisionFlood.slice(0, 6).map((reading) => <Link className="table-row table-row-link" role="row" key={reading.id} href={`/water-bodies/stations/${reading.stationId}`}><strong>{reading.station?.name ?? 'Station'}</strong><span>{reading.station?.riverName ?? '—'}</span><span>{new Date(reading.forecastDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span><span>{reading.riverDischarge != null ? `${reading.riverDischarge.toFixed(0)} m³/s` : '—'}</span></Link>)}</div></article>}
+      {stations.length > 0 && (
+        <section className="dv-card" aria-labelledby="fl-h">
+          <div className="dv-card-head">
+            <div>
+              <h2 id="fl-h">River discharge forecast</h2>
+              <span>{forecastDay ? `Forecast for ${forecastDay} · ` : ''}GloFAS model · not an official warning</span>
+            </div>
+            <Link href="/water-bodies?tab=stations" className="dv-link">All {stations.length} stations</Link>
+          </div>
+          <div className="dv-table" role="table" aria-label="Flood forecast by station">
+            <div className="dv-row dv-row--stations dv-row--head" role="row">
+              <div role="columnheader">Station</div>
+              <div role="columnheader">River</div>
+              <div role="columnheader" className="dv-num">Discharge m³/s</div>
+              <div role="columnheader" className="dv-num">vs usual</div>
+            </div>
+            {stations.slice(0, 6).map((s) => (
+              <div key={s.id} className="dv-row dv-row--stations" role="row">
+                <div role="cell" className="dv-strong">{s.name}</div>
+                <div role="cell" className="dv-muted">{s.river}</div>
+                <div role="cell" className="dv-num">{s.q != null ? Math.round(s.q * 10) / 10 : '—'}</div>
+                <div role="cell" className="dv-num">
+                  <span className="dv-ratio" data-hi={s.ratio != null && s.ratio >= ABOVE_USUAL}>{s.ratio != null ? `${s.ratio.toFixed(1)}×` : '—'}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <ul className="dv-list">
+            {stations.slice(0, 6).map((s) => (
+              <li key={s.id}>
+                <div className="dv-list-row">
+                  <span className="dv-list-main">
+                    <strong>{s.name}</strong>
+                    <small>{s.river} · {s.q != null ? Math.round(s.q * 10) / 10 : '—'} m³/s</small>
+                  </span>
+                  <span className="dv-ratio" data-hi={s.ratio != null && s.ratio >= ABOVE_USUAL}>{s.ratio != null ? `${s.ratio.toFixed(1)}×` : '—'}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="dv-note">&quot;vs usual&quot; compares the forecast with the station&apos;s median discharge. It is shown for stations whose median is at least {MIN_MEDIAN} m³/s.</p>
+        </section>
+      )}
 
-      <article id="activity" className="panel" style={{ marginTop: 18 }}>
-        <div className="panel-header"><div><h2>Environmental activity</h2><p>Recent public evidence, biodiversity records, and restoration work</p></div><div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}><Link href="/reports" className="button ghost">Reports</Link><Link href="/observations" className="button ghost">Observations</Link></div></div>
-        {divisionReports.length > 0 && <><h3 style={{ fontSize: '0.92rem', margin: '4px 0 8px' }}>Verified reports</h3><div className="table" role="table" aria-label="Recent verified reports"><div className="table-row table-head" role="row"><span>Title</span><span>Category</span><span>District</span><span>Submitted</span></div>{divisionReports.slice(0, 5).map((report) => <Link className="table-row table-row-link" role="row" key={report.id} href={`/reports/${report.id}`}><strong>{report.title}</strong><span>{titleCase(report.category)}</span><span>{report.district?.name ?? '—'}</span><span>{relativeTime(report.createdAt)}</span></Link>)}</div></>}
-        {divisionObservations.length > 0 && <><h3 style={{ fontSize: '0.92rem', margin: '18px 0 8px' }}>Observations</h3><div className="table" role="table" aria-label="Recent observations"><div className="table-row table-head" role="row"><span>Category</span><span>Species</span><span>Trust</span><span>Observed</span></div>{divisionObservations.slice(0, 5).map((observation) => <Link className="table-row table-row-link" role="row" key={observation.id} href={`/observations/${observation.id}`}><span>{titleCase(observation.category)}</span><span>{observation.species ?? '—'}</span><span className={`tag ${TRUST_BADGE[observation.trustLevel] ?? 'muted'}`}>{titleCase(observation.trustLevel)}</span><span>{relativeTime(observation.observedAt)}</span></Link>)}</div></>}
-        {(divisionOccurrences.length > 0 || divisionRestoration.length > 0) && <div className="content-grid" style={{ marginTop: 18 }}>{divisionOccurrences.length > 0 && <div><h3 style={{ fontSize: '0.92rem', margin: '0 0 8px' }}>Biodiversity</h3><div className="access-grid"><div className="access-grid-row"><span>Species recorded</span><strong>{new Set(divisionOccurrences.map((occurrence) => occurrence.speciesId)).size}</strong></div><div className="access-grid-row"><span>Occurrence records</span><strong>{divisionOccurrences.length}</strong></div></div><Link href="/biodiversity" className="muted" style={{ display: 'inline-block', marginTop: 10, fontSize: '0.82rem' }}>Browse biodiversity →</Link></div>}{divisionRestoration.length > 0 && <div><h3 style={{ fontSize: '0.92rem', margin: '0 0 8px' }}>Restoration</h3><div className="access-grid"><div className="access-grid-row"><span>Projects</span><strong>{divisionRestoration.length}</strong></div><div className="access-grid-row"><span>Active projects</span><strong>{divisionRestoration.filter((project) => project.status === 'ACTIVE').length}</strong></div></div><Link href="/restoration" className="muted" style={{ display: 'inline-block', marginTop: 10, fontSize: '0.82rem' }}>Browse restoration →</Link></div>}</div>}
-        {divisionReports.length === 0 && divisionObservations.length === 0 && divisionOccurrences.length === 0 && divisionRestoration.length === 0 && <p className="empty-state">No public activity records are available for this division yet.</p>}
-      </article>
-
-      <article id="districts" className="panel" style={{ marginTop: 18 }}>
-        <div className="panel-header">
+      <section id="activity" className="dv-card" aria-labelledby="act-h">
+        <div className="dv-card-head">
           <div>
-            <h2>Districts</h2>
-            <p>Select a district for detailed weather, flood, biodiversity, and community data.</p>
+            <h2 id="act-h">Environmental activity</h2>
+            <span>
+              {hasActivity
+                ? `${pluralize(counts!.verifiedReports, 'verified report')}, ${pluralize(counts!.researchObservations, 'research observation')}, ${pluralize(counts!.occurrences, 'species record')} and ${pluralize(counts!.restorationProjects, 'restoration project')} in this division.`
+                : 'No verified reports, observations, species records or restoration projects here yet.'}
+            </span>
+          </div>
+          <div className="dv-actions">
+            <Link href="/reports" className="dv-link">Report an issue</Link>
+            <Link href="/observations" className="dv-link">Add an observation</Link>
           </div>
         </div>
-        <div className="division-grid">
-          {districts.map((district) => {
-            const districtAqi = aqiClass(district.avgPm25_30d);
-            return (
-              <Link key={district.id} href={`/locations/districts/${district.id}`} className={`division-card ${districtAqi.css}`} style={{ textDecoration: 'none' }}>
-                <div className="division-card-top">
-                  <span className="division-name">{district.name}</span>
-                  {district.bnName && <span className="division-bn">{district.bnName}</span>}
-                </div>
-                <div className="division-card-temp">{district.avgTemp30d != null ? `${district.avgTemp30d.toFixed(1)}°C` : '—'}</div>
-                <div className="division-card-aqi">
-                  <span className={`aqi-badge ${districtAqi.css}`}>{districtAqi.label}</span>
-                  {district.avgPm25_30d != null && <span className="division-pm25">PM2.5 {district.avgPm25_30d.toFixed(0)} µg/m³</span>}
-                </div>
-                <div className="division-card-footer">
-                  {district.totalPrecip30d != null && <span>{district.totalPrecip30d.toFixed(0)}mm rain</span>}
-                  {district.avgUvIndex30d != null && <span>UV {district.avgUvIndex30d.toFixed(1)}</span>}
-                </div>
-              </Link>
-            );
-          })}
-          {districts.length === 0 && <div className="empty-state">No districts found for this division.</div>}
-        </div>
-      </article>
+        {recent && (recent.reports.length > 0 || recent.observations.length > 0) && (
+          <div className="dv-recent">
+            {recent.reports.length > 0 && (
+              <div>
+                <h3>Verified reports</h3>
+                <ul>
+                  {recent.reports.map((r) => (
+                    <li key={r.id}>
+                      <Link href={`/reports/${r.id}`}>{r.title}</Link>
+                      <small>{titleCase(r.category)} · {r.district ? shown(r.district.name) : 'District not set'} · Updated {dhakaDate(r.updatedAt)}</small>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {recent.observations.length > 0 && (
+              <div>
+                <h3>Observations</h3>
+                <ul>
+                  {recent.observations.map((o) => (
+                    <li key={o.id}>
+                      <Link href={`/observations/${o.id}`}>{o.species ?? titleCase(o.category)}</Link>
+                      <small>{titleCase(o.trustLevel)} · {o.district ? shown(o.district.name) : 'District not set'} · {dhakaDate(o.observedAt)}</small>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
       <LocationSourceNote>
-        Climate: OpenMeteo 30-day derived averages. Other sections use the latest public records returned by their respective Delta Signal APIs.
+        Climate: Open-Meteo 30-day derived averages. Other sections use the latest public records returned by their respective Delta Signal APIs.
       </LocationSourceNote>
-    </>
+    </div>
   );
 }

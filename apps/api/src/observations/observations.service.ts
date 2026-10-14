@@ -144,7 +144,11 @@ export class ObservationsService {
     ]).then(([data, total]) => ({ data, total, page, pageSize }));
   }
 
-  list(
+  /**
+   * Public list, most recently observed first. `counts` ignores the trust filter (but respects type and place,
+   * and never includes FLAGGED) so the All / Research grade / Community / Unverified segments keep their own totals.
+   */
+  async list(
     category?: ObservationCategory,
     trustLevel?: ObservationTrustLevel,
     districtId?: string,
@@ -155,23 +159,41 @@ export class ObservationsService {
   ) {
     const { page, pageSize } = clampPagination(rawPage, rawPageSize);
     const skip = (page - 1) * pageSize;
-    const where = {
+    const scope = {
       ...(category ? { category } : {}),
-      ...(trustLevel ? { trustLevel } : { trustLevel: { not: ObservationTrustLevel.FLAGGED } }),
       ...(districtId ? { districtId } : {}),
       ...(upazilaId ? { upazilaId } : {}),
       ...(unionId ? { unionId } : {}),
     };
-    return Promise.all([
+    const where = { ...scope, ...(trustLevel ? { trustLevel } : { trustLevel: { not: ObservationTrustLevel.FLAGGED } }) };
+
+    const [data, total, grouped] = await Promise.all([
       this.prisma.observation.findMany({
         where,
         skip,
         take: pageSize,
-        orderBy: { observedAt: 'desc' },
+        orderBy: [{ observedAt: 'desc' }, { id: 'asc' }],
         select: OBSERVATION_SELECT,
       }),
       this.prisma.observation.count({ where }),
-    ]).then(([data, total]) => ({ data, total, page, pageSize }));
+      this.prisma.observation.groupBy({
+        by: ['trustLevel'],
+        where: { ...scope, trustLevel: { not: ObservationTrustLevel.FLAGGED } },
+        _count: { _all: true },
+      }),
+    ]);
+
+    const n = (t: ObservationTrustLevel) => grouped.find((g) => g.trustLevel === t)?._count._all ?? 0;
+    const researchGrade = n(ObservationTrustLevel.RESEARCH_GRADE);
+    const community = n(ObservationTrustLevel.COMMUNITY);
+    const unverified = n(ObservationTrustLevel.UNVERIFIED);
+    return {
+      data,
+      total,
+      page,
+      pageSize,
+      counts: { researchGrade, community, unverified, all: researchGrade + community + unverified },
+    };
   }
 
   async getById(id: string) {
