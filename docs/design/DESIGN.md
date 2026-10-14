@@ -2785,6 +2785,11 @@ Fill in once and keep current. AI agents use only these.
 - Profile is a summary column plus three tabs (Profile, Alert emails,
   Security); location is a section of the Profile tab.
 - The user menu has two items: Profile and Sign out.
+- The admin console (`apps/admin`) shares the palette, type and scale at the
+  token level only: light sidebar, Delta Green accent, dark scheme from the
+  system setting, chip colour pairs instead of raw colours, and a drawer
+  sidebar below 900px. Its pages follow their own operational layout; this
+  document's page patterns do not apply to it.
 - EcoBrief is laid out as a short journal article: abstract, numbered
   sections, ruled tables and captioned figures, limitations, citation and
   references; figures never rely on colour alone, and it prints cleanly.

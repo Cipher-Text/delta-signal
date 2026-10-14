@@ -155,7 +155,7 @@ The data catalog. Covers weather, air quality, water quality, biodiversity, repo
 
 ### Admin Console (`apps/admin`)
 
-Separate app for moderators and admins. Report moderation queue, user role management, alert publishing, dataset management. Only accessible to `MODERATOR` and `ADMIN` roles. Mirrors the public site structure but gives operational control over every content type.
+Separate app for moderators and admins. Report moderation queue, user role management, alert publishing, dataset management. Only accessible to `MODERATOR` and `ADMIN` roles. Uses the platform's palette and type with a light sidebar, follows the system light/dark setting, and collapses its sidebar into a drawer on small screens. Mirrors the public site structure but gives operational control over every content type.
 
 ---
 

@@ -18,7 +18,7 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | Database schema and migrations | `packages/database` | **Done** |
 | Audit trail (`AuditEvent` on all mutations) | `common` | **Done** |
 | Security headers, rate limiting, JWT secret validation | `common` | **Done** |
-| Automated API tests | `apps/api` | **Done** — unit coverage across 16 spec files and e2e coverage across 4 spec files; `apps/web` and `apps/admin` have no test suites |
+| Automated API tests | `apps/api` | **Done** — unit coverage across 18 spec files and e2e coverage across 4 spec files; `apps/web` and `apps/admin` have no test suites |
 | CI pipeline | `.github/workflows/ci.yml` | **Done** — runs on pull requests and pushes to `main`, including production dependency audit |
 | Production Dockerfiles | `infrastructure/docker` | **Done** |
 
@@ -135,6 +135,7 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | Feature | App | Status |
 | --- | --- | --- |
 | Login / logout (MODERATOR + ADMIN only) | `apps/admin` | **Done** |
+| Admin look and layout | `apps/admin` | **Done** (2026-10-15) — same palette and scale as `apps/web` (light sidebar, Delta Green accent, Inter), dark scheme from the system setting, `--chip-*` colour pairs for badges and tags; below 900px the sidebar is a drawer opened from a top bar. Pages are not redesigned and there is no admin mock |
 | Report moderation queue | `apps/admin` | **Done** |
 | User management (role change, deactivate, reactivate) | `apps/admin` | **Done** |
 | Alert management (create, cancel, status tabs) | `apps/admin` | **Done** |
