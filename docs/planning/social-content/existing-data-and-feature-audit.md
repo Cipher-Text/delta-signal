@@ -73,7 +73,7 @@ Scheduled jobs are Nest `@Cron` jobs protected by PostgreSQL advisory-style lock
 - satellite radiation daily at 01:00;
 - marine forecasts daily at 02:00;
 - flood forecasts daily at 03:00;
-- World Bank emissions weekly Sunday at 03:00;
+- World Bank emissions every six months, January 1 and July 1 at 03:00;
 - refresh-token/OAuth-code cleanup daily;
 - BullMQ processors for email, gamification, and other existing asynchronous work.
 

@@ -193,7 +193,7 @@ All 4 weather tables are keyed by `districtId`, not raw `lat`/`lng` proximity ma
 | --- | --- | --- |
 | `NationalEmissionReading` | `id`, `year Int`, `indicatorCode String`, `indicatorName String`, `value Float?`, `unit String default "Mt CO2e"`, `ingestionJobId?` | none — flat table; `@@unique([year, indicatorCode])` |
 
-`NationalEmissionReading` stores annual national GHG data fetched from the World Bank Climate Change API. One row per `(year, indicatorCode)` combination. Four indicators are synced: Total GHG, CO₂, CH₄, and N₂O. Values are in Mt CO₂e, excluding land-use change (LULUCF). Data covers 1976–2024 (66 records per indicator; 2025 is null and skipped). Populated weekly by `EmissionsScheduler` and on first boot. No user-input write paths. Implemented in `apps/api/src/emissions/`. Dataset catalog entry: "Emissions Inventory" (AIR_QUALITY / PUBLIC).
+`NationalEmissionReading` stores annual national GHG data fetched from the World Bank Climate Change API. One row per `(year, indicatorCode)` combination. Four indicators are synced: Total GHG, CO₂, CH₄, and N₂O. Values are in Mt CO₂e, excluding land-use change (LULUCF). Data covers 1976–2024 (66 records per indicator; 2025 is null and skipped). Populated every six months by `EmissionsScheduler` and on first boot. No user-input write paths. Implemented in `apps/api/src/emissions/`. Dataset catalog entry: "Emissions Inventory" (AIR_QUALITY / PUBLIC).
 
 Note `carbonMonoxide` on `HourlyAirQuality` is an OpenMeteo air-quality pollutant reading. It is unrelated to carbon accounting or footprint tracking, which Delta Signal does not model yet — that is roadmap Phase 7.
 

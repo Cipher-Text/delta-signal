@@ -31,8 +31,8 @@ export class EmissionsScheduler implements OnModuleInit {
     return this.syncEmissions();
   }
 
-  /** Run weekly on Sunday at 3am — World Bank data updates annually. */
-  @Cron('0 0 3 * * 0')
+  /** Refresh every six months, on January 1 and July 1 at 3am. */
+  @Cron('0 0 3 1 1,7 *')
   syncEmissions() {
     return withCronLock(this.prisma, this.logger, CRON_LOCK_KEYS.EMISSIONS, async () => {
       const providerId = await this.ingestionService.findProviderIdByName(WORLD_BANK_PROVIDER_NAME);

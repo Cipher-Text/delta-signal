@@ -157,7 +157,7 @@ Source: OpenMeteo Flood API, persisted as `StationFloodForecast` (station-based,
 | GET | `/emissions/indicators` | Public | ✓ | Distinct indicator codes + display names |
 | GET | `/emissions/:year` | Public | ✓ | All 4 indicators for a specific year; 404 if no data |
 
-Source: World Bank Climate Change API (`EN.GHG.ALL`, `EN.GHG.CO2`, `EN.GHG.CH4`, `EN.GHG.N2O` — all in Mt CO₂e). Weekly scheduler (Sunday 3am); initial sync on empty table. See `docs/architecture/modules.md` "emissions" for design notes.
+Source: World Bank Climate Change API (`EN.GHG.ALL`, `EN.GHG.CO2`, `EN.GHG.CH4`, `EN.GHG.N2O` — all in Mt CO₂e). Scheduler runs every six months (January 1 and July 1 at 3am); initial sync on empty table. See `docs/architecture/modules.md` "emissions" for design notes.
 
 ## EcoBrief
 

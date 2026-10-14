@@ -94,7 +94,7 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | Feature | Module / App | Status |
 | --- | --- | --- |
 | Live platform metrics | `metrics` | **Done** |
-| National GHG emissions (World Bank Climate Change API) | `emissions` | **Done** — `NationalEmissionReading` model; 4 GHG indicators (Total GHG, CO₂, CH₄, N₂O); weekly scheduler; `/emissions` frontend page |
+| National GHG emissions (World Bank Climate Change API) | `emissions` | **Done** — `NationalEmissionReading` model; 4 GHG indicators (Total GHG, CO₂, CH₄, N₂O); six-month scheduler; `/emissions` frontend page |
 | Climate forecasting and ML predictions | `data-worker` | *Planned* (Phase 7) |
 | Carbon footprint accounting | — | *Planned* (Phase 7) |
 
