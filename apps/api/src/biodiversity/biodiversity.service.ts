@@ -6,6 +6,12 @@ import { clampPagination } from '../common/pagination';
 
 const MAX_RECORDS_PER_SYNC = 1000;
 
+function parseGbifEventDate(value?: string): Date | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
 const SPECIES_SELECT = {
   id: true,
   gbifKey: true,
@@ -118,7 +124,7 @@ export class BiodiversityService {
               districtId,
               lat: record.decimalLatitude!,
               lng: record.decimalLongitude!,
-              observedAt: record.eventDate ? new Date(record.eventDate) : undefined,
+              observedAt: parseGbifEventDate(record.eventDate),
               recordedBy: record.recordedBy,
               basisOfRecord: record.basisOfRecord,
             },
