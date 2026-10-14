@@ -35,6 +35,7 @@ const NAV_SECTIONS: readonly { label: string; links: readonly NavLink[] }[] = [
   {
     label: 'Data',
     links: [
+      { href: '/ecobrief', label: 'EcoBrief', icon: 'ecobrief' },
       { href: '/data', label: 'Data Hub', icon: 'data' },
       { href: '/locations', label: 'Locations', icon: 'locations' },
     ],

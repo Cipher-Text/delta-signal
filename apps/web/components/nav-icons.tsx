@@ -12,6 +12,7 @@ const PATHS: Record<string, ReactNode> = {
   emissions: <path d="M6 15a3.5 3.5 0 0 1 0-7 4.5 4.5 0 0 1 8.5-1A3.5 3.5 0 0 1 14 15z" />,
   'industrial-sites': <path d="M3 17V9l5 3V9l5 3V5h4v12z" />,
   data: <><ellipse cx="10" cy="5" rx="6" ry="2.5" /><path d="M4 5v10c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V5M4 10c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5" /></>,
+  ecobrief: <><path d="M4 3.5h8l4 4V16a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 16z" /><path d="M12 3.5V8h4M7 11h6M7 14h4" /></>,
   locations: <><path d="M10 18s6-5.2 6-10a6 6 0 0 0-12 0c0 4.8 6 10 6 10z" /><circle cx="10" cy="8" r="2" /></>,
   reports: <path d="M5 17V3M5 4h9l-2 3 2 3H5" />,
   restoration: <path d="M10 17V9M10 9c0-3-2-4.5-5-4.5 0 3 1.5 4.5 5 4.5M10 11c0-3 2-4.5 5-4.5 0 3-1.5 4.5-5 4.5" />,

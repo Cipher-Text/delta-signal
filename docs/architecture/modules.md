@@ -6,7 +6,7 @@ Global prefix is `/api/v1` (see `packages/contracts/src/index.ts` for the canoni
 
 Legend: ✓ Implemented | ~ Stub only | ✗ Not started
 
-Registered in `app.module.ts`: `database`, `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `biodiversity`, `observations`, `restoration`, `media`, `ingestion`, `weather`, `flood`, `marine`, `radiation`, `emissions`, `companies`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `gamification`, `community`, `social-content`, and `social-publishing`. `SeedService` is also registered directly in `AppModule` (not its own module) and seeds dev users + a seed organization on first boot.
+Registered in `app.module.ts`: `database`, `auth`, `users`, `organizations`, `locations`, `locations/climate`, `providers`, `datasets`, `reports`, `alerts`, `biodiversity`, `observations`, `restoration`, `media`, `ingestion`, `weather`, `flood`, `marine`, `radiation`, `emissions`, `ecobrief`, `companies`, `metrics`, `notifications`, `permissions`, `analytics`, `water-bodies`, `gamification`, `community`, `social-content`, and `social-publishing`. `SeedService` is also registered directly in `AppModule` (not its own module) and seeds dev users + a seed organization on first boot.
 
 ## database ✓
 
@@ -320,6 +320,14 @@ Ingests national GHG data from the World Bank Climate Change API (`api.worldbank
 | GET | `/emissions` | Public (`?indicator=`, `?from=`, `?to=`) |
 | GET | `/emissions/indicators` | Public — distinct codes in DB |
 | GET | `/emissions/:year` | Public — all indicators for a year |
+
+## ecobrief ✓
+
+Generates an on-demand environmental data brief from the current database snapshot. It does not save reports or fabricate narrative: summary statements are computed from the selected records. Climate metrics use the latest rolling 30-day district aggregates; biodiversity counts dated GBIF occurrences; national emissions are only included for Bangladesh-wide scope; community observations exclude flagged records and retain trust-level counts.
+
+| Method | Path | Access |
+| --- | --- | --- |
+| GET | `/ecobriefs` | Public (`areaType`, `from`, `to`, optional `areaId` and comma-separated `topics`) |
 
 ## companies ✓
 

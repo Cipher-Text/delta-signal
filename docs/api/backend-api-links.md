@@ -159,6 +159,14 @@ Source: OpenMeteo Flood API, persisted as `StationFloodForecast` (station-based,
 
 Source: World Bank Climate Change API (`EN.GHG.ALL`, `EN.GHG.CO2`, `EN.GHG.CH4`, `EN.GHG.N2O` — all in Mt CO₂e). Weekly scheduler (Sunday 3am); initial sync on empty table. See `docs/architecture/modules.md` "emissions" for design notes.
 
+## EcoBrief
+
+| Method | Route | Access | Implemented | Description |
+|---|---|---|---|---|
+| GET | `/ecobriefs` | Public | ✓ | Generate an on-demand evidence summary. Requires `areaType` (`COUNTRY`, `DIVISION`, or `DISTRICT`), `from`, and `to`; requires `areaId` for divisions/districts. Optional comma-separated `topics`: `climate`, `biodiversity`, `emissions`, `observations`. Response includes summary statements, section metrics, coverage, source, and limitations. |
+
+Climate values are the latest rolling 30-day aggregates and are not filtered by the selected dates. Biodiversity uses dated GBIF occurrences mapped to districts; emissions are national annual readings only; observations exclude flagged records and include trust-level counts.
+
 ## Reports
 
 | Method | Path | Access | Status | Purpose |

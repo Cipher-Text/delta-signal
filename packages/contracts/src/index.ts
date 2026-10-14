@@ -201,6 +201,10 @@ export const routes = {
     indicators: `${apiPrefix}/emissions/indicators`,
   },
 
+  ecoBriefs: {
+    generate: `${apiPrefix}/ecobriefs`,
+  },
+
   industrialSites: {
     list: `${apiPrefix}/industrial-sites`,
     detail: (id: string) => `${apiPrefix}/industrial-sites/${id}`,
@@ -304,6 +308,63 @@ export interface ApiError {
   message: string;
   code?: string;
   details?: Record<string, string[]>;
+}
+
+export type EcoBriefTopic = 'climate' | 'biodiversity' | 'emissions' | 'observations';
+export type EcoBriefAreaType = 'COUNTRY' | 'DIVISION' | 'DISTRICT';
+
+export interface EcoBriefMetric {
+  key: string;
+  label: string;
+  value: number | null;
+  unit: string;
+}
+
+export interface EcoBrief {
+  title: string;
+  summary: string[];
+  generatedAt: string;
+  area: { type: EcoBriefAreaType; id: string | null; name: string };
+  period: { from: string; to: string };
+  topics: EcoBriefTopic[];
+  sections: {
+    climate?: {
+      available: boolean;
+      source: string;
+      periodLabel: string;
+      coverage: { reportingDistricts: number; totalDistricts: number };
+      updatedAt: string | null;
+      metrics: EcoBriefMetric[];
+      note: string;
+    };
+    biodiversity?: {
+      available: boolean;
+      source: string;
+      periodLabel: string;
+      coverage: { occurrenceRecords: number; speciesRecorded: number };
+      topSpecies: Array<{ scientificName: string; commonName: string | null; records: number }>;
+      note: string;
+    };
+    emissions?: {
+      available: boolean;
+      source: string;
+      indicator?: string;
+      periodLabel: string;
+      coverage: { yearsWithData: number } | null;
+      points: Array<{ year: number; value: number; unit: string }>;
+      updatedAt?: string | null;
+      note: string;
+    };
+    observations?: {
+      available: boolean;
+      source: string;
+      periodLabel: string;
+      coverage: { observations: number };
+      byCategory: Array<{ category: string; count: number }>;
+      byTrustLevel: Array<{ trustLevel: string; count: number }>;
+      note: string;
+    };
+  };
 }
 
 // ─── Common Query Params ──────────────────────────────────────────────────────
