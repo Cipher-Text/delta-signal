@@ -17,6 +17,7 @@ import { CreateSocialDraftDto } from './dto/create-social-draft.dto';
 import { UpdateSocialDraftDto } from './dto/update-social-draft.dto';
 import { MarkPublishedDto } from './dto/mark-published.dto';
 import { NationalRankingService } from './national-ranking.service';
+import { renderSocialCardSvg } from './social-card-renderer';
 
 const DRAFT_INCLUDE = {
   district: { select: { id: true, name: true, bnName: true, division: { select: { name: true } } } },
@@ -28,51 +29,6 @@ const DRAFT_INCLUDE = {
     include: { platformAccount: { select: { id: true, platform: true, displayName: true } } },
   },
 } as const;
-
-const escapeXml = (value: string) => value
-  .replaceAll('&', '&amp;')
-  .replaceAll('<', '&lt;')
-  .replaceAll('>', '&gt;')
-  .replaceAll('"', '&quot;')
-  .replaceAll("'", '&apos;');
-
-const text = (value: unknown) => value == null ? '' : String(value);
-const POSTER_FONT = 'Noto Sans Bengali, Arial, sans-serif';
-
-const seriesLabelFor = (type: SocialContentType): string => {
-  switch (type) {
-    case SocialContentType.CURRENT_WEATHER: return 'TODAY IN BANGLADESH';
-    case SocialContentType.WEATHER_FORECAST: return 'RAIN WATCH';
-    case SocialContentType.RIVER_SIGNAL: return 'RIVER WATCH';
-    case SocialContentType.ENVIRONMENTAL_ALERT: return 'ALERT EXPLAINER';
-    case SocialContentType.BIODIVERSITY_OBSERVATION: return 'WILD BANGLADESH';
-    case SocialContentType.NATIONAL_RAIN_WATCH: return 'BANGLADESH RAIN WATCH';
-    case SocialContentType.NATIONAL_AIR_QUALITY_WATCH: return 'BANGLADESH AIR QUALITY WATCH';
-    case SocialContentType.NATIONAL_HEAT_WATCH: return 'BANGLADESH HEAT WATCH';
-    case SocialContentType.NATIONAL_RIVER_WATCH: return 'RIVER WATCH BANGLADESH';
-    case SocialContentType.NATIONAL_ALERT_WATCH: return 'BANGLADESH ALERT WATCH';
-    case SocialContentType.NATIONAL_COMMUNITY_SIGNALS: return 'COMMUNITY SIGNALS BANGLADESH';
-    case SocialContentType.NATIONAL_BIODIVERSITY: return 'WILD BANGLADESH';
-    default: return String(type).replaceAll('_', ' ');
-  }
-};
-
-const evidenceLabelFor = (type: SocialContentType): string => {
-  switch (type) {
-    case SocialContentType.WEATHER_FORECAST:
-    case SocialContentType.RIVER_SIGNAL: return 'FORECAST';
-    case SocialContentType.ENVIRONMENTAL_ALERT: return 'ALERT';
-    case SocialContentType.BIODIVERSITY_OBSERVATION: return 'GBIF OBSERVATION';
-    case SocialContentType.NATIONAL_ALERT_WATCH: return 'ALERT';
-    case SocialContentType.NATIONAL_COMMUNITY_SIGNALS: return 'VERIFIED REPORTS';
-    case SocialContentType.NATIONAL_BIODIVERSITY: return 'GBIF OBSERVATION';
-    case SocialContentType.NATIONAL_RAIN_WATCH:
-    case SocialContentType.NATIONAL_AIR_QUALITY_WATCH:
-    case SocialContentType.NATIONAL_HEAT_WATCH:
-    case SocialContentType.NATIONAL_RIVER_WATCH: return 'NATIONAL DATA';
-    default: return 'MODEL DATA';
-  }
-};
 
 function deltaSignalLogoDataUri(): string {
   const candidates = [
@@ -294,39 +250,18 @@ export class SocialContentService {
 
   private renderSvg(draft: any, width: number, height: number) {
     const source = draft.sourceSnapshot as Record<string, any>;
-    const location = draft.district?.name ?? source.district?.name ?? 'Bangladesh';
-    const metrics = this.metricsFor(draft.type, source);
-    const national = draft.type.startsWith('NATIONAL_');
-    const metricMarkup = metrics.map((metric: { label: string; value: string }, index: number) => {
-      if (national) {
-        const y = 500 + index * 62;
-        return `<text x="90" y="${y}" fill="#172026" font-size="25" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(`${index + 1}. ${metric.label}`)}</text><text x="${width - 90}" y="${y}" text-anchor="end" fill="#2e7b83" font-size="25" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(metric.value)}</text>`;
-      }
-      const y = 560 + index * 112;
-      return `<text x="90" y="${y}" fill="#5b6d74" font-size="24" font-family="${POSTER_FONT}">${escapeXml(metric.label)}</text><text x="90" y="${y + 48}" fill="#172026" font-size="40" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(metric.value)}</text>`;
-    }).join('');
-    const logo = deltaSignalLogoDataUri();
-    const seriesLabel = seriesLabelFor(draft.type);
-    const evidenceLabel = evidenceLabelFor(draft.type);
-    const asOf = draft.sourceObservedAt ? `As of ${String(draft.sourceObservedAt).slice(0, 16).replace('T', ' ')}` : '';
-    const brand = logo
-      ? `<image href="${logo}" x="70" y="55" width="96" height="96" preserveAspectRatio="xMidYMid meet"/><text x="190" y="120" fill="#172026" font-size="28" font-weight="700" font-family="${POSTER_FONT}">DELTA SIGNAL</text>`
-      : `<text x="90" y="120" fill="#172026" font-size="28" font-weight="700" font-family="${POSTER_FONT}">DELTA SIGNAL</text>`;
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="100%" height="100%" fill="#f0f4f5"/><rect x="0" y="0" width="${width}" height="24" fill="#3d9fa8"/>${brand}<text x="90" y="245" fill="#2e7b83" font-size="22" font-weight="700" letter-spacing="1" font-family="${POSTER_FONT}">${escapeXml(seriesLabel)}</text><rect x="${width - 330}" y="205" width="240" height="48" rx="24" fill="#d9ecee"/><text x="${width - 210}" y="237" text-anchor="middle" fill="#246b73" font-size="17" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(evidenceLabel)}</text><text x="90" y="315" fill="#172026" font-size="48" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(location)}</text><text x="90" y="410" fill="#172026" font-size="38" font-weight="700" font-family="${POSTER_FONT}">${escapeXml(draft.headline)}</text>${metricMarkup}<line x1="90" y1="${height - 230}" x2="${width - 90}" y2="${height - 230}" stroke="#d4dcdf"/><text x="90" y="${height - 175}" fill="#3a4f58" font-size="22" font-family="${POSTER_FONT}">${escapeXml(draft.summary ?? '')}</text><text x="90" y="${height - 130}" fill="#5b6d74" font-size="18" font-family="${POSTER_FONT}">${escapeXml(asOf)}</text><text x="90" y="${height - 95}" fill="#5b6d74" font-size="18" font-family="${POSTER_FONT}">Source: ${escapeXml(draft.sourceLabel)}</text><text x="90" y="${height - 55}" fill="#8a9fa8" font-size="17" font-family="${POSTER_FONT}">${escapeXml(draft.disclaimer ?? '')}</text></svg>`;
-  }
-
-  private metricsFor(type: SocialContentType, source: Record<string, any>) {
-    if (type === SocialContentType.CURRENT_WEATHER) return [{ label: 'Temperature', value: `${source.reading?.temperature2m ?? '—'} °C` }, { label: 'Precipitation', value: `${source.reading?.precipitation ?? '—'} mm` }];
-    if (type === SocialContentType.WEATHER_FORECAST) return [{ label: 'Forecast high', value: `${source.forecast?.temperature2mMax ?? '—'} °C` }, { label: 'Rain probability', value: `${source.forecast?.precipitationProbabilityMax ?? '—'}%` }];
-    if (type === SocialContentType.RIVER_SIGNAL) return [{ label: 'Forecast discharge', value: `${source.forecast?.riverDischarge ?? '—'} m³/s` }, { label: 'Forecast date', value: `${String(source.forecast?.forecastDate ?? '').slice(0, 10)}` }];
-    if (type === SocialContentType.ENVIRONMENTAL_ALERT) return [{ label: 'Severity', value: text(source.alert?.severity) }, { label: 'Status', value: text(source.alert?.status) }];
-    if (type.startsWith('NATIONAL_')) {
-      const rows = Array.isArray(source.ranking?.rows) ? source.ranking.rows : [];
-      return rows.slice(0, 5).map((row: Record<string, unknown>) => ({
-        label: text(row.district ?? row.station ?? row.species ?? row.title ?? 'Bangladesh'),
-        value: text(row.rainfallMm ?? row.pm25 ?? row.avgPm25 ?? row.apparentTemperature ?? row.avgTemperature ?? row.discharge ?? row.severity ?? row.category ?? ''),
-      }));
-    }
-    return [{ label: 'Species', value: text(source.occurrence?.species?.canonicalName) }, { label: 'Observed', value: text(source.occurrence?.observedAt ?? '').slice(0, 10) }];
+    return renderSocialCardSvg({
+      type: draft.type,
+      headline: draft.headline,
+      summary: draft.summary ?? null,
+      disclaimer: draft.disclaimer ?? null,
+      sourceLabel: draft.sourceLabel,
+      observedAt: draft.sourceObservedAt ?? null,
+      location: draft.district?.name ?? source.district?.name ?? 'Bangladesh',
+      source,
+      width,
+      height,
+      logoDataUri: deltaSignalLogoDataUri(),
+    });
   }
 }
