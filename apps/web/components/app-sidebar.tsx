@@ -109,7 +109,9 @@ export default function AppSidebar({ user, collapsed, open, onClose, onToggleCol
         {NAV_SECTIONS.map((section) => (
           <div key={section.label} role="group" aria-label={section.label}>
             <span className="nav-label" aria-hidden="true">{section.label}</span>
-            {section.links.map(renderLink)}
+            {section.links
+              .filter((link) => link.href !== '/members' || user.role === 'ADMIN')
+              .map(renderLink)}
           </div>
         ))}
       </nav>

@@ -9,6 +9,7 @@ import EmptyState from '../../../components/empty-state';
 import ListPagination from '../../../components/list-pagination';
 import NavIcon from '../../../components/nav-icons';
 import PageHeader from '../../../components/page-header';
+import { requireRole } from '../../../lib/current-user';
 
 type Query = { role?: string; district?: string; search?: string; page?: string };
 
@@ -41,6 +42,7 @@ function href(q: Query, patch: Partial<Query>) {
 
 /** Member directory (Web UI Reference): role segments with live counts, search + district, table / mobile list. */
 export default async function MembersPage(props: { searchParams: Promise<Query> }) {
+  await requireRole('ADMIN');
   const sp = await props.searchParams;
   const role = sp.role && sp.role in ROLE_LABEL ? sp.role : undefined;
   const district = sp.district || undefined;

@@ -6,6 +6,7 @@ import { apiGetAuthed, ApiError } from '../../../../lib/api';
 import { titleCase } from '../../../../lib/format';
 import { ACCESS_TOKEN_COOKIE } from '../../../../lib/session-constants';
 import PageHeader from '../../../../components/page-header';
+import { requireRole } from '../../../../lib/current-user';
 
 const ROLE_BADGE_CLASS: Record<string, string> = {
   CITIZEN: 'role-citizen',
@@ -38,6 +39,7 @@ function joinedDate(iso: string): string {
 }
 
 export default async function MemberDetailPage(props: { params: Promise<{ id: string }> }) {
+  await requireRole('ADMIN');
   const { id } = await props.params;
   const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value ?? '';
 
