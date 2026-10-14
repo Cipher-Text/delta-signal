@@ -1,32 +1,31 @@
 import Link from 'next/link';
 import {
   routes,
+  type Alert,
+  type CitizenReport,
   type CurrentWeatherReading,
   type HourlyAirQualityReading,
-  type StationFloodForecast,
-  type Alert,
-  type Occurrence,
-  type CitizenReport,
-  type Observation,
-  type RestorationProject,
-  type PaginatedEnvelope,
   type MarineForecast,
+  type Observation,
+  type Occurrence,
+  type PaginatedEnvelope,
+  type RestorationProject,
   type SatelliteRadiationReading,
+  type StationFloodForecast,
 } from '@delta-signal/contracts';
 import { apiGet } from '../../../../../lib/api';
 import LocationBreadcrumb from '../../../../../components/location-breadcrumb';
-import { LocationHeader, LocationSectionNav, LocationSourceNote } from '../../../../../components/location-page';
-import { titleCase, relativeTime } from '../../../../../lib/format';
+import { LocationSectionNav, LocationSourceNote } from '../../../../../components/location-page';
+import NavIcon from '../../../../../components/nav-icons';
+import { canonicalDivision } from '../../../../../lib/alerts';
+import { calendarDay, dhakaDate, dhakaToday, pluralize, relativeTime, titleCase } from '../../../../../lib/format';
 
-// District detail includes upazilas list and all 11 climate fields
 interface DistrictDetail {
   id: string;
   name: string;
   bnName: string | null;
   areaSqKm: number | null;
   isCoastal: boolean;
-  coastLat: number | null;
-  coastLng: number | null;
   division: { id: string; name: string };
   upazilas: { id: string; name: string; bnName: string | null }[];
   avgTemp30d: number | null;
@@ -50,44 +49,65 @@ interface DailyForecast {
   temperature2mMin: number | null;
   precipitationSum: number | null;
   precipitationProbabilityMax: number | null;
-  windSpeed10mMax: number | null;
-  uvIndexMax: number | null;
 }
 
-function aqiClass(pm25: number | null): { label: string; css: string } {
-  if (pm25 === null) return { label: 'No data', css: 'aqi-none' };
-  if (pm25 <= 12)    return { label: 'Good',       css: 'aqi-good' };
-  if (pm25 <= 35.4)  return { label: 'Moderate',   css: 'aqi-moderate' };
-  if (pm25 <= 55.4)  return { label: 'Unhealthy*', css: 'aqi-sensitive' };
-  if (pm25 <= 150.4) return { label: 'Unhealthy',  css: 'aqi-unhealthy' };
-  return               { label: 'Hazardous',        css: 'aqi-hazardous' };
+/** US EPA PM2.5 categories. They describe 24-hour values: used for the latest hourly reading only, never for 30-day means. */
+function pmCategory(pm25: number): { label: string; tone: string } {
+  if (pm25 <= 12) return { label: 'Good range', tone: 'good' };
+  if (pm25 <= 35.4) return { label: 'Moderate range', tone: 'moderate' };
+  if (pm25 <= 55.4) return { label: 'Unhealthy for sensitive groups', tone: 'sensitive' };
+  if (pm25 <= 150.4) return { label: 'Unhealthy range', tone: 'unhealthy' };
+  if (pm25 <= 250.4) return { label: 'Very unhealthy range', tone: 'very' };
+  return { label: 'Hazardous range', tone: 'hazardous' };
 }
 
-function weatherDesc(code: number | null): string {
-  if (code === null) return '—';
-  if (code === 0)  return 'Clear';
-  if (code <= 3)   return 'Partly cloudy';
-  if (code <= 48)  return 'Foggy';
-  if (code <= 55)  return 'Drizzle';
-  if (code <= 65)  return 'Rain';
-  if (code <= 75)  return 'Snow';
-  if (code <= 82)  return 'Showers';
-  if (code <= 99)  return 'Thunderstorm';
-  return '—';
+type Sky = 'clear' | 'partly' | 'fog' | 'rain' | 'storm' | 'snow';
+function sky(code: number | null): { label: string; kind: Sky | null } {
+  if (code === null) return { label: '—', kind: null };
+  if (code === 0) return { label: 'Clear', kind: 'clear' };
+  if (code <= 3) return { label: 'Partly cloudy', kind: 'partly' };
+  if (code <= 48) return { label: 'Foggy', kind: 'fog' };
+  if (code <= 55) return { label: 'Drizzle', kind: 'rain' };
+  if (code <= 65) return { label: 'Rain', kind: 'rain' };
+  if (code <= 75) return { label: 'Snow', kind: 'snow' };
+  if (code <= 82) return { label: 'Showers', kind: 'rain' };
+  if (code <= 99) return { label: 'Thunderstorm', kind: 'storm' };
+  return { label: '—', kind: null };
 }
 
-const SEVERITY_BADGE: Record<string, string> = {
-  EMERGENCY: 'danger',
-  WARNING: 'warning',
-  WATCH: 'warning',
-  INFO: 'info',
-};
+function SkyIcon({ kind, label }: { kind: Sky | null; label: string }) {
+  const p = { width: 22, height: 22, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.75, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const, role: 'img', 'aria-label': label };
+  const cloud = <path d="M7 18a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17 9.5 4.25 4.25 0 0 1 17 18z" />;
+  switch (kind) {
+    case 'clear':
+      return <svg {...p}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>;
+    case 'partly':
+      return <svg {...p}><circle cx="8" cy="8" r="3" /><path d="M8 2v1M2 8h1M3.8 3.8l.7.7M12.2 3.8l-.7.7" />{cloud}</svg>;
+    case 'rain':
+      return <svg {...p}>{cloud}<path d="M9 21l1-2M13 21l1-2M17 21l1-2" /></svg>;
+    case 'storm':
+      return <svg {...p}>{cloud}<path d="M12 14l-2 4h3l-2 4" /></svg>;
+    case 'fog':
+      return <svg {...p}><path d="M4 9h16M3 13h18M5 17h14" /></svg>;
+    case 'snow':
+      return <svg {...p}>{cloud}<path d="M9 21h.01M13 21h.01M17 21h.01" /></svg>;
+    default:
+      return <svg {...p}><circle cx="12" cy="12" r="1" /></svg>;
+  }
+}
 
-const TRUST_BADGE: Record<string, string> = {
-  RESEARCH_GRADE: 'success',
-  COMMUNITY: 'info',
-  UNVERIFIED: 'muted',
-};
+/** UV index WHO bands, applied to the displayed (rounded) value. */
+function uvBand(uv: number): string {
+  const v = Math.round(uv);
+  if (v <= 2) return 'Low';
+  if (v <= 5) return 'Moderate';
+  if (v <= 7) return 'High';
+  if (v <= 10) return 'Very high';
+  return 'Extreme';
+}
+
+/** A station is "above usual" at 1.5x its median; ratios on medians under 1 m³/s are noise and not computed. */
+const MIN_MEDIAN = 1;
 
 async function tryGet<T>(url: string, revalidate = 900): Promise<T | null> {
   try {
@@ -97,642 +117,352 @@ async function tryGet<T>(url: string, revalidate = 900): Promise<T | null> {
   }
 }
 
-export default async function DistrictPage(
-  props: {
-    params: Promise<{ id: string }>;
-  }
-) {
-  const params = await props.params;
-  const { id } = params;
+const num = (v: number | null | undefined, digits = 1) => (v == null ? '—' : v.toFixed(digits));
 
+function Tile({ label, value, unit, notes }: { label: string; value: string; unit?: string; notes: string[] }) {
+  return (
+    <div className="uz-tile">
+      <span className="uz-tile-label">{label}</span>
+      <span className="uz-tile-value">
+        {value}
+        {unit && value !== '—' && <small>{unit}</small>}
+      </span>
+      {notes.map((n) => (
+        <span key={n} className="uz-tile-note">{n}</span>
+      ))}
+    </div>
+  );
+}
+
+function CardHead({ title, sub, tag, link }: { title: string; sub?: string; tag?: string; link?: { href: string; label: string } }) {
+  return (
+    <div className="dv-card-head">
+      <div>
+        <h2>{title}</h2>
+        {sub && <span>{sub}</span>}
+      </div>
+      {tag && <span className="dd-tag">{tag}</span>}
+      {link && <Link href={link.href} className="dv-link">{link.label}</Link>}
+    </div>
+  );
+}
+
+/** District overview (Web UI Reference): now, air quality, hazards, 7-day forecast, last 30 days, nature, community, upazilas. */
+export default async function DistrictPage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
   const district = await apiGet<DistrictDetail>(routes.locations.district(id), 900);
 
-  const [
-    weather,
-    airQuality,
-    forecastData,
-    floodData,
-    alertsRes,
-    marine,
-    radiation,
-    occurrencesRes,
-    reportsRes,
-    observationsRes,
-    restorationRes,
-  ] = await Promise.all([
+  const [weather, air, daily, flood, alertsRes, marine, radiation, occurrencesRes, reportsRes, observationsRes, projectsRes] = await Promise.all([
     tryGet<CurrentWeatherReading>(routes.weather.currentByDistrict(id), 300),
     tryGet<HourlyAirQualityReading>(routes.weather.airQualityByDistrict(id), 900),
     tryGet<DailyForecast[]>(routes.weather.daily(id), 900),
     tryGet<StationFloodForecast[]>(routes.flood.forecastByDistrict(id), 3600),
     tryGet<PaginatedEnvelope<Alert>>(`${routes.alerts.list}?districtId=${id}&status=ACTIVE&pageSize=3`, 300),
-    district.isCoastal
-      ? tryGet<MarineForecast[]>(routes.marine.forecastByDistrict(id), 3600)
-      : Promise.resolve(null),
+    district.isCoastal ? tryGet<MarineForecast[]>(routes.marine.forecastByDistrict(id), 3600) : Promise.resolve(null),
     tryGet<SatelliteRadiationReading[]>(routes.radiation.dailyByDistrict(id), 3600),
     tryGet<PaginatedEnvelope<Occurrence>>(`${routes.biodiversity.occurrences}?districtId=${id}&pageSize=5`, 900),
-    tryGet<PaginatedEnvelope<CitizenReport>>(`${routes.reports.list}?districtId=${id}&pageSize=5`, 900),
-    tryGet<PaginatedEnvelope<Observation>>(`${routes.observations.list}?districtId=${id}&pageSize=5`, 900),
+    tryGet<PaginatedEnvelope<CitizenReport>>(`${routes.reports.list}?districtId=${id}&pageSize=3`, 900),
+    tryGet<PaginatedEnvelope<Observation>>(`${routes.observations.list}?districtId=${id}&pageSize=3`, 900),
     tryGet<PaginatedEnvelope<RestorationProject>>(`${routes.restoration.projects}?districtId=${id}&pageSize=3`, 900),
   ]);
 
-  const pm25 = airQuality?.pm25 ?? district.avgPm25_30d;
-  const aqi = aqiClass(pm25);
-  const activeAlerts = alertsRes?.data ?? [];
-  const emergency = activeAlerts.find((a) => a.severity === 'EMERGENCY');
-  const forecast = forecastData?.slice(0, 7) ?? [];
-  // District forecasts are grouped by station, then date. Do not assume the
-  // first API row represents today's signal; choose the earliest forecast date
-  // and rank stations on that date by discharge relative to historical mean.
-  const floodTodayDate = floodData?.reduce<string | null>(
-    (earliest, row) => !earliest || row.forecastDate < earliest ? row.forecastDate : earliest,
-    null,
-  );
-  const floodTodayRows = floodData?.filter((row) => row.forecastDate === floodTodayDate) ?? [];
-  const floodToday = [...floodTodayRows].sort((a, b) => {
-    const aRatio = a.riverDischarge != null && a.riverDischargeMean ? a.riverDischarge / a.riverDischargeMean : 0;
-    const bRatio = b.riverDischarge != null && b.riverDischargeMean ? b.riverDischarge / b.riverDischargeMean : 0;
-    return bRatio - aRatio;
-  })[0] ?? null;
-  const floodPeak = floodData && floodData.length > 0
-    ? Math.max(...floodData.map((f) => f.riverDischargeMax ?? 0))
-    : null;
+  const name = district.name;
+  const division = canonicalDivision(district.division.name);
+  const area = district.areaSqKm != null ? ` · ${Math.round(district.areaSqKm).toLocaleString()} km²` : '';
+  const alerts = alertsRes?.data ?? [];
+  const forecast = (daily ?? []).slice(0, 7);
+  const today = dhakaToday();
+
+  // River: pick the station furthest above its usual (median) flow on the first forecast day; else the largest discharge.
+  const firstDay = (flood ?? []).reduce<string | null>((min, r) => (!min || r.forecastDate < min ? r.forecastDate : min), null);
+  const rows = flood ?? [];
+  const todayRows = rows.filter((r) => r.forecastDate === firstDay);
+  const scored = todayRows
+    .map((r) => ({ r, ratio: r.riverDischarge != null && r.riverDischargeMedian != null && r.riverDischargeMedian >= MIN_MEDIAN ? r.riverDischarge / r.riverDischargeMedian : null }))
+    .sort((a, b) => (b.ratio ?? -1) - (a.ratio ?? -1) || (b.r.riverDischarge ?? 0) - (a.r.riverDischarge ?? 0));
+  const pick = scored[0]?.r ?? null;
+  const stationRows = pick ? rows.filter((r) => r.stationId === pick.stationId) : [];
+  const peak = stationRows.reduce<StationFloodForecast | null>((best, r) => ((r.riverDischarge ?? -1) > (best?.riverDischarge ?? -1) ? r : best), null);
+  const aboveCount = scored.filter((s) => s.ratio != null && s.ratio >= 1.5).length;
+
+  const pmCat = air?.pm25 != null ? pmCategory(air.pm25) : null;
   const marineToday = marine?.[0] ?? null;
-  const radiationRecent = radiation?.slice(0, 7) ?? [];
-  const hasReports = (reportsRes?.data.length ?? 0) > 0;
-  const hasObs = (observationsRes?.data.length ?? 0) > 0;
-  const hasRestoration = (restorationRes?.data.length ?? 0) > 0;
+  const latestRadiation = (radiation ?? []).reduce<SatelliteRadiationReading | null>((best, r) => (!best || r.readingDate > best.readingDate ? r : best), null);
+
+  const occurrences = occurrencesRes?.data ?? [];
+  const latestOcc = occurrences.reduce<number | null>((max, o) => {
+    const t = o.observedAt ? new Date(o.observedAt).getTime() : null;
+    return t != null && (max == null || t > max) ? t : max;
+  }, null);
+  const ageYears = latestOcc != null ? (Date.now() - latestOcc) / (365.25 * 86_400_000) : null;
+
+  const reports = reportsRes?.data ?? [];
+  const observations = observationsRes?.data ?? [];
+  const projects = projectsRes?.data ?? [];
+  const hasCommunity = reports.length + observations.length + projects.length > 0;
+
+  const rainDays = forecast.filter((f) => (f.precipitationSum ?? 0) > 0).length;
+  const rainTotal = forecast.reduce((s, f) => s + (f.precipitationSum ?? 0), 0);
 
   return (
-    <>
+    <div className="dv-page">
       <LocationBreadcrumb
         crumbs={[
           { label: 'Locations', href: '/locations' },
-          { label: district.division.name, href: `/locations/divisions/${district.division.id}` },
-          { label: district.name },
+          { label: division, href: `/locations/divisions/${district.division.id}` },
+          { label: name },
         ]}
       />
 
-      {/* Emergency alert strip */}
-      {emergency && (
-        <Link className="alert-strip danger" href={`/alerts/${emergency.id}`} role="alert">
-          {emergency.title} — {emergency.district?.name ?? district.name} →
-        </Link>
-      )}
-
-      <LocationHeader
-        level="District"
-        parentLabel={district.division.name}
-        name={district.name}
-        bnName={district.bnName}
-        summary={`${district.upazilas.length} upazila${district.upazilas.length !== 1 ? 's' : ''}${district.areaSqKm != null ? ` · ${district.areaSqKm.toLocaleString()} km²` : ''}${district.isCoastal ? ' · Coastal district' : ''}`}
-        statusLabel={`${aqi.label} · 30-day PM2.5`}
-        statusClass={aqi.css}
-        freshness={district.climateUpdatedAt ? `Climate updated ${relativeTime(district.climateUpdatedAt)}` : 'Climate update time unavailable'}
-      />
+      <header className="dv-head">
+        <div>
+          <h1>{name} district</h1>
+          <p>{division} division · {pluralize(district.upazilas.length, 'upazila')}{area}</p>
+        </div>
+        <span className="dv-fresh">Times in BST (UTC+6)</span>
+      </header>
 
       <LocationSectionNav
-        label="District sections"
-        items={[{ id: 'overview', label: 'Overview' }, { id: 'hazards', label: 'Hazards' }, { id: 'climate', label: 'Climate' }, { id: 'activity', label: 'Activity' }, { id: 'geography', label: 'Geography' }]}
+        label="On this page"
+        items={[{ id: 'now', label: 'Now' }, { id: 'forecast', label: 'Forecast' }, { id: 'climate', label: 'Last 30 days' }, { id: 'nature', label: 'Nature' }, { id: 'upazilas', label: 'Upazilas' }]}
       />
 
-      <div className="location-section-stack">
-        <section id="overview" className="location-section" aria-labelledby="overview-heading">
-          <h2 id="overview-heading" className="sr-only">Current conditions</h2>
-          {/* Current weather */}
-          {weather && (
-            <div className="metric-grid">
-              <div className="metric">
-                <span>Temperature</span>
-                <strong>{weather.temperature2m?.toFixed(1) ?? '—'}°C</strong>
-                <small>Feels like {weather.apparentTemperature?.toFixed(1) ?? '—'}°C</small>
-              </div>
-              <div className="metric">
-                <span>Humidity</span>
-                <strong>{weather.relativeHumidity2m?.toFixed(0) ?? '—'}%</strong>
-                <small>Relative humidity</small>
-              </div>
-              <div className="metric">
-                <span>Wind speed</span>
-                <strong>
-                  {weather.windSpeed10m?.toFixed(1) ?? '—'}
-                  <small style={{ fontSize: '1rem' }}>km/h</small>
-                </strong>
-                <small>At 10m</small>
-              </div>
-              <div className="metric">
-                <span>Precipitation</span>
-                <strong>
-                  {weather.precipitation?.toFixed(1) ?? '—'}
-                  <small style={{ fontSize: '1rem' }}>mm</small>
-                </strong>
-                <small>Current</small>
-              </div>
+      <div className="dd-top">
+        <section id="now" className="dv-card" aria-labelledby="now-h">
+          <CardHead
+            title="Right now"
+            sub={weather ? `Latest reading · ${dhakaDate(weather.readingTime)}` : 'No current reading available'}
+            tag={weather ? 'Observed' : undefined}
+          />
+          {weather ? (
+            <div className="dd-now">
+              <Tile label="Temperature" value={num(weather.temperature2m)} unit=" °C" notes={[`Feels like ${num(weather.apparentTemperature)} °C`]} />
+              <Tile label="Humidity" value={num(weather.relativeHumidity2m, 0)} unit=" %" notes={['Relative humidity']} />
+              <Tile label="Wind" value={num(weather.windSpeed10m)} unit=" km/h" notes={['At 10 m']} />
+              <Tile label="Rain" value={num(weather.precipitation)} unit=" mm" notes={['In the last hour']} />
             </div>
-          )}
-
-          <div id="hazards" className="content-grid">
-            {/* Air quality */}
-            {airQuality && (
-              <article className="panel">
-                <div className="panel-header">
-                  <div>
-                    <h2>Air Quality</h2>
-                    <p>Latest hourly reading</p>
-                  </div>
-                  <span className={`aqi-badge ${aqi.css}`}>{aqi.label}</span>
-                </div>
-
-                {airQuality.pm25 != null && (
-                  <div style={{ marginBottom: 14 }}>
-                    <div className="aqi-bar-track">
-                      <div
-                        className={`aqi-bar-fill ${aqi.css}-fill`}
-                        style={{ width: `${Math.min(100, (airQuality.pm25 / 200) * 100)}%` }}
-                      />
-                    </div>
-                    <span className="muted" style={{ fontSize: '0.8rem' }}>
-                      PM2.5 {airQuality.pm25.toFixed(0)} µg/m³
-                    </span>
-                  </div>
-                )}
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', fontSize: '0.88rem' }}>
-                  {airQuality.pm10 != null && (
-                    <>
-                      <span className="muted">PM10</span>
-                      <span>{airQuality.pm10.toFixed(0)} µg/m³</span>
-                    </>
-                  )}
-                  {airQuality.nitrogenDioxide != null && (
-                    <>
-                      <span className="muted">NO₂</span>
-                      <span>{airQuality.nitrogenDioxide.toFixed(1)} µg/m³</span>
-                    </>
-                  )}
-                  {airQuality.ozone != null && (
-                    <>
-                      <span className="muted">O₃</span>
-                      <span>{airQuality.ozone.toFixed(1)} µg/m³</span>
-                    </>
-                  )}
-                  {airQuality.sulphurDioxide != null && (
-                    <>
-                      <span className="muted">SO₂</span>
-                      <span>{airQuality.sulphurDioxide.toFixed(1)} µg/m³</span>
-                    </>
-                  )}
-                  {airQuality.carbonMonoxide != null && (
-                    <>
-                      <span className="muted">CO</span>
-                      <span>{airQuality.carbonMonoxide.toFixed(0)} µg/m³</span>
-                    </>
-                  )}
-                  {airQuality.uvIndex != null && (
-                    <>
-                      <span className="muted">UV index</span>
-                      <span>{airQuality.uvIndex.toFixed(1)}</span>
-                    </>
-                  )}
-                </div>
-              </article>
-            )}
-
-          {/* Flood forecast */}
-          {floodToday && (
-            <article className="panel">
-                <div className="panel-header">
-                  <div>
-                    <h2>Flood Forecast</h2>
-                    <p>{floodToday.station?.name ?? 'Station'} · {floodToday.station?.riverName ?? 'River not recorded'} · {floodTodayDate}</p>
-                  </div>
-                </div>
-                <div className="metric-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
-                  {floodToday.riverDischargeMean != null && (
-                    <div className="metric">
-                      <span>Mean discharge</span>
-                      <strong>
-                        {floodToday.riverDischargeMean.toFixed(0)}
-                        <small style={{ fontSize: '1rem' }}>m³/s</small>
-                      </strong>
-                      <small>Today</small>
-                    </div>
-                  )}
-                  {floodPeak != null && floodPeak > 0 && (
-                    <div className="metric">
-                      <span>Peak (30-day)</span>
-                      <strong>
-                        {floodPeak.toFixed(0)}
-                        <small style={{ fontSize: '1rem' }}>m³/s</small>
-                      </strong>
-                      <small>Max forecast</small>
-                    </div>
-                  )}
-                </div>
-                {floodToday.riverDischargeP25 != null && floodToday.riverDischargeP75 != null && (
-                  <p className="muted" style={{ fontSize: '0.82rem', marginTop: 10 }}>
-                    Uncertainty band today: {floodToday.riverDischargeP25.toFixed(0)}–{floodToday.riverDischargeP75.toFixed(0)} m³/s
-                  </p>
-                )}
-              </article>
-            )}
-          </div>
-
-          {/* Marine conditions (coastal districts only) */}
-          {district.isCoastal && marineToday && (
-            <article className="panel">
-              <div className="panel-header">
-                <div>
-                  <h2>Marine Conditions</h2>
-                  <p>
-                    Wave and swell forecast ·{' '}
-                    {new Date(marineToday.forecastDate).toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
-                  </p>
-                </div>
-              </div>
-              <div className="metric-grid">
-                {marineToday.waveHeightMax != null && (
-                  <div className="metric">
-                    <span>Wave height</span>
-                    <strong>
-                      {marineToday.waveHeightMax.toFixed(1)}
-                      <small style={{ fontSize: '1rem' }}>m</small>
-                    </strong>
-                    <small>Max today</small>
-                  </div>
-                )}
-                {marineToday.wavePeriodMax != null && (
-                  <div className="metric">
-                    <span>Wave period</span>
-                    <strong>
-                      {marineToday.wavePeriodMax.toFixed(0)}
-                      <small style={{ fontSize: '1rem' }}>s</small>
-                    </strong>
-                    <small>Peak period</small>
-                  </div>
-                )}
-                {marineToday.swellWaveHeightMax != null && (
-                  <div className="metric">
-                    <span>Swell height</span>
-                    <strong>
-                      {marineToday.swellWaveHeightMax.toFixed(1)}
-                      <small style={{ fontSize: '1rem' }}>m</small>
-                    </strong>
-                    <small>Max today</small>
-                  </div>
-                )}
-                {marineToday.seaSurfaceTemp != null && (
-                  <div className="metric">
-                    <span>Sea surface temp</span>
-                    <strong>{marineToday.seaSurfaceTemp.toFixed(1)}°C</strong>
-                    <small>Surface water</small>
-                  </div>
-                )}
-              </div>
-            </article>
-          )}
-
-          {/* Active alerts */}
-          {activeAlerts.length > 0 && (
-            <article className="panel">
-              <div className="panel-header">
-                <div>
-                  <h2>Active Alerts</h2>
-                  <p>Environmental warnings for this district</p>
-                </div>
-                <Link href="/alerts" className="button ghost">View all alerts</Link>
-              </div>
-              <div className="table" role="table" aria-label="Active alerts">
-                <div className="table-row table-head" role="row">
-                  <span>Alert</span>
-                  <span>Severity</span>
-                  <span>Issued</span>
-                  <span>Expires</span>
-                </div>
-                {activeAlerts.map((a) => (
-                  <Link className="table-row table-row-link" role="row" key={a.id} href={`/alerts/${a.id}`}>
-                    <strong>{a.title}</strong>
-                    <span className={`tag ${SEVERITY_BADGE[a.severity] ?? 'info'}`}>{titleCase(a.severity)}</span>
-                    <span>{relativeTime(a.issuedAt)}</span>
-                    <span>{a.expiresAt ? new Date(a.expiresAt).toLocaleDateString('en-GB') : '—'}</span>
-                  </Link>
-                ))}
-              </div>
-            </article>
+          ) : (
+            <p className="dv-empty">Weather readings for {name} are temporarily unavailable.</p>
           )}
         </section>
 
-        <section id="climate" className="location-section" aria-labelledby="climate-heading">
-          <h2 id="climate-heading" className="sr-only">Climate</h2>
-          {/* 7-day forecast */}
-          {forecast.length > 0 && (
-            <article className="panel">
-              <div className="panel-header">
-                <div>
-                  <h2>7-Day Forecast</h2>
-                  <p>Daily weather outlook</p>
-                </div>
+        <section className="dv-card" aria-labelledby="aq-h">
+          <CardHead title="Air quality" sub="Latest hourly reading · Open-Meteo" tag="Modeled" />
+          {air && air.pm25 != null && pmCat ? (
+            <>
+              <div className="dd-pm">
+                <span className="dd-pm-value">{num(air.pm25, 0)}<small> µg/m³ PM2.5</small></span>
+                <span className={`dd-cat dd-cat--${pmCat.tone}`}><span aria-hidden="true" />{pmCat.label}</span>
               </div>
-              <div className="table" role="table" aria-label="7-day forecast">
-                <div className="table-row table-head" role="row">
-                  <span>Date</span>
-                  <span>Condition</span>
-                  <span>Temp range</span>
-                  <span>Rain</span>
-                </div>
-                {forecast.map((f) => (
-                  <div className="table-row" role="row" key={f.id}>
-                    <span>
-                      {new Date(f.forecastDate).toLocaleDateString('en-GB', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </span>
-                    <span>{weatherDesc(f.weatherCode)}</span>
-                    <span>
-                      {f.temperature2mMin?.toFixed(0) ?? '—'}–{f.temperature2mMax?.toFixed(0) ?? '—'}°C
-                    </span>
-                    <span>
-                      {f.precipitationSum?.toFixed(1) ?? '—'}mm
-                      {f.precipitationProbabilityMax != null && ` (${f.precipitationProbabilityMax}%)`}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </article>
-          )}
-
-          {/* 30-day climate summary */}
-          <article className="panel">
-            <div className="panel-header">
-              <div>
-                <h2>30-Day Climate</h2>
-                <p>
-                  {district.climateUpdatedAt
-                    ? `Updated ${relativeTime(district.climateUpdatedAt)}`
-                    : 'Rolling 30-day average from OpenMeteo'}
-                </p>
-              </div>
-            </div>
-            <div className="metric-grid">
-              {district.avgTemp30d != null && (
-                <div className="metric">
-                  <span>Avg temperature</span>
-                  <strong>{district.avgTemp30d.toFixed(1)}°C</strong>
-                  <small>
-                    {district.minTemp30d != null && district.maxTemp30d != null
-                      ? `${district.minTemp30d.toFixed(1)}–${district.maxTemp30d.toFixed(1)}°C`
-                      : '30-day average'}
-                  </small>
-                </div>
-              )}
-              {district.totalPrecip30d != null && (
-                <div className="metric">
-                  <span>Total precipitation</span>
-                  <strong>
-                    {district.totalPrecip30d.toFixed(0)}
-                    <small style={{ fontSize: '1rem' }}>mm</small>
-                  </strong>
-                  <small>Last 30 days</small>
-                </div>
-              )}
-              {district.avgHumidity30d != null && (
-                <div className="metric">
-                  <span>Avg humidity</span>
-                  <strong>{district.avgHumidity30d.toFixed(0)}%</strong>
-                  <small>30-day average</small>
-                </div>
-              )}
-              {district.avgUvIndex30d != null && (
-                <div className="metric">
-                  <span>UV index</span>
-                  <strong>{district.avgUvIndex30d.toFixed(1)}</strong>
-                  <small>30-day average</small>
-                </div>
-              )}
-            </div>
-            {(district.avgWindSpeed30d != null || district.avgPm10_30d != null || district.avgCloudCover30d != null) && (
-              <div className="metric-grid" style={{ marginTop: 12 }}>
-                {district.avgWindSpeed30d != null && (
-                  <div className="metric">
-                    <span>Avg wind speed</span>
-                    <strong>
-                      {district.avgWindSpeed30d.toFixed(1)}
-                      <small style={{ fontSize: '1rem' }}>km/h</small>
-                    </strong>
-                    <small>30-day average</small>
-                  </div>
-                )}
-                {district.avgPm10_30d != null && (
-                  <div className="metric">
-                    <span>PM10</span>
-                    <strong>
-                      {district.avgPm10_30d.toFixed(0)}
-                      <small style={{ fontSize: '1rem' }}> µg/m³</small>
-                    </strong>
-                    <small>30-day average</small>
-                  </div>
-                )}
-                {district.avgCloudCover30d != null && (
-                  <div className="metric">
-                    <span>Cloud cover</span>
-                    <strong>{district.avgCloudCover30d.toFixed(0)}%</strong>
-                    <small>30-day average</small>
-                  </div>
-                )}
-              </div>
-            )}
-          </article>
-
-          {/* Solar radiation */}
-          {radiationRecent.length > 0 && (
-            <article className="panel">
-              <div className="panel-header">
-                <div>
-                  <h2>Solar Radiation</h2>
-                  <p>Daily shortwave radiation sum — satellite data from OpenMeteo</p>
-                </div>
-              </div>
-              <div className="table" role="table" aria-label="Solar radiation readings">
-                <div className="table-row table-head" role="row">
-                  <span>Date</span>
-                  <span>Shortwave radiation</span>
-                </div>
-                {radiationRecent.map((r) => (
-                  <div className="table-row" role="row" key={r.id}>
-                    <span>
-                      {new Date(r.readingDate).toLocaleDateString('en-GB', {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                      })}
-                    </span>
-                    <span>
-                      {r.shortwaveRadiationSum != null
-                        ? `${r.shortwaveRadiationSum.toFixed(1)} MJ/m²`
-                        : '—'}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </article>
+              <p className="dv-note">Category uses the US EPA 24-hour scale. One hourly reading can be higher or lower than the daily average.</p>
+              <dl className="dv-coverage">
+                {air.pm10 != null && <div><dt>PM10</dt><dd>{num(air.pm10, 0)} µg/m³</dd></div>}
+                {air.nitrogenDioxide != null && <div><dt>NO₂</dt><dd>{num(air.nitrogenDioxide)} µg/m³</dd></div>}
+                {air.ozone != null && <div><dt>O₃</dt><dd>{num(air.ozone)} µg/m³</dd></div>}
+                {air.sulphurDioxide != null && <div><dt>SO₂</dt><dd>{num(air.sulphurDioxide)} µg/m³</dd></div>}
+                {air.carbonMonoxide != null && <div><dt>CO</dt><dd>{num(air.carbonMonoxide, 0)} µg/m³</dd></div>}
+              </dl>
+            </>
+          ) : (
+            <p className="dv-empty">No air-quality reading for {name} yet.</p>
           )}
         </section>
 
-        <section id="activity" className="location-section" aria-labelledby="activity-heading">
-          <h2 id="activity-heading" className="sr-only">Environmental activity</h2>
-          {/* Biodiversity */}
-          {occurrencesRes && occurrencesRes.data.length > 0 && (
-            <article className="panel">
-              <div className="panel-header">
-                <div>
-                  <h2>Biodiversity</h2>
-                  <p>Recent species occurrences in this district</p>
-                </div>
-                <Link href="/biodiversity" className="button ghost">Browse all species</Link>
-              </div>
-              <div className="table" role="table" aria-label="Species occurrences">
-                <div className="table-row table-head" role="row">
-                  <span>Species</span>
-                  <span>Common name</span>
-                  <span>Kingdom</span>
-                  <span>Observed</span>
-                </div>
-                {occurrencesRes.data.map((o) => (
-                  <Link
-                    className="table-row table-row-link"
-                    role="row"
-                    key={o.id}
-                    href={`/biodiversity/species/${o.speciesId}`}
-                  >
-                    <strong><em>{o.species.canonicalName}</em></strong>
-                    <span>{o.species.vernacularName ?? '—'}</span>
-                    <span>{o.species.kingdom ?? '—'}</span>
-                    <span>{o.observedAt ? relativeTime(o.observedAt) : '—'}</span>
-                  </Link>
-                ))}
-              </div>
-            </article>
-          )}
-
-          {/* Community activity */}
-          {(hasReports || hasObs || hasRestoration) && (
-            <article className="panel">
-              <div className="panel-header">
-                <div>
-                  <h2>Community Activity</h2>
-                  <p>Reports, observations, and restoration projects in this district</p>
-                </div>
-              </div>
-
-              {hasReports && reportsRes && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 4 }}>
-                    <h3 style={{ fontSize: '0.92rem', margin: 0 }}>Citizen Reports</h3>
-                    <Link href="/reports" className="muted" style={{ fontSize: '0.82rem' }}>View all →</Link>
-                  </div>
-                  <div className="table" role="table" aria-label="Recent reports">
-                    <div className="table-row table-head" role="row">
-                      <span>Title</span>
-                      <span>Category</span>
-                      <span>By</span>
-                      <span>Submitted</span>
-                    </div>
-                    {reportsRes.data.map((r) => (
-                      <Link className="table-row table-row-link" role="row" key={r.id} href={`/reports/${r.id}`}>
-                        <strong>{r.title}</strong>
-                        <span>{titleCase(r.category)}</span>
-                        <span>{r.reporter?.displayName ?? '—'}</span>
-                        <span>{relativeTime(r.createdAt)}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {hasObs && observationsRes && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 16 }}>
-                    <h3 style={{ fontSize: '0.92rem', margin: 0 }}>Observations</h3>
-                    <Link href="/observations" className="muted" style={{ fontSize: '0.82rem' }}>View all →</Link>
-                  </div>
-                  <div className="table" role="table" aria-label="Recent observations">
-                    <div className="table-row table-head" role="row">
-                      <span>Category</span>
-                      <span>Species</span>
-                      <span>Trust</span>
-                      <span>Observed</span>
-                    </div>
-                    {observationsRes.data.map((o) => (
-                      <Link className="table-row table-row-link" role="row" key={o.id} href={`/observations/${o.id}`}>
-                        <span>{titleCase(o.category)}</span>
-                        <span>{o.species ?? '—'}</span>
-                        <span className={`tag ${TRUST_BADGE[o.trustLevel] ?? 'muted'}`}>
-                          {titleCase(o.trustLevel)}
-                        </span>
-                        <span>{relativeTime(o.observedAt)}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              {hasRestoration && restorationRes && (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 16 }}>
-                    <h3 style={{ fontSize: '0.92rem', margin: 0 }}>Restoration Projects</h3>
-                    <Link href="/restoration" className="muted" style={{ fontSize: '0.82rem' }}>View all →</Link>
-                  </div>
-                  <div className="table" role="table" aria-label="Restoration projects">
-                    <div className="table-row table-head" role="row">
-                      <span>Project</span>
-                      <span>Category</span>
-                      <span>Status</span>
-                      <span>Participants</span>
-                    </div>
-                    {restorationRes.data.map((r) => (
-                      <Link className="table-row table-row-link" role="row" key={r.id} href={`/restoration/${r.id}`}>
-                        <strong>{r.title}</strong>
-                        <span>{titleCase(r.category)}</span>
-                        <span className="tag muted">{titleCase(r.status)}</span>
-                        <span>{r._count.participants}</span>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-            </article>
-          )}
-
-          {!hasReports && !hasObs && !hasRestoration && (!occurrencesRes || occurrencesRes.data.length === 0) && (
-            <p className="muted">No activity data recorded in this district yet.</p>
-          )}
-
-          {/* Upazilas */}
-          <article id="geography" className="panel">
-            <div className="panel-header">
+        <section id="hazards" className="dv-card" aria-labelledby="hz-h">
+          <CardHead title="Hazards" link={{ href: '/alerts', label: 'All alerts' }} />
+          {alerts.length === 0 ? (
+            <div className="dv-hazard">
+              <span className="dv-hazard-icon dv-hazard-icon--ok"><NavIcon name="check" /></span>
               <div>
-                <h2>Upazilas</h2>
-                <p>{district.upazilas.length} upazilas in {district.name} — click to view climate data</p>
+                <strong>No active alerts</strong>
+                <small>For {name} district</small>
               </div>
             </div>
-            <div className="union-list">
-              {district.upazilas.map((u) => (
-                <Link key={u.id} href={`/locations/upazilas/${u.id}`} className="union-list-item">
-                  {u.name}
-                  {u.bnName && <small>{u.bnName}</small>}
-                </Link>
-              ))}
+          ) : (
+            alerts.map((a) => (
+              <div key={a.id} className="dv-hazard">
+                <span className={`dv-hazard-icon dv-hazard-icon--${a.severity === 'EMERGENCY' || a.severity === 'WARNING' ? 'bad' : 'warn'}`}><NavIcon name="alerts" /></span>
+                <div>
+                  <strong><Link href={`/alerts/${a.id}`}>{a.title}</Link></strong>
+                  <small>{titleCase(a.severity)} · {a.district ? a.district.name : 'Nationwide'}</small>
+                </div>
+              </div>
+            ))
+          )}
+          {pick && (
+            <div className="dd-river">
+              <div className="dd-river-head">
+                <strong>River discharge, {pick.station?.name}</strong>
+                <span className="dd-tag">Forecast</span>
+              </div>
+              <small>{pick.station?.riverName ? `${pick.station.riverName} river · ` : ''}GloFAS · not an official warning</small>
+              <div className="dd-river-grid">
+                <div>
+                  <span>Today</span>
+                  <b>{num(pick.riverDischarge)} <small>m³/s</small></b>
+                  <small>Range {num(pick.riverDischargeMin)}–{num(pick.riverDischargeMax)}</small>
+                </div>
+                <div>
+                  <span>Peak in next 30 days</span>
+                  <b>{num(peak?.riverDischarge)} <small>m³/s</small></b>
+                  <small>{peak ? `Forecast for ${calendarDay(peak.forecastDate.slice(0, 10)).short}` : ''}</small>
+                </div>
+              </div>
+              <small className="dd-river-foot">{aboveCount} of {pluralize(scored.length, 'station')} above usual · <Link href="/water-bodies?tab=stations">Station forecast →</Link></small>
             </div>
-          </article>
+          )}
         </section>
       </div>
+
+      <section id="forecast" className="dv-card" aria-labelledby="fc-h">
+        <CardHead title="7-day forecast" sub="Open-Meteo · high and low °C, chance of rain" tag="Forecast" />
+        {forecast.length === 0 ? (
+          <p className="dv-empty">The forecast for {name} is not available right now. It refreshes every 12 hours.</p>
+        ) : (
+          <>
+          <ul className="dd-days">
+            {forecast.map((f) => {
+              const d = calendarDay(f.forecastDate.slice(0, 10));
+              const s = sky(f.weatherCode);
+              const isToday = f.forecastDate.slice(0, 10) === today;
+              return (
+                <li key={f.id}>
+                  <span className="dd-day">{isToday ? 'Today' : d.weekdayShort}</span>
+                  <span className="dd-date">{d.short}</span>
+                  <span className="dd-sky"><SkyIcon kind={s.kind} label={s.label} /></span>
+                  <span className="dd-cond">{s.label}</span>
+                  <span className="dd-temp"><b>{num(f.temperature2mMax, 0)}°</b> <span>{num(f.temperature2mMin, 0)}°</span></span>
+                  <span className="dd-rain">{f.precipitationProbabilityMax != null ? `${f.precipitationProbabilityMax}% rain` : '—'}</span>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="dv-note">
+            {rainDays === 0
+              ? 'No rain expected this week; all days forecast 0.0 mm.'
+              : `Rain forecast on ${rainDays} of ${forecast.length} days, ${rainTotal.toFixed(1)} mm in total.`}
+          </p>
+          </>
+        )}
+      </section>
+
+      {district.isCoastal && marineToday && (
+        <section className="dv-card" aria-labelledby="mr-h">
+          <CardHead title="Marine conditions" sub={`Wave and swell forecast · ${calendarDay(marineToday.forecastDate.slice(0, 10)).short}`} tag="Forecast" link={{ href: '/marine', label: 'Marine page' }} />
+          <div className="dd-now dd-now--4">
+            <Tile label="Wave height" value={num(marineToday.waveHeightMax)} unit=" m" notes={['Max today']} />
+            <Tile label="Wave period" value={num(marineToday.wavePeriodMax, 0)} unit=" s" notes={['Peak period']} />
+            <Tile label="Swell height" value={num(marineToday.swellWaveHeightMax)} unit=" m" notes={['Max today']} />
+            <Tile label="Sea surface" value={num(marineToday.seaSurfaceTemp)} unit=" °C" notes={['Surface water']} />
+          </div>
+        </section>
+      )}
+
+      <section id="climate" className="dv-card" aria-labelledby="cl-h">
+        <CardHead title="Last 30 days" sub={`Open-Meteo${district.climateUpdatedAt ? ` · updated ${relativeTime(district.climateUpdatedAt)}` : ''}`} tag="Modeled" />
+        <div className="uz-tiles">
+          <Tile label="Temperature" value={num(district.avgTemp30d)} unit=" °C" notes={[district.minTemp30d != null && district.maxTemp30d != null ? `Mean · range ${num(district.minTemp30d)}–${num(district.maxTemp30d)}` : 'Mean']} />
+          <Tile label="Rainfall" value={num(district.totalPrecip30d, 0)} unit=" mm" notes={['30-day total']} />
+          <Tile label="Humidity" value={num(district.avgHumidity30d, 0)} unit=" %" notes={['Mean']} />
+          <Tile label="Cloud cover" value={num(district.avgCloudCover30d, 0)} unit=" %" notes={['Mean']} />
+          <Tile label="Wind speed" value={num(district.avgWindSpeed30d)} unit=" km/h" notes={['Mean']} />
+          <Tile label="UV index" value={num(district.avgUvIndex30d)} notes={[district.avgUvIndex30d != null ? `Mean · WHO band: ${uvBand(district.avgUvIndex30d)}` : 'Mean']} />
+          <Tile label="PM2.5" value={num(district.avgPm25_30d, 0)} unit=" µg/m³" notes={['Mean']} />
+          <Tile label="PM10" value={num(district.avgPm10_30d, 0)} unit=" µg/m³" notes={['Mean']} />
+        </div>
+        {latestRadiation && latestRadiation.shortwaveRadiationSum != null && (
+          <p className="dv-note uz-note">
+            Solar radiation: latest complete day {dhakaDate(`${latestRadiation.readingDate.slice(0, 10)}T00:00:00+06:00`)}, {latestRadiation.shortwaveRadiationSum.toFixed(1)} MJ/m² · <Link href="/radiation">Radiation page</Link>
+          </p>
+        )}
+      </section>
+
+      <section id="nature" className="dv-card" aria-labelledby="nt-h">
+        <CardHead title="Recent species records" sub={`GBIF occurrences in ${name}`} link={{ href: '/biodiversity', label: 'All species' }} />
+        {occurrences.length === 0 ? (
+          <p className="dv-empty">No species records in {name} yet.</p>
+        ) : (
+          <>
+            <ul className="dd-species">
+              {occurrences.map((o) => (
+                <li key={o.id}>
+                  <Link href={`/biodiversity/species/${o.speciesId}`}>
+                    <span className="dd-sp-main">
+                      <em>{o.species.canonicalName}</em>
+                      <small>{o.species.kingdom ?? '—'}</small>
+                    </span>
+                    <span className="dd-sp-date">{o.observedAt ? dhakaDate(o.observedAt) : '—'}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {ageYears != null && ageYears >= 1 && (
+              <p className="dv-note">The most recent record is {ageYears < 1.9 ? 'about a year' : `about ${Math.round(ageYears)} years`} old.</p>
+            )}
+          </>
+        )}
+      </section>
+
+      <section className="dv-card" aria-labelledby="cm-h">
+        <div className="dv-card-head">
+          <div>
+            <h2 id="cm-h">Community activity</h2>
+            <span>
+              {hasCommunity
+                ? `Latest verified reports, observations and restoration projects in ${name}.`
+                : `No verified reports, observations or restoration projects in ${name} yet.`}
+            </span>
+          </div>
+          <div className="dv-actions">
+            <Link href="/reports" className="dv-link">Report an issue</Link>
+            <Link href="/observations" className="dv-link">Add an observation</Link>
+          </div>
+        </div>
+        {hasCommunity && (
+          <div className="dv-recent">
+            {reports.length > 0 && (
+              <div>
+                <h3>Verified reports</h3>
+                <ul>{reports.map((r) => <li key={r.id}><Link href={`/reports/${r.id}`}>{r.title}</Link><small>{titleCase(r.category)} · Updated {dhakaDate(r.updatedAt)}</small></li>)}</ul>
+              </div>
+            )}
+            {observations.length > 0 && (
+              <div>
+                <h3>Observations</h3>
+                <ul>{observations.map((o) => <li key={o.id}><Link href={`/observations/${o.id}`}>{o.species ?? titleCase(o.category)}</Link><small>{titleCase(o.trustLevel)} · {dhakaDate(o.observedAt)}</small></li>)}</ul>
+              </div>
+            )}
+            {projects.length > 0 && (
+              <div>
+                <h3>Restoration projects</h3>
+                <ul>{projects.map((p) => <li key={p.id}><Link href={`/restoration/${p.id}`}>{p.title}</Link><small>{titleCase(p.status)} · {titleCase(p.category)}</small></li>)}</ul>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+
+      <section id="upazilas" className="dv-card" aria-labelledby="up-h">
+        <CardHead title="Upazilas" sub={`${district.upazilas.length} in ${name}`} />
+        {district.upazilas.length === 0 ? (
+          <p className="dv-empty">No upazilas listed for this district.</p>
+        ) : (
+          <ul className="uz-unions dd-upazilas">
+            {district.upazilas.map((u) => (
+              <li key={u.id}>
+                <Link href={`/locations/upazilas/${u.id}`}>
+                  {u.name}
+                  <NavIcon name="chevron-right" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <LocationSourceNote>
-        OpenMeteo forecast and air-quality data are labelled by period and source. District climate values are derived 30-day averages, not local station observations.
+        Weather, air quality and 30-day climate: Open-Meteo. River discharge: GloFAS model via Open-Meteo, not an official warning. Species: GBIF. Other sections use the latest public records from Delta Signal.
       </LocationSourceNote>
-    </>
+    </div>
   );
 }

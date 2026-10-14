@@ -222,9 +222,13 @@ export class WeatherService {
     });
   }
 
+  /**
+   * Latest hourly reading that has actually happened. Open-Meteo returns a few days of forecast hours too, so
+   * "latest by time" would otherwise be a future hour.
+   */
   getLatestAirQuality(districtId: string) {
     return this.prisma.hourlyAirQuality.findFirst({
-      where: { districtId },
+      where: { districtId, forecastTime: { lte: new Date() } },
       orderBy: { forecastTime: 'desc' },
       select: WeatherService.AIR_QUALITY_SELECT,
     });
@@ -232,6 +236,7 @@ export class WeatherService {
 
   getLatestAirQualityForAllDistricts() {
     return this.prisma.hourlyAirQuality.findMany({
+      where: { forecastTime: { lte: new Date() } },
       distinct: ['districtId'],
       orderBy: [{ districtId: 'asc' }, { forecastTime: 'desc' }],
       select: {
