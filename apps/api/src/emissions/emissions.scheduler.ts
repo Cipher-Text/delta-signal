@@ -23,6 +23,14 @@ export class EmissionsScheduler implements OnModuleInit {
     void this.syncEmissions();
   }
 
+  /** Retry an incomplete initial load daily until total emissions are stored. */
+  @Cron('0 0 4 * * *')
+  async retryInitialSync() {
+    if (await this.emissionsService.hasReadings()) return;
+    this.logger.warn('No total emission readings found; retrying initial World Bank sync');
+    return this.syncEmissions();
+  }
+
   /** Run weekly on Sunday at 3am — World Bank data updates annually. */
   @Cron('0 0 3 * * 0')
   syncEmissions() {

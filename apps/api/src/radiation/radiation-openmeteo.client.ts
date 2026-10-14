@@ -4,7 +4,7 @@ import type {
   OpenMeteoRadiationResponse,
 } from './dto/open-meteo-radiation-response.dto';
 
-const SATELLITE_BASE_URL = 'https://satellite-api.open-meteo.com/v1/archive';
+const SATELLITE_BASE_URL = 'https://satellite-api.open-meteo.com/v1/satellite';
 const LOOK_BACK_DAYS      = 7;
 const MAX_ATTEMPTS        = 3;
 const RETRY_DELAYS_MS     = [500, 1500];
@@ -65,16 +65,16 @@ export class RadiationOpenMeteoClient {
    * same daily shape that the service and scheduler expect.
    */
   async fetch(lat: number, lng: number): Promise<OpenMeteoRadiationResponse> {
-    const endDate   = new Date();
-    const startDate = new Date(Date.now() - (LOOK_BACK_DAYS - 1) * 24 * 60 * 60 * 1_000);
-
-    const url =
-      `${SATELLITE_BASE_URL}?latitude=${lat}&longitude=${lng}` +
-      `&hourly=shortwave_radiation&models=satellite_radiation_seamless` +
-      `&temporal_resolution=native` +
-      `&start_date=${startDate.toISOString().slice(0, 10)}` +
-      `&end_date=${endDate.toISOString().slice(0, 10)}` +
-      `&timezone=UTC`;
+    const params = new URLSearchParams({
+      latitude: String(lat),
+      longitude: String(lng),
+      hourly: 'shortwave_radiation',
+      past_days: String(LOOK_BACK_DAYS),
+      forecast_days: '0',
+      temporal_resolution: 'native',
+      timezone: 'UTC',
+    });
+    const url = `${SATELLITE_BASE_URL}?${params.toString()}`;
 
     const raw = await this.getJson<SatelliteArchiveRawResponse>(url);
 

@@ -305,7 +305,7 @@ Fetches 11 daily wave/swell/wind-wave variables for all 64 districts. OpenMeteo 
 
 ## emissions ✓
 
-Ingests national GHG data from the World Bank Climate Change API (`api.worldbank.org/v2/country/BGD/indicator/{code}`). All read endpoints are `@Public()`. No user-input write paths exist.
+Ingests national GHG data from the World Bank Climate Change API (`api.worldbank.org/v2/country/BGD/indicator/{code}`). All read endpoints are `@Public()`. No user-input write paths exist. Failed or empty initial syncs are retried daily until total GHG readings are stored; the regular refresh remains weekly.
 
 **Indicators synced:** `EN.GHG.ALL.MT.CE.AR5` (Total GHG), `EN.GHG.CO2.MT.CE.AR5` (CO₂), `EN.GHG.CH4.MT.CE.AR5` (CH₄), `EN.GHG.N2O.MT.CE.AR5` (N₂O). Values in Mt CO₂e, annual, 1976–2024.
 

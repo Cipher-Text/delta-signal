@@ -13,7 +13,10 @@ export class EmissionsService {
 
   hasReadings(): Promise<boolean> {
     return this.prisma.nationalEmissionReading
-      .findFirst({ select: { id: true } })
+      .findFirst({
+        where: { indicatorCode: WORLD_BANK_INDICATORS[0] },
+        select: { id: true },
+      })
       .then(Boolean);
   }
 
@@ -57,12 +60,22 @@ export class EmissionsService {
 
   /** Sync all configured indicators in sequence. */
   async syncAll(jobId: string | null): Promise<void> {
+    let totalRows = 0;
+    let totalError: unknown;
+
     for (const code of WORLD_BANK_INDICATORS) {
       try {
-        await this.syncIndicator(code, jobId);
+        const rows = await this.syncIndicator(code, jobId);
+        if (code === WORLD_BANK_INDICATORS[0]) totalRows = rows;
       } catch (err) {
         this.logger.error(`Failed to sync indicator ${code}: ${String(err)}`);
+        if (code === WORLD_BANK_INDICATORS[0]) totalError = err;
       }
+    }
+
+    if (totalError) throw totalError;
+    if (totalRows === 0) {
+      throw new Error(`World Bank returned no usable values for ${WORLD_BANK_INDICATORS[0]}`);
     }
   }
 
