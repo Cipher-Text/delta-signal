@@ -40,6 +40,8 @@ const THEMES: Record<string, Omit<Theme, 'label' | 'evidence'>> = {
   RIVER: { key: 'RIVER', a: '#1d86a0', b: '#0e5368', tint: '#e2f2f6', glyph: 'M2 9c2-2 3-2 5 0s3 2 5 0 3-2 5 0 3 2 5 0M2 15c2-2 3-2 5 0s3 2 5 0 3-2 5 0 3 2 5 0' },
   ALERT: { key: 'ALERT', a: '#c23b3b', b: '#7d1f1f', tint: '#fbe8e8', glyph: 'M12 3L2 20h20zM12 10v4M12 17v.5' },
   COMMUNITY: { key: 'COMMUNITY', a: '#147a57', b: '#0b4a35', tint: '#e4f3ea', glyph: 'M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM2 20c0-3 2.7-5 6-5s6 2 6 5M17 9a2.5 2.5 0 1 0 0-5M16 14.5c3 0 5 1.8 5 4.5' },
+  SEA: { key: 'SEA', a: '#0f7391', b: '#0a3f5e', tint: '#e0f0f5', glyph: 'M2 8c2-2 3-2 5 0s3 2 5 0 3-2 5 0 3 2 5 0M2 13c2-2 3-2 5 0s3 2 5 0 3-2 5 0 3 2 5 0M2 18c2-2 3-2 5 0s3 2 5 0 3-2 5 0 3 2 5 0' },
+  DIGEST: { key: 'DIGEST', a: '#3f64a8', b: '#243a68', tint: '#e8edf7', glyph: 'M4 20V10M10 20V4M16 20v-7M22 20V8' },
   WILD: { key: 'WILD', a: '#3f7447', b: '#234a2b', tint: '#e8f2ea', glyph: 'M5 19c0-9 5-14 15-14 0 9-5 14-14 14M5 19l7-7' },
 };
 
@@ -56,6 +58,10 @@ const SERIES: Record<string, { theme: keyof typeof THEMES; label: string; eviden
   NATIONAL_ALERT_WATCH: { theme: 'ALERT', label: 'BANGLADESH ALERT WATCH', evidence: 'ALERT' },
   NATIONAL_COMMUNITY_SIGNALS: { theme: 'COMMUNITY', label: 'COMMUNITY SIGNALS BANGLADESH', evidence: 'VERIFIED REPORTS' },
   NATIONAL_BIODIVERSITY: { theme: 'WILD', label: 'WILD BANGLADESH', evidence: 'GBIF OBSERVATION' },
+  DISTRICT_SNAPSHOT: { theme: 'SKY', label: 'DISTRICT SNAPSHOT', evidence: 'MODEL DATA' },
+  NATIONAL_COASTAL_WATCH: { theme: 'SEA', label: 'COASTAL WATCH', evidence: 'MARINE FORECAST' },
+  NATIONAL_PERIOD_SUMMARY: { theme: 'DIGEST', label: 'BANGLADESH IN REVIEW', evidence: 'PLATFORM DATA' },
+  CUSTOM_EDITORIAL: { theme: 'SKY', label: 'DELTA SIGNAL NOTE', evidence: 'EDITORIAL' },
 };
 
 const SEVERITY: Record<string, { fg: string; bg: string }> = {
@@ -184,6 +190,14 @@ function rankingRows(type: string, source: Record<string, any>): Row[] {
         value: `${n(r.ratio, 1)}×`,
         unit: 'of mean',
       }));
+    case 'NATIONAL_COASTAL_WATCH':
+      return rows.map((r) => ({
+        name: r.district,
+        sub: [r.swellHeightM != null ? `swell ${n(r.swellHeightM)} m` : null, r.wavePeriodS != null ? `${n(r.wavePeriodS, 0)} s period` : null, r.seaSurfaceTemp != null ? `sea ${n(r.seaSurfaceTemp, 0)} °C` : null].filter(Boolean).join(' · '),
+        amount: Number(r.waveHeightM),
+        value: n(r.waveHeightM),
+        unit: 'm',
+      }));
     case 'NATIONAL_ALERT_WATCH':
       return rows.map((r) => ({
         name: r.title,
@@ -285,6 +299,41 @@ function heroFor(type: string, source: Record<string, any>, location: string): H
         ],
       };
     }
+    case 'DISTRICT_SNAPSHOT': {
+      const w = source.weather ?? {};
+      const air = source.airQuality ?? {};
+      const alerts = Number(source.activeAlerts ?? 0);
+      return {
+        label: `Temperature now · ${location}`,
+        value: n(w.temperature2m, 0),
+        unit: '°C',
+        sub: w.apparentTemperature != null ? `Feels like ${n(w.apparentTemperature, 0)} °C` : undefined,
+        tiles: [
+          { label: 'PM2.5 (model)', value: air.pm25 != null ? `${n(air.pm25, 0)} µg/m³` : '—' },
+          { label: 'Humidity', value: w.relativeHumidity2m != null ? `${n(w.relativeHumidity2m, 0)} %` : '—' },
+          { label: 'Wind', value: w.windSpeed10m != null ? `${n(w.windSpeed10m)} km/h` : '—' },
+          { label: 'Active alerts', value: alerts ? String(alerts) : 'None' },
+        ],
+      };
+    }
+    case 'NATIONAL_PERIOD_SUMMARY': {
+      const s = (Array.isArray(source.ranking?.rows) ? source.ranking.rows[0] : null) ?? {};
+      const hi = s.alerts?.highestSeverity;
+      return {
+        label: `Alerts issued · last ${s.days ?? 7} days`,
+        value: n(s.alerts?.issued ?? 0, 0),
+        unit: s.alerts?.issued === 1 ? 'alert' : 'alerts',
+        sub: hi ? `Highest severity: ${title(hi)}` : 'No alerts issued in this period',
+        tiles: [
+          { label: 'Verified reports', value: n(s.verifiedReports ?? 0, 0) },
+          { label: 'Observations', value: n(s.observations?.total ?? 0, 0) },
+          { label: 'Species records', value: n(s.speciesRecords ?? 0, 0) },
+          { label: s.wettest ? `Rain · ${s.wettest.district}` : 'Wettest (30d)', value: s.wettest ? `${n(s.wettest.rainfallMm, 0)} mm` : '—' },
+          { label: s.hottest ? `Heat · ${s.hottest.district}` : 'Warmest (30d)', value: s.hottest ? `${n(s.hottest.avgTemperature)} °C` : '—' },
+          { label: s.airQuality ? `PM2.5 · ${s.airQuality.district}` : 'PM2.5 (30d)', value: s.airQuality ? `${n(s.airQuality.avgPm25, 0)} µg/m³` : '—' },
+        ],
+      };
+    }
     default:
       return null;
   }
@@ -295,9 +344,12 @@ function heroFor(type: string, source: Record<string, any>, location: string): H
 export function renderSocialCardSvg(input: SocialCardInput): string {
   const { width: W, height: H } = input;
   const meta = SERIES[input.type] ?? { theme: 'COMMUNITY', label: title(input.type).toUpperCase(), evidence: 'MODEL DATA' };
-  const theme: Theme = { ...THEMES[meta.theme], label: meta.label, evidence: meta.evidence };
+  const custom = input.type === 'CUSTOM_EDITORIAL';
+  const customTheme = custom && typeof input.source.theme === 'string' && THEMES[input.source.theme] ? input.source.theme : meta.theme;
+  const customKicker = custom && typeof input.source.kicker === 'string' && input.source.kicker.trim() ? input.source.kicker.trim().toUpperCase() : meta.label;
+  const theme: Theme = { ...THEMES[customTheme], label: custom ? customKicker : meta.label, evidence: meta.evidence };
   const portrait = H > W;
-  const national = input.type.startsWith('NATIONAL_');
+  const national = input.type.startsWith('NATIONAL_') || custom;
 
   const M = 60;
   const headSize = portrait ? 58 : 52;
@@ -313,11 +365,11 @@ export function renderSocialCardSvg(input: SocialCardInput): string {
   const innerW = panelW - pad * 2;
 
   // Footer is measured first so the evidence area gets every remaining pixel.
-  const sumLines = wrap(input.summary ?? '', 25, innerW, 2);
+  const sumLines = custom ? [] : wrap(input.summary ?? '', 25, innerW, 2);
   const asOf = formatBst(input.observedAt);
   const metaLines = wrap([asOf ? `As of ${asOf}` : '', `Source: ${input.sourceLabel}`].filter(Boolean).join('  ·  '), 18, innerW, 2);
   const discLines = wrap(input.disclaimer ?? '', 17, innerW, 2);
-  const footerH = 40 + Math.max(1, sumLines.length) * 33 + 14 + metaLines.length * 25 + 8 + discLines.length * 23 + 34;
+  const footerH = 40 + (custom ? 0 : Math.max(1, sumLines.length)) * 33 + 14 + metaLines.length * 25 + 8 + discLines.length * 23 + 34;
   const contentTop = panelY + 40;
   const contentBottom = panelB - footerH;
 
@@ -364,11 +416,10 @@ export function renderSocialCardSvg(input: SocialCardInput): string {
   );
 
   // evidence area
-  if (national) parts.push(drawRanking(rankingRows(input.type, input.source), theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait));
-  else {
-    const hero = heroFor(input.type, input.source, input.location);
-    if (hero) parts.push(drawHero(hero, theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait));
-  }
+  const hero = custom ? null : heroFor(input.type, input.source, input.location);
+  if (custom) parts.push(drawEditorial(input.summary ?? '', Array.isArray(input.source.highlights) ? input.source.highlights : [], theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait));
+  else if (hero) parts.push(drawHero(hero, theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait));
+  else if (national) parts.push(drawRanking(rankingRows(input.type, input.source), theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait));
 
   // footer
   const fy = contentBottom;
@@ -377,7 +428,7 @@ export function renderSocialCardSvg(input: SocialCardInput): string {
   sumLines.forEach((line, i) => {
     parts.push(`<text x="${innerX}" y="${y + i * 33}" fill="#2c3b36" font-size="25" font-family="${FONT}">${esc(line)}</text>`);
   });
-  y += Math.max(1, sumLines.length) * 33 + 14;
+  y += (custom ? 0 : Math.max(1, sumLines.length)) * 33 + 14;
   metaLines.forEach((line, i) => {
     parts.push(`<text x="${innerX}" y="${y + i * 25}" fill="#5f6f68" font-size="18" font-family="${FONT}">${esc(line)}</text>`);
   });
@@ -457,10 +508,13 @@ function drawRanking(rows: Row[], theme: Theme, x: number, topIn: number, w: num
 
 function drawHero(hero: Hero, theme: Theme, x: number, top: number, w: number, h: number, portrait: boolean): string {
   const out: string[] = [];
-  const tileH = portrait ? 168 : 132;
+  const count = Math.min(hero.tiles.length, 6);
+  const cols = count === 4 ? 2 : 3;
+  const rows = Math.max(1, Math.ceil(count / cols));
+  const tileH = (portrait ? 168 : 132) - (rows > 1 ? 22 : 0);
   const tileGap = 18;
-  const tileW = (w - tileGap * 2) / 3;
-  const tilesY = top + h - tileH - 24;
+  const tileW = (w - tileGap * (cols - 1)) / cols;
+  const tilesY = top + h - rows * tileH - (rows - 1) * tileGap - 24;
   const blockH = tilesY - top - 22;
   const pad = 40;
   const clip = `hero-${theme.key}`;
@@ -505,13 +559,58 @@ function drawHero(hero: Hero, theme: Theme, x: number, top: number, w: number, h
   }
 
   // stat tiles
-  hero.tiles.slice(0, 3).forEach((t, i) => {
-    const tx = x + i * (tileW + tileGap);
+  hero.tiles.slice(0, 6).forEach((t, i) => {
+    const tx = x + (i % cols) * (tileW + tileGap);
+    const tilesRowY = tilesY + Math.floor(i / cols) * (tileH + tileGap);
     out.push(
-      `<rect x="${tx}" y="${tilesY}" width="${tileW}" height="${tileH}" rx="28" fill="${theme.tint}"/>`,
-      `<rect x="${tx + 24}" y="${tilesY + 28}" width="36" height="6" rx="3" fill="${theme.a}"/>`,
-      `<text x="${tx + 24}" y="${tilesY + 74}" fill="#5f6f68" font-size="20" font-weight="700" letter-spacing="1" font-family="${FONT}">${esc(fit(t.label.toUpperCase(), 20, tileW - 40, true))}</text>`,
-      `<text x="${tx + 24}" y="${tilesY + tileH - 32}" fill="${theme.b}" font-size="${portrait ? 36 : 32}" font-weight="700" font-family="${FONT}">${esc(fit(t.value, portrait ? 36 : 32, tileW - 40, true))}</text>`,
+      `<rect x="${tx}" y="${tilesRowY}" width="${tileW}" height="${tileH}" rx="28" fill="${theme.tint}"/>`,
+      `<rect x="${tx + 24}" y="${tilesRowY + 28}" width="36" height="6" rx="3" fill="${theme.a}"/>`,
+      `<text x="${tx + 24}" y="${tilesRowY + 74}" fill="#5f6f68" font-size="20" font-weight="700" letter-spacing="1" font-family="${FONT}">${esc(fit(t.label.toUpperCase(), 20, tileW - 40, true))}</text>`,
+      `<text x="${tx + 24}" y="${tilesRowY + tileH - 32}" fill="${theme.b}" font-size="${portrait ? 36 : 32}" font-weight="700" font-family="${FONT}">${esc(fit(t.value, portrait ? 36 : 32, tileW - 40, true))}</text>`,
+    );
+  });
+  return out.join('');
+}
+
+function drawEditorial(summary: string, highlights: Array<{ label?: string; value?: string }>, theme: Theme, x: number, top: number, w: number, h: number, portrait: boolean): string {
+  const out: string[] = [];
+  const tiles = highlights.filter((t) => t && (t.label || t.value)).slice(0, 4);
+  const cols = tiles.length === 1 ? 1 : 2;
+  const rows = tiles.length ? Math.ceil(tiles.length / cols) : 0;
+  const tileH = portrait ? 170 : 116;
+  const gap = 18;
+  const tilesH = rows ? rows * tileH + (rows - 1) * gap + 24 : 0;
+  const blockH = h - tilesH - (rows ? 22 : 24);
+  const pad = 40;
+  // Largest type that shows the whole summary; only the smallest size may truncate.
+  const sizes = tiles.length ? (portrait ? [42, 36, 32, 28] : [36, 32, 28, 26]) : portrait ? [64, 54, 46, 40, 34] : [54, 46, 40, 34, 30];
+  let size = sizes[sizes.length - 1];
+  let lines: string[] = [];
+  for (const candidate of sizes) {
+    const room = Math.max(2, Math.floor((blockH - 56) / (candidate + 12)));
+    const attempt = wrap(summary, candidate, w - pad * 2 - 20, room);
+    size = candidate;
+    lines = attempt;
+    if (!attempt.length || !attempt[attempt.length - 1].endsWith('…')) break;
+  }
+  const textH = lines.length * (size + 12);
+  out.push(
+    `<rect x="${x}" y="${top}" width="${w}" height="${blockH}" rx="36" fill="${theme.tint}"/>`,
+    `<rect x="${x + pad}" y="${top + blockH / 2 - textH / 2 - 6}" width="8" height="${textH + 12}" rx="4" fill="${theme.a}"/>`,
+  );
+  lines.forEach((line, i) => {
+    out.push(`<text x="${x + pad + 30}" y="${top + blockH / 2 - textH / 2 + size * 0.85 + i * (size + 12)}" fill="${theme.b}" font-size="${size}" font-family="${FONT}">${esc(line)}</text>`);
+  });
+  const tileW = (w - gap * (cols - 1)) / cols;
+  const ty0 = top + blockH + 22;
+  tiles.forEach((t, i) => {
+    const tx = x + (i % cols) * (tileW + gap);
+    const ty = ty0 + Math.floor(i / cols) * (tileH + gap);
+    out.push(
+      `<rect x="${tx}" y="${ty}" width="${tileW}" height="${tileH}" rx="28" fill="${theme.tint}"/>`,
+      `<rect x="${tx + 24}" y="${ty + (portrait ? 26 : 20)}" width="36" height="6" rx="3" fill="${theme.a}"/>`,
+      `<text x="${tx + 24}" y="${ty + (portrait ? 70 : 56)}" fill="#5f6f68" font-size="20" font-weight="700" letter-spacing="1" font-family="${FONT}">${esc(fit(String(t.label ?? '').toUpperCase(), 20, tileW - 40, true))}</text>`,
+      `<text x="${tx + 24}" y="${ty + tileH - (portrait ? 30 : 24)}" fill="${theme.b}" font-size="${portrait ? 46 : 34}" font-weight="700" font-family="${FONT}">${esc(fit(String(t.value ?? ''), portrait ? 46 : 34, tileW - 40, true))}</text>`,
     );
   });
   return out.join('');

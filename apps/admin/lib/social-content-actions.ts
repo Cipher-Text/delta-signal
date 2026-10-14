@@ -14,6 +14,16 @@ const token = async () => {
 
 const fail = (error: unknown) => error instanceof ApiError ? error.message : 'Social content action failed';
 
+/** "Label | Value" per line, at most four. */
+function parseHighlights(text: string) {
+  return text
+    .split('\n')
+    .map((line) => line.split('|').map((part) => part.trim()))
+    .filter((parts) => parts.length >= 2 && parts[0] && parts[1])
+    .slice(0, 4)
+    .map(([label, ...rest]) => ({ label: label.slice(0, 24), value: rest.join(' | ').slice(0, 16) }));
+}
+
 export async function createSocialDraftAction(formData: FormData) {
   const accessToken = await token();
   try {
@@ -29,6 +39,11 @@ export async function createSocialDraftAction(formData: FormData) {
       summary: String(formData.get('summary') ?? '').trim() || undefined,
       caption: String(formData.get('caption') ?? '').trim() || undefined,
       disclaimer: String(formData.get('disclaimer') ?? '').trim() || undefined,
+      ...(formData.get('type') === 'CUSTOM_EDITORIAL' ? {
+        theme: String(formData.get('theme') ?? '').trim() || undefined,
+        kicker: String(formData.get('kicker') ?? '').trim() || undefined,
+        highlights: parseHighlights(String(formData.get('highlights') ?? '')),
+      } : {}),
     }, accessToken);
   } catch (error) {
     redirect(`/social-content?error=${encodeURIComponent(fail(error))}`);

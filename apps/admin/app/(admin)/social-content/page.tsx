@@ -72,6 +72,10 @@ const TYPES = [
   ['NATIONAL_ALERT_WATCH', 'Bangladesh Alert Watch — active alerts'],
   ['NATIONAL_COMMUNITY_SIGNALS', 'Community Signals Bangladesh — verified reports'],
   ['NATIONAL_BIODIVERSITY', 'Wild Bangladesh — recent observations'],
+  ['DISTRICT_SNAPSHOT', 'District Snapshot — weather, air and alerts (pick a district)'],
+  ['NATIONAL_COASTAL_WATCH', 'Coastal Watch — wave height along the coast'],
+  ['NATIONAL_PERIOD_SUMMARY', 'Bangladesh in Review — weekly / monthly summary (use Weekly or 30 days)'],
+  ['CUSTOM_EDITORIAL', 'Custom editorial card — your own headline, text and figures'],
 ] as const;
 
 function label(value: string) { return value.replaceAll('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase()); }
@@ -88,32 +92,72 @@ const SERIES_LABELS: Record<string, string> = {
     NATIONAL_ALERT_WATCH: 'Bangladesh Alert Watch',
     NATIONAL_COMMUNITY_SIGNALS: 'Community Signals Bangladesh',
     NATIONAL_BIODIVERSITY: 'Wild Bangladesh',
+    DISTRICT_SNAPSHOT: 'District Snapshot',
+    NATIONAL_COASTAL_WATCH: 'Coastal Watch',
+    NATIONAL_PERIOD_SUMMARY: 'Bangladesh in Review',
+    CUSTOM_EDITORIAL: 'Editorial',
 };
 function seriesLabel(value: string) {
   return SERIES_LABELS[value] ?? label(value);
 }
+// Weekly/monthly rankings are named WEEKLY_RAIN_WATCH / MONTHLY_RAIN_WATCH by the API but create the same card type.
 const NATIONAL_TYPE_BY_SERIES: Record<string, string> = {
   RAIN_WATCH: 'NATIONAL_RAIN_WATCH',
+  WEEKLY_RAIN_WATCH: 'NATIONAL_RAIN_WATCH',
+  MONTHLY_RAIN_WATCH: 'NATIONAL_RAIN_WATCH',
   AIR_QUALITY_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
+  WEEKLY_AIR_QUALITY_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
+  MONTHLY_AIR_QUALITY_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
   HEAT_WATCH: 'NATIONAL_HEAT_WATCH',
+  WEEKLY_HEAT_WATCH: 'NATIONAL_HEAT_WATCH',
+  MONTHLY_HEAT_WATCH: 'NATIONAL_HEAT_WATCH',
+  COASTAL_WATCH: 'NATIONAL_COASTAL_WATCH',
+  PERIOD_SUMMARY: 'NATIONAL_PERIOD_SUMMARY',
   RIVER_WATCH: 'NATIONAL_RIVER_WATCH',
   ALERT_WATCH: 'NATIONAL_ALERT_WATCH',
   COMMUNITY_SIGNALS: 'NATIONAL_COMMUNITY_SIGNALS',
   WILD_BANGLADESH: 'NATIONAL_BIODIVERSITY',
 };
+const CADENCES = [['DAILY', 'Daily'], ['WEEKLY', 'Weekly'], ['MONTHLY', 'Monthly']] as const;
+const num = (v: unknown, digits = 1) => (v == null || Number.isNaN(Number(v)) ? '—' : Number(v).toLocaleString('en-GB', { maximumFractionDigits: digits }));
+
+/** Right-hand text for a suggestion row, in the same units the card shows. */
+function rowValue(series: string, row: Record<string, unknown>): string {
+  if (series.endsWith('RAIN_WATCH')) return `${num(row.rainfallMm)} mm`;
+  if (series.endsWith('AIR_QUALITY_WATCH')) return `${num(row.pm25 ?? row.avgPm25)} µg/m³`;
+  if (series.endsWith('HEAT_WATCH')) return `${num(row.apparentTemperature ?? row.avgTemperature)} °C`;
+  if (series === 'RIVER_WATCH') return `${num(row.ratio)}× mean`;
+  if (series === 'COASTAL_WATCH') return `${num(row.waveHeightM)} m`;
+  if (series === 'ALERT_WATCH') return String(row.severity ?? '');
+  if (series === 'COMMUNITY_SIGNALS') return label(String(row.category ?? ''));
+  return '';
+}
+
+/** Plain-language lines for the period summary, which has one object rather than ranked rows. */
+function summaryLines(row: Record<string, any>): string[] {
+  return [
+    `${row.alerts?.issued ?? 0} alert${row.alerts?.issued === 1 ? '' : 's'} issued${row.alerts?.highestSeverity ? ` (highest: ${label(String(row.alerts.highestSeverity))})` : ''}`,
+    `${row.verifiedReports ?? 0} verified reports · ${row.observations?.total ?? 0} observations · ${row.speciesRecords ?? 0} species records`,
+    row.wettest ? `Wettest (30 d): ${row.wettest.district}, ${num(row.wettest.rainfallMm, 0)} mm` : '',
+    row.hottest ? `Warmest (30 d): ${row.hottest.district}, ${num(row.hottest.avgTemperature)} °C` : '',
+    row.airQuality ? `Highest PM2.5 (30 d): ${row.airQuality.district}, ${num(row.airQuality.avgPm25, 0)} µg/m³` : '',
+  ].filter(Boolean);
+}
+
 function date(value: string | null) { return value ? new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
 
-export default async function SocialContentPage(props: { searchParams: Promise<{ success?: string; error?: string; status?: string }> }) {
+export default async function SocialContentPage(props: { searchParams: Promise<{ success?: string; error?: string; status?: string; cadence?: string }> }) {
   const params = await props.searchParams;
   const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const selectedStatus = params.status && ['DRAFT', 'RENDERED', 'APPROVED', 'ARCHIVED'].includes(params.status) ? params.status : undefined;
+  const cadence = ['DAILY', 'WEEKLY', 'MONTHLY'].includes(params.cadence ?? '') ? (params.cadence as string) : 'DAILY';
   const [drafts, districts, alerts, occurrences, stations, suggestions, platformAccounts] = await Promise.all([
     apiGet<Draft[]>(`/api/v1/social-content/drafts${selectedStatus ? `?status=${selectedStatus}` : ''}`, accessToken),
     apiGet<District[]>('/api/v1/locations/districts', accessToken),
     apiGet<{ data: AlertOption[] }>('/api/v1/alerts?status=ACTIVE&pageSize=100', accessToken).catch(() => ({ data: [] })),
     apiGet<{ data: OccurrenceOption[] }>('/api/v1/biodiversity/occurrences?pageSize=100', accessToken).catch(() => ({ data: [] })),
     apiGet<StationOption[]>('/api/v1/flood/forecast', accessToken).catch(() => []),
-    apiGet<NationalSuggestion[]>('/api/v1/social-content/suggestions/national?cadence=DAILY', accessToken).catch(() => []),
+    apiGet<NationalSuggestion[]>(`/api/v1/social-content/suggestions/national?cadence=${cadence}`, accessToken).catch(() => []),
     apiGet<PlatformAccount[]>('/api/v1/social-content/platforms', accessToken).catch(() => []),
   ]);
   return <>
@@ -131,13 +175,15 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
     </section>
 
     <section className="social-suggestions">
-      <div className="section-heading"><div><h2>Suggested Posts</h2><p>Live national rankings from current environmental data. Suggestions require editorial review.</p></div><span className="tag tag-info">Daily window</span></div>
-      {suggestions.length === 0 ? <div className="empty-state">No current national suggestions meet the data requirements.</div> : <div className="social-suggestion-grid">{suggestions.map((suggestion) => <article className="social-suggestion-card" key={suggestion.id}>
-        <div className="social-suggestion-top"><span className="badge badge-info">{suggestion.series.replaceAll('_', ' ')}</span><span className={`tag ${suggestion.quality === 'HIGH' ? 'tag-success' : 'tag-info'}`}>{suggestion.quality}</span></div>
+      <div className="section-heading"><div><h2>Suggested Posts</h2><p>Live national rankings from current environmental data. Suggestions require editorial review.</p></div><nav className="social-status-tabs" aria-label="Suggestion window">{CADENCES.map(([value, text]) => <a className={cadence === value ? 'active' : ''} href={`/social-content?${new URLSearchParams({ ...(selectedStatus ? { status: selectedStatus } : {}), cadence: value })}`} key={value}>{text}</a>)}</nav></div>
+      {suggestions.length === 0 ? <div className="empty-state">No {cadence.toLowerCase()} suggestions meet the data requirements right now.</div> : <div className="social-suggestion-grid">{suggestions.map((suggestion) => <article className="social-suggestion-card" key={suggestion.id}>
+        <div className="social-suggestion-top"><span className="badge badge-info">{label(suggestion.series)}</span><span className={`tag ${suggestion.quality === 'HIGH' ? 'tag-success' : suggestion.quality === 'REVIEW' ? 'tag-warning' : 'tag-danger'}`}>{suggestion.quality === 'HIGH' ? 'Ready' : suggestion.quality === 'REVIEW' ? 'Partial data' : 'Too little data'}</span></div>
         <h3>{suggestion.headline}</h3>
         <p>{suggestion.reason}</p>
-        <p className="social-draft-meta">{suggestion.sourceLabel} · {suggestion.coverage.available}/{suggestion.coverage.expected} covered ({suggestion.coverage.percentage}%)</p>
-        <ol className="social-ranking-list">{suggestion.sourceSnapshot.rows.slice(0, 5).map((row, index) => <li key={`${suggestion.id}-${index}`}><strong>{index + 1}. {String(row.district ?? row.station ?? row.species ?? row.title ?? 'Bangladesh')}</strong><span>{String(row.rainfallMm ?? row.pm25 ?? row.apparentTemperature ?? row.discharge ?? row.severity ?? row.category ?? '')}</span></li>)}</ol>
+        <p className="social-draft-meta">{suggestion.sourceLabel} · {date(suggestion.windowStart)} – {date(suggestion.windowEnd)} · {suggestion.coverage.available}/{suggestion.coverage.expected} covered ({suggestion.coverage.percentage}%)</p>
+        {suggestion.series === 'PERIOD_SUMMARY'
+          ? <ul className="social-ranking-list">{summaryLines(suggestion.sourceSnapshot.rows[0] ?? {}).map((line) => <li key={line}><span>{line}</span></li>)}</ul>
+          : <ol className="social-ranking-list">{suggestion.sourceSnapshot.rows.slice(0, 5).map((row, index) => <li key={`${suggestion.id}-${index}`}><strong>{index + 1}. {String(row.district ?? row.station ?? row.species ?? row.title ?? 'Bangladesh')}</strong><span>{rowValue(suggestion.series, row)}</span></li>)}</ol>}
         <div className="form-actions"><form action={createSocialDraftAction}><input type="hidden" name="type" value={NATIONAL_TYPE_BY_SERIES[suggestion.series] ?? ''} /><input type="hidden" name="cadence" value={suggestion.cadence} /><input type="hidden" name="format" value="PORTRAIT_4_5" /><input type="hidden" name="locale" value="en" /><button className="btn btn-primary" type="submit" disabled={!NATIONAL_TYPE_BY_SERIES[suggestion.series]}>Create Post from Suggestion</button></form><span className="form-actions-note">Review source evidence before approval.</span></div>
       </article>)}</div>}
     </section>
@@ -155,6 +201,13 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
           <div className="form-row"><div className="field field-grow"><label htmlFor="sourceId">Source record <span className="field-optional">(alerts/species only)</span></label><select id="sourceId" name="sourceId" className="role-select"><option value="">Automatic/latest source</option><optgroup label="Active alerts">{alerts.data.map((alert) => <option key={alert.id} value={alert.id}>{alert.title} · {alert.severity}</option>)}</optgroup><optgroup label="Biodiversity occurrences">{occurrences.data.map((occurrence) => <option key={occurrence.id} value={occurrence.id}>{occurrence.species.canonicalName} · {occurrence.district?.name ?? 'Unknown district'}</option>)}</optgroup></select></div><div className="field field-grow"><label htmlFor="stationId">River station <span className="field-optional">(river cards only)</span></label><select id="stationId" name="stationId" className="role-select"><option value="">Select station</option>{stations.map((item) => <option key={item.station.id} value={item.station.id}>{item.station.riverName} · {item.station.name}</option>)}</select></div><div className="field field-fixed"><label htmlFor="locale">Language</label><select id="locale" name="locale" className="role-select"><option value="en">English</option><option value="bn">Bengali</option></select></div></div>
           <div className="form-row"><div className="field field-grow"><label htmlFor="headline">Headline <span className="field-optional">(optional — generated from source)</span></label><input id="headline" name="headline" className="filter-input" maxLength={200} /></div><div className="field field-grow"><label htmlFor="disclaimer">Disclaimer <span className="field-optional">(optional — source default used)</span></label><input id="disclaimer" name="disclaimer" className="filter-input" maxLength={500} /></div></div>
           <div className="field"><label htmlFor="summary">Summary <span className="field-optional">(optional)</span></label><textarea id="summary" name="summary" rows={2} className="note-input" /></div>
+          <details className="create-panel-sub"><summary>Custom editorial card options <span className="field-optional">(only for “Custom editorial card”; headline and summary above are the card text)</span></summary>
+            <div className="form-row">
+              <div className="field field-fixed"><label htmlFor="theme">Colour</label><select id="theme" name="theme" className="role-select"><option value="SKY">Sky blue</option><option value="RAIN">Rain blue</option><option value="AIR">Violet</option><option value="HEAT">Orange</option><option value="RIVER">Teal</option><option value="ALERT">Red</option><option value="COMMUNITY">Green</option><option value="WILD">Forest</option></select></div>
+              <div className="field field-grow"><label htmlFor="kicker">Label above the headline</label><input id="kicker" name="kicker" className="filter-input" maxLength={40} placeholder="e.g. Wetland spotlight" /></div>
+            </div>
+            <div className="field"><label htmlFor="highlights">Figures <span className="field-optional">(up to 4 lines, “Label | Value”)</span></label><textarea id="highlights" name="highlights" rows={4} className="note-input" placeholder={'Haor area | 8,000 km²\nDistricts | 7'} /></div>
+          </details>
           <div className="field"><label htmlFor="caption">Caption <span className="field-optional">(optional)</span></label><textarea id="caption" name="caption" rows={3} className="note-input" /></div>
           <div className="form-actions"><button type="submit" className="btn btn-primary">Create draft</button><p className="form-actions-note">Source values are loaded server-side and remain traceable to the selected record.</p></div>
         </form>

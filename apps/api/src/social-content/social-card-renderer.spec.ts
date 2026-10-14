@@ -120,4 +120,52 @@ describe('renderSocialCardSvg', () => {
     expect(svg).toContain('SOMETHING NEW');
     expect(svg).toContain('MODEL DATA');
   });
+
+  it('ranks coastal districts by wave height with swell detail', () => {
+    const svg = renderSocialCardSvg({ ...base, type: 'NATIONAL_COASTAL_WATCH', headline: 'Coastal wave watch', source: ranking([{ district: "Cox's Bazar", waveHeightM: 2.4, swellHeightM: 1.9, wavePeriodS: 9, seaSurfaceTemp: 29 }]) });
+    expect(svg).toContain('COASTAL WATCH');
+    expect(svg).toContain('2.4');
+    expect(svg).toContain('swell 1.9 m');
+  });
+
+  it('shows a district snapshot as a hero temperature with four tiles', () => {
+    const svg = renderSocialCardSvg({
+      ...base,
+      type: 'DISTRICT_SNAPSHOT',
+      location: 'Dhaka',
+      headline: 'Dhaka right now',
+      source: { weather: { temperature2m: 31.2, apparentTemperature: 36.4, relativeHumidity2m: 74, windSpeed10m: 9.4 }, airQuality: { pm25: 92.3 }, activeAlerts: 0 },
+    });
+    expect(svg).toContain('>31<');
+    expect(svg).toContain('92 µg/m³');
+    expect(svg).toContain('None');
+    expect(svg.match(/rx="28"/g)?.length).toBe(4);
+  });
+
+  it('summarises a period with six tiles and tolerates missing climate data', () => {
+    const svg = renderSocialCardSvg({
+      ...base,
+      type: 'NATIONAL_PERIOD_SUMMARY',
+      headline: 'Bangladesh this week',
+      source: { ranking: { rows: [{ days: 7, alerts: { issued: 1, highestSeverity: 'WARNING' }, verifiedReports: 2, observations: { total: 0 }, speciesRecords: 10, wettest: null, hottest: null, airQuality: null }] } },
+    });
+    expect(svg).toContain('Highest severity: Warning');
+    expect(svg).toContain('>alert<');
+    expect(svg.match(/rx="28"/g)?.length).toBe(6);
+  });
+
+  it('renders a custom editorial card with its own theme, kicker and highlights, and escapes markup', () => {
+    const svg = renderSocialCardSvg({
+      ...base,
+      type: 'CUSTOM_EDITORIAL',
+      headline: 'Haor wetlands',
+      summary: 'Storage <b>for</b> floodwater',
+      source: { theme: 'RIVER', kicker: 'Wetland spotlight', highlights: [{ label: 'Area', value: '8,000 km²' }] },
+    });
+    expect(svg).toContain('WETLAND SPOTLIGHT');
+    expect(svg).toContain('#1d86a0');
+    expect(svg).toContain('8,000 km²');
+    expect(svg).toContain('&lt;b&gt;');
+    expect(svg).not.toContain('<b>');
+  });
 });

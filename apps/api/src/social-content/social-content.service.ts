@@ -191,10 +191,22 @@ export class SocialContentService {
   }
 
   private async loadSource(dto: CreateSocialDraftDto) {
+    if (dto.type === SocialContentType.CUSTOM_EDITORIAL) {
+      if (!dto.headline) throw new BadRequestException('A headline is required for a custom card');
+      return {
+        sourceId: null,
+        sourceLabel: 'Delta Signal editorial',
+        observedAt: new Date(),
+        snapshot: { kind: dto.type, theme: dto.theme ?? 'SKY', kicker: dto.kicker ?? null, highlights: dto.highlights ?? [] },
+        defaultHeadline: dto.headline,
+        defaultSummary: dto.summary ?? '',
+        defaultDisclaimer: 'Editorial content prepared by the Delta Signal team.',
+      };
+    }
     if (dto.type.startsWith('NATIONAL_')) {
       const cadence = dto.cadence ?? 'DAILY';
       const suggestions = await this.ranking.getSuggestions(cadence);
-      const seriesByType: Record<string, string> = {
+      const baseByType: Record<string, string> = {
         NATIONAL_RAIN_WATCH: 'RAIN_WATCH',
         NATIONAL_AIR_QUALITY_WATCH: 'AIR_QUALITY_WATCH',
         NATIONAL_HEAT_WATCH: 'HEAT_WATCH',
@@ -202,8 +214,15 @@ export class SocialContentService {
         NATIONAL_ALERT_WATCH: 'ALERT_WATCH',
         NATIONAL_COMMUNITY_SIGNALS: 'COMMUNITY_SIGNALS',
         NATIONAL_BIODIVERSITY: 'WILD_BANGLADESH',
+        NATIONAL_COASTAL_WATCH: 'COASTAL_WATCH',
+        NATIONAL_PERIOD_SUMMARY: 'PERIOD_SUMMARY',
       };
-      const suggestion = suggestions.find((item) => item.series === seriesByType[dto.type]);
+      // Weather rankings are cadence-prefixed (WEEKLY_RAIN_WATCH); the others keep one name across cadences.
+      const base = baseByType[dto.type];
+      const prefixed = cadence !== 'DAILY' && ['RAIN_WATCH', 'AIR_QUALITY_WATCH', 'HEAT_WATCH'].includes(base);
+      const wanted = prefixed ? `${cadence}_${base}` : base;
+      if (dto.type === SocialContentType.NATIONAL_PERIOD_SUMMARY && cadence === 'DAILY') throw new BadRequestException('Period summaries need a weekly or monthly cadence');
+      const suggestion = suggestions.find((item) => item.series === wanted);
       if (!suggestion) throw new BadRequestException(`No ${cadence.toLowerCase()} data is currently available for this national card`);
       return {
         sourceId: suggestion.id,
@@ -219,6 +238,26 @@ export class SocialContentService {
     const district = await this.prisma.district.findUnique({ where: { id: dto.districtId }, select: { id: true, name: true, bnName: true } });
     if (!district) throw new NotFoundException('District not found');
     const base = { district: { id: district.id, name: district.name, bnName: district.bnName } };
+    if (dto.type === SocialContentType.DISTRICT_SNAPSHOT) {
+      const now = new Date();
+      const [weather, air, climate, alertCount] = await Promise.all([
+        this.prisma.currentWeatherReading.findFirst({ where: { districtId: dto.districtId }, orderBy: { readingTime: 'desc' } }),
+        this.prisma.hourlyAirQuality.findFirst({ where: { districtId: dto.districtId, forecastTime: { lte: now } }, orderBy: { forecastTime: 'desc' } }),
+        this.prisma.district.findUnique({ where: { id: dto.districtId }, select: { totalPrecip30d: true, avgTemp30d: true, avgPm25_30d: true } }),
+        this.prisma.alert.count({ where: { status: 'ACTIVE', OR: [{ districtId: dto.districtId }, { areas: { some: { districtId: dto.districtId } } }] } }),
+      ]);
+      if (!weather && !air) throw new BadRequestException('No current weather or air-quality data is available for this district');
+      const parts = [weather?.temperature2m != null ? `${Math.round(weather.temperature2m)}°C` : null, air?.pm25 != null ? `PM2.5 ${Math.round(air.pm25)} µg/m³` : null].filter(Boolean);
+      return {
+        sourceId: weather?.id ?? air?.id ?? null,
+        sourceLabel: 'Open-Meteo current weather and air-quality model, Delta Signal alerts',
+        observedAt: weather?.readingTime ?? air?.forecastTime ?? now,
+        snapshot: { ...base, kind: dto.type, weather, airQuality: air, climate30d: climate, activeAlerts: alertCount },
+        defaultHeadline: `${district.name} right now`,
+        defaultSummary: parts.length ? `${parts.join(', ')}. ${alertCount ? `${alertCount} active alert${alertCount === 1 ? '' : 's'}.` : 'No active alerts.'}` : 'A snapshot of current conditions.',
+        defaultDisclaimer: 'Model-based values; local conditions may differ. Not an official AQI or forecast.',
+      };
+    }
     if (dto.type === SocialContentType.CURRENT_WEATHER) {
       const row = await this.prisma.currentWeatherReading.findFirst({ where: { districtId: dto.districtId }, orderBy: { readingTime: 'desc' } });
       if (!row) throw new BadRequestException('No current weather data is available for this district');

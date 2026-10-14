@@ -261,7 +261,7 @@ Provider job-tracking API for scheduled external syncs. Weather, GBIF, and Flood
 | GET | `/social-content/suggestions/national?cadence=DAILY|WEEKLY|MONTHLY` | `social_content.create` | ✓ | Generate live nationwide ranked suggestions with source windows, coverage, and quality metadata; review-only |
 | GET | `/social-content/drafts` | `social_content.create` | ✓ | List reviewed social drafts |
 | GET | `/social-content/drafts/:id` | `social_content.create` | ✓ | Draft, source snapshot, and rendered assets |
-| POST | `/social-content/drafts` | `social_content.create` | ✓ | Create a source-backed draft |
+| POST | `/social-content/drafts` | `social_content.create` | ✓ | Create a source-backed draft; `CUSTOM_EDITORIAL` takes `headline`, `summary`, `theme`, `kicker`, `highlights[≤4]` instead of a source; `DISTRICT_SNAPSHOT` needs `districtId`; `NATIONAL_PERIOD_SUMMARY` needs a WEEKLY/MONTHLY `cadence` |
 | PATCH | `/social-content/drafts/:id` | `social_content.edit` | ✓ | Edit copy, format, and locale |
 | POST | `/social-content/drafts/:id/render` | `social_content.render` | ✓ | Render deterministic SVG card |
 | POST | `/social-content/drafts/:id/approve` | `social_content.approve` | ✓ | Approve a rendered card |
