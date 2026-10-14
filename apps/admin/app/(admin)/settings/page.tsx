@@ -84,72 +84,73 @@ const NAV_MATRIX = [
   },
 ];
 
-/* ── Design tokens (mirrors :root in globals.css) ─────────────────────
-   Update here whenever globals.css :root changes.
+/* ── Design tokens (mirrors :root in globals.css, light scheme) ───────
+   Update here whenever globals.css :root changes. The dark scheme follows the
+   system setting and overrides the same names in a prefers-color-scheme block.
    ──────────────────────────────────────────────────────────────────── */
 
 const TOKEN_GROUPS: { label: string; tokens: { name: string; value: string; swatch?: true }[] }[] = [
   {
     label: 'Brand / Accent',
     tokens: [
-      { name: '--accent',            value: '#3d9fa8', swatch: true },
-      { name: '--accent-hover',      value: '#2e7b83', swatch: true },
-      { name: '--accent-subtle',     value: '#d0edf0', swatch: true },
-      { name: '--accent-subtle-txt', value: '#2b7a82', swatch: true },
+      { name: '--accent',            value: '#147a57', swatch: true },
+      { name: '--accent-hover',      value: '#0d5f4a', swatch: true },
+      { name: '--accent-subtle',     value: '#e4f3ea', swatch: true },
+      { name: '--accent-subtle-txt', value: '#1f6b45', swatch: true },
     ],
   },
   {
     label: 'Sidebar',
     tokens: [
-      { name: '--sidebar-bg',           value: '#172026', swatch: true },
-      { name: '--sidebar-hover',        value: '#1e2f38', swatch: true },
-      { name: '--sidebar-border',       value: '#2a3840', swatch: true },
-      { name: '--sidebar-text',         value: '#c8d6da', swatch: true },
-      { name: '--sidebar-text-bright',  value: '#e8f0f2', swatch: true },
-      { name: '--sidebar-text-muted',   value: '#8aa4ac', swatch: true },
-      { name: '--sidebar-text-dim',     value: '#6a8890', swatch: true },
+      { name: '--sidebar-bg',           value: '#ffffff', swatch: true },
+      { name: '--sidebar-hover',        value: '#f1f5f3', swatch: true },
+      { name: '--sidebar-border',       value: '#dde5e1', swatch: true },
+      { name: '--sidebar-text',         value: '#3a4f48', swatch: true },
+      { name: '--sidebar-text-bright',  value: '#17201d', swatch: true },
+      { name: '--sidebar-text-muted',   value: '#5f6f68', swatch: true },
+      { name: '--sidebar-text-dim',     value: '#6f7f78', swatch: true },
     ],
   },
   {
     label: 'Surfaces & Backgrounds',
     tokens: [
-      { name: '--page-bg',       value: '#f0f4f5', swatch: true },
+      { name: '--page-bg',       value: '#f7f9f8', swatch: true },
       { name: '--surface',       value: '#ffffff', swatch: true },
-      { name: '--surface-subtle', value: '#f8fafb', swatch: true },
-      { name: '--surface-dim',   value: '#fafafa', swatch: true },
+      { name: '--surface-subtle', value: '#f1f5f3', swatch: true },
+      { name: '--surface-dim',   value: '#f7f9f8', swatch: true },
     ],
   },
   {
     label: 'Borders',
     tokens: [
-      { name: '--border',        value: '#d4dcdf', swatch: true },
-      { name: '--border-subtle', value: '#edf1f2', swatch: true },
+      { name: '--border',        value: '#dde5e1', swatch: true },
+      { name: '--border-subtle', value: '#e9eeeb', swatch: true },
     ],
   },
   {
     label: 'Text',
     tokens: [
-      { name: '--ink',            value: '#172026', swatch: true },
-      { name: '--text-secondary', value: '#5b6d74', swatch: true },
-      { name: '--text-muted',     value: '#8a9fa8', swatch: true },
-      { name: '--text-body',      value: '#3a4f58', swatch: true },
-      { name: '--text-label',     value: '#2a3840', swatch: true },
+      { name: '--ink',            value: '#17201d', swatch: true },
+      { name: '--text-secondary', value: '#5f6f68', swatch: true },
+      { name: '--text-muted',     value: '#6f7f78', swatch: true },
+      { name: '--text-body',      value: '#3a4f48', swatch: true },
+      { name: '--text-label',     value: '#17201d', swatch: true },
     ],
   },
   {
     label: 'Semantic — Success',
     tokens: [
-      { name: '--success-bg',     value: '#d1fae5', swatch: true },
-      { name: '--success-text',   value: '#065f46', swatch: true },
-      { name: '--success-border', value: '#a7f3d0', swatch: true },
+      { name: '--success-bg',     value: '#e4f3ea', swatch: true },
+      { name: '--success-text',   value: '#1f6b45', swatch: true },
+      { name: '--success-border', value: '#cfe6dc', swatch: true },
     ],
   },
   {
     label: 'Semantic — Danger',
     tokens: [
-      { name: '--danger-bg',     value: '#fee2e2', swatch: true },
-      { name: '--danger-text',   value: '#991b1b', swatch: true },
-      { name: '--danger-border', value: '#fecaca', swatch: true },
+      { name: '--danger-bg',     value: '#fbe3e3', swatch: true },
+      { name: '--danger-text',   value: '#b23a3a', swatch: true },
+      { name: '--danger-border', value: '#f3c5c5', swatch: true },
     ],
   },
 ];

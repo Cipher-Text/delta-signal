@@ -4,6 +4,7 @@ import { apiGet } from '../../lib/api';
 import { ADMIN_ACCESS_TOKEN_COOKIE } from '../../lib/session-constants';
 import { logoutAction } from '../../lib/auth-actions';
 import AdminNav from '../../components/admin-nav';
+import AdminShell from '../../components/admin-shell';
 
 interface AdminUser {
   id: string;
@@ -28,7 +29,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="admin-layout">
+    <AdminShell
+      sidebar={
       <aside className="sidebar">
         <div className="sidebar-brand">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -54,8 +56,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </form>
         </div>
       </aside>
-
-      <div className="main-content">{children}</div>
-    </div>
+      }
+    >
+      {children}
+    </AdminShell>
   );
 }

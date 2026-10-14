@@ -165,6 +165,8 @@ Route groups: `(auth)` — `/login`; `(admin)` — all other pages behind a dark
 
 **Role enforcement:** login rejects non-MODERATOR/ADMIN accounts at the application layer (best-effort revoke + clear cookies). The `(admin)` layout re-checks role on every render via `GET /api/v1/auth/profile`.
 
+**Look:** `app/globals.css` uses the same palette and scale as `apps/web` (Delta Green accent, neutral green-grey surfaces, light sidebar with a green active item, Inter via `next/font`) as plain CSS variables, with a dark scheme that follows `prefers-color-scheme`. Badges, tags and roles use `--chip-*` pairs, never raw hex; severity stripes use `--sev-*`. The Layout page (`/settings`) lists the light-scheme token values and must be updated with `:root`. Below 900px `components/admin-shell.tsx` turns the sidebar into a drawer opened from a top bar (closes on navigation, Escape or a tap outside).
+
 **Nav:** `components/admin-nav.tsx` is `'use client'` (uses `usePathname()` for active-link state); Datasets and Users links are ADMIN-only. The layout itself stays a Server Component.
 
 Pages: Reports (moderation queue, 5-status tabs), Users (role change, deactivate, reactivate), Alerts (create, cancel, status tabs), Datasets (publish toggle, access policy), Organizations (create, membership management), Ingestion (job history, status tabs, per-job detail — ADMIN-only), Permissions (role ↔ permission matrix CRUD), Restoration (project admin), Audit (audit event log), Settings (layout & design tokens), System (system health), **Social Content** (nationwide ranking suggestions, draft CRUD + render/approve/download/archive workflow — see below).
