@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import ThemeToggle from './theme-toggle';
+import type { Theme } from '../lib/theme';
 
 function MenuIcon() {
   return (
@@ -11,7 +13,7 @@ function MenuIcon() {
   );
 }
 
-export default function MobileMenu({ links }: { links: readonly { href: string; label: string }[] }) {
+export default function MobileMenu({ links, theme, signedIn = false }: { links: readonly { href: string; label: string }[]; theme: Theme | undefined; signedIn?: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -33,8 +35,9 @@ export default function MobileMenu({ links }: { links: readonly { href: string; 
               {link.label}
             </Link>
           ))}
-          <Link href="/login" className="mobile-menu-signin" onClick={() => setOpen(false)}>
-            Sign in
+          <div className="mobile-menu-theme"><ThemeToggle theme={theme} /></div>
+          <Link href={signedIn ? '/dashboard' : '/login'} className="mobile-menu-signin" onClick={() => setOpen(false)}>
+            {signedIn ? 'Dashboard' : 'Sign in'}
           </Link>
         </div>
       )}

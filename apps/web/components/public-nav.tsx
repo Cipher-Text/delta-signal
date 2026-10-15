@@ -2,6 +2,7 @@ import Link from 'next/link';
 import ThemeToggle from './theme-toggle';
 import MobileMenu from './mobile-menu';
 import { getTheme } from '../lib/theme';
+import { getCurrentUser } from '../lib/current-user';
 
 const NAV_LINKS = [
   { href: '/#topics', label: 'Explore' },
@@ -9,10 +10,12 @@ const NAV_LINKS = [
   { href: '/data', label: 'Data' },
   { href: '/observations', label: 'Research' },
   { href: '/reports', label: 'Reports' },
+  { href: '/organizations', label: 'Organizations' },
 ] as const;
 
 export default async function PublicNav() {
   const theme = await getTheme();
+  const signedIn = (await getCurrentUser()) !== null;
   return (
     <header className="public-nav">
       <Link className="public-brand" href="/">
@@ -29,11 +32,11 @@ export default async function PublicNav() {
       </nav>
 
       <div className="nav-actions">
-        <ThemeToggle theme={theme} compact />
-        <Link className="button ghost nav-signin" href="/login">
-          Sign in
+        <span className="nav-theme"><ThemeToggle theme={theme} compact /></span>
+        <Link className="button ghost nav-signin" href={signedIn ? '/dashboard' : '/login'}>
+          {signedIn ? 'Dashboard' : 'Sign in'}
         </Link>
-        <MobileMenu links={NAV_LINKS} />
+        <MobileMenu links={NAV_LINKS} theme={theme} signedIn={signedIn} />
       </div>
     </header>
   );

@@ -11,7 +11,7 @@ export async function apiGet<T>(path: string, revalidateSeconds = 900): Promise<
     next: { revalidate: revalidateSeconds },
   });
   if (!res.ok) {
-    throw new Error(`API request failed: ${res.status} ${path}`);
+    throw new ApiError(res.status, `API request failed: ${res.status} ${path}`);
   }
   return res.json() as Promise<T>;
 }

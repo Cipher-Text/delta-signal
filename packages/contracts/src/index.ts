@@ -762,6 +762,7 @@ export interface Organization {
   isVerified: boolean;
   logoUrl: string | null;
   createdAt: string;
+  _count?: { restorationProjects: number };
   providers?: Array<{ id: string; name: string; type: ProviderType; isActive: boolean }>;
   photos?: Array<{ id: string; url: string; caption: string | null }>;
   socialLinks?: Array<{ platform: string; url: string }>;

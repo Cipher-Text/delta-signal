@@ -8,6 +8,7 @@ const COLUMNS = [
       { label: 'Data', href: '/data' },
       { label: 'Research', href: '/observations' },
       { label: 'Reports', href: '/reports' },
+      { label: 'Organizations', href: '/organizations' },
     ],
   },
   {

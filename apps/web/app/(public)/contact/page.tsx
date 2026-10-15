@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
-import LegalPage from '../../../components/legal-page';
+import type { Metadata } from "next";
+import LegalPage from "../../../components/legal-page";
 
 export const metadata: Metadata = {
-  title: 'Contact — Delta Signal',
-  description: 'How to reach the Delta Signal team.',
+  title: "Contact — Delta Signal",
+  description: "How to reach the Delta Signal team.",
 };
 
 export default function ContactPage() {
@@ -14,10 +14,12 @@ export default function ContactPage() {
       intro="Delta Signal is an independent public platform. For questions about the data, a correction, a partnership enquiry, or anything else, reach us by email."
       sections={[
         {
-          title: 'Email',
+          title: "Email",
           children: (
             <p>
-              <a href="mailto:privacy@deltasignal.org" className="text-link">privacy@deltasignal.org</a>
+              <a href="mailto:hello@deltasignal.org" className="text-link">
+                hello@deltasignal.org
+              </a>
             </p>
           ),
         },

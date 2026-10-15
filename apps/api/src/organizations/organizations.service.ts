@@ -29,6 +29,7 @@ const ORG_SELECT = {
   logoUrl: true,
   createdAt: true,
   updatedAt: true,
+  _count: { select: { restorationProjects: true } },
 } as const;
 
 @Injectable()

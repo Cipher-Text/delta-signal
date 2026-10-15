@@ -31,8 +31,11 @@ const PUBLIC_PATHS = [
   '/data-deletion',
 ];
 
+/** The organization directory and each organization's landing page (`/organizations/{slug}`); `/organizations/{slug}/edit` stays private. */
+const PUBLIC_ORGANIZATION_PATH = /^\/organizations(?:\/[^/]+)?\/?$/;
+
 function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some((p) => pathname === p || (p !== '/' && pathname.startsWith(p + '/')));
+  return PUBLIC_ORGANIZATION_PATH.test(pathname) || PUBLIC_PATHS.some((p) => pathname === p || (p !== '/' && pathname.startsWith(p + '/')));
 }
 
 function loginRedirect(req: NextRequest): NextResponse {
