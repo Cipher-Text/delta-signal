@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsIn, IsUrl, IsOptional, IsString, MaxLength } from 'class-validator';
 import type { OrganizationType } from '@delta-signal/shared';
 
 const ORGANIZATION_TYPES: OrganizationType[] = [
@@ -27,7 +27,7 @@ export class UpdateOrganizationDto {
   description?: string;
 
   @IsOptional()
-  @IsString()
+  @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   @MaxLength(500)
   website?: string;
 

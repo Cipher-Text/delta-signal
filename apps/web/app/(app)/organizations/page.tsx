@@ -6,6 +6,7 @@ import AutoSubmitCheckbox from '../../../components/auto-submit-checkbox';
 import EmptyState from '../../../components/empty-state';
 import NavIcon from '../../../components/nav-icons';
 import PageHeader from '../../../components/page-header';
+import OrgLogo from '../../../components/org-logo';
 
 type Query = { type?: string; verified?: string; q?: string };
 
@@ -145,9 +146,12 @@ export default async function OrganizationsPage(props: { searchParams: Promise<Q
           {orgs.map((o) => (
             <li key={o.id}>
               <Link href={`/organizations/${o.id}`} className="org-card">
-                <span className="org-card-tags">
-                  <TypePill type={o.type} />
-                  {o.isVerified && <VerifiedPill />}
+                <span className="org-card-top">
+                  <OrgLogo name={o.name} url={o.logoUrl} />
+                  <span className="org-card-tags">
+                    <TypePill type={o.type} />
+                    {o.isVerified && <VerifiedPill />}
+                  </span>
                 </span>
                 <h3>{o.name}</h3>
                 {o.description && <p>{o.description}</p>}

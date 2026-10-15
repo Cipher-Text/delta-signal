@@ -55,7 +55,7 @@ export default async function RestorationDetailPage(
         </div>
         <h1>{project.title}</h1>
         <div className="report-detail-meta">
-          {project.organization && <span>{project.organization.name}</span>}
+          {project.organization && <span><Link href={`/organizations/${project.organization.id}`}>{project.organization.name}</Link></span>}
           {project.district && (
             <span>{project.district.name}, {project.district.division?.name}</span>
           )}
@@ -95,7 +95,7 @@ export default async function RestorationDetailPage(
           {project.organization && (
             <div className="obs-detail-row">
               <span>Organization</span>
-              <strong>{project.organization.name}</strong>
+              <strong><Link href={`/organizations/${project.organization.id}`}>{project.organization.name}</Link></strong>
             </div>
           )}
           {project.district && (

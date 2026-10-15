@@ -758,8 +758,11 @@ export interface Organization {
   website: string | null;
   country: string;
   isVerified: boolean;
+  logoUrl: string | null;
   createdAt: string;
   providers?: Array<{ id: string; name: string; type: ProviderType; isActive: boolean }>;
+  photos?: Array<{ id: string; url: string; caption: string | null }>;
+  socialLinks?: Array<{ platform: string; url: string }>;
 }
 
 export interface UserProfile {

@@ -7071,7 +7071,31 @@ a.loc-row:focus-visible { outline: 3px solid var(--ds-focus); outline-offset: -3
 .org-card:focus-visible { outline: 2px solid var(--ds-brand-mark); outline-offset: 2px; }
 .org-card h3 { margin: 0; font-size: 1.0625rem; font-weight: 600; line-height: 1.35; }
 .org-card p { margin: 0; color: var(--ds-text-2); font-size: var(--ds-text-nav); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.org-card-top { display: flex; align-items: center; gap: 12px; }
 .org-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.org-logo { flex: none; display: block; border-radius: 12px; object-fit: contain; background: var(--ds-surface); border: 1px solid var(--ds-border); }
+.org-logo--md { width: 44px; height: 44px; }
+.org-logo--lg { width: 72px; height: 72px; border-radius: 16px; }
+.org-logo--empty { display: grid; place-items: center; background: var(--ds-tint-neutral-bg); color: var(--ds-tint-neutral-icon); font-weight: 700; }
+.org-logo--md.org-logo--empty { font-size: 1.125rem; }
+.org-logo--lg.org-logo--empty { font-size: 1.75rem; }
+.org-edit-card { padding: 0 var(--ds-space-24, 24px); }
+.org-edit-card .pf-section:first-child { border-top: 0; }
+.org-edit-logo { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.org-edit-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+.org-edit-caption { flex: 1 1 200px; min-width: 0; box-sizing: border-box; height: 40px; padding: 0 12px; border: 1px solid var(--ds-border-strong); border-radius: var(--ds-radius-control); background: var(--ds-surface); color: var(--ds-text); font: inherit; }
+.org-edit .org-gallery li { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.org-hero a.pf-btn-outline { text-decoration: none; }
+.org-hero { display: flex; align-items: center; gap: 16px; }
+.org-hero > div { min-width: 0; }
+.org-links { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.org-links a { display: inline-flex; align-items: center; height: 32px; padding: 0 12px; border: 1px solid var(--ds-border-strong); border-radius: 999px; color: var(--ds-text); font-size: 0.8125rem; font-weight: 500; text-decoration: none; }
+.org-links a:hover { background: var(--ds-surface-2); }
+.org-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.org-gallery figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.org-gallery img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--ds-radius-card); border: 1px solid var(--ds-border); }
+.org-gallery figcaption { color: var(--ds-text-2); font-size: 0.8125rem; }
+@media (max-width: 560px) { .org-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); } .org-logo--lg { width: 56px; height: 56px; } }
 .org-pill, .org-verified { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
 .org-pill--bio { background: var(--ds-tint-biodiversity-bg); color: var(--ds-tint-biodiversity-icon); }
 .org-pill--water { background: var(--ds-tint-water-bg); color: var(--ds-tint-water-icon); }

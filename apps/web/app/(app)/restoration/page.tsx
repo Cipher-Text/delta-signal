@@ -19,24 +19,9 @@ import ListPagination from '../../../components/list-pagination';
 import NavIcon from '../../../components/nav-icons';
 import PageHeader from '../../../components/page-header';
 import RegisterDrawer from '../../../components/restoration/register-drawer';
+import { CATEGORIES, STATUSES } from '../../../lib/restoration-meta';
 
 type Query = { category?: string; status?: string; districtId?: string; page?: string; created?: string; joined?: string; error?: string };
-
-const CATEGORIES: { value: RestorationCategory; label: string; tint: string }[] = [
-  { value: 'TREE_PLANTING', label: 'Tree planting', tint: 'bio' },
-  { value: 'WETLAND_RESTORATION', label: 'Wetland restoration', tint: 'water' },
-  { value: 'RIVERBANK_PROTECTION', label: 'Riverbank protection', tint: 'water' },
-  { value: 'MANGROVE', label: 'Mangrove', tint: 'bio' },
-  { value: 'WASTE_MANAGEMENT', label: 'Waste management', tint: 'earth' },
-  { value: 'OTHER', label: 'Other', tint: 'neutral' },
-];
-
-const STATUSES: { value: ProjectStatus; label: string; dot: string; hollow?: boolean }[] = [
-  { value: 'ACTIVE', label: 'Active', dot: '#2E9B66' },
-  { value: 'PLANNED', label: 'Planned', dot: '#3388C7' },
-  { value: 'PAUSED', label: 'Paused', dot: '#7B8782', hollow: true },
-  { value: 'COMPLETED', label: 'Completed', dot: '#5F6F68', hollow: true },
-];
 
 const CREATOR_ROLES = new Set(['ORGANIZATION_ADMIN', 'ADMIN']);
 
@@ -220,7 +205,7 @@ export default async function RestorationPage(props: { searchParams: Promise<Que
                 <h3><Link href={`/restoration/${p.id}`}>{p.title}</Link></h3>
                 <p className="rs-where">
                   <NavIcon name="organizations" />
-                  {p.organization?.name ?? 'No organization'}
+                  {p.organization ? <Link href={`/organizations/${p.organization.id}`}>{p.organization.name}</Link> : 'No organization'}
                   <span aria-hidden="true">·</span>
                   <NavIcon name="locations" />
                   {p.district?.name ?? 'District not set'}

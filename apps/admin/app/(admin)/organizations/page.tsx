@@ -6,9 +6,16 @@ import {
   updateOrganizationAction,
   deleteOrganizationAction,
   upsertMembershipAction,
+  setOrganizationLogoAction,
+  removeOrganizationLogoAction,
+  addOrganizationPhotoAction,
+  removeOrganizationPhotoAction,
+  saveOrganizationLinksAction,
   updateMembershipAction,
   removeMembershipAction,
 } from '../../../lib/organization-actions';
+import { countryOptions } from '../../../lib/countries';
+import { ORG_LINK_LABELS, ORG_LINK_PLATFORMS } from '../../../lib/organization-links';
 
 type Organization = {
   id: string;
@@ -18,6 +25,9 @@ type Organization = {
   website: string | null;
   country: string;
   isVerified: boolean;
+  logoUrl: string | null;
+  photos: Array<{ id: string; url: string; caption: string | null }>;
+  socialLinks: Array<{ platform: string; url: string }>;
   memberships: Array<{
     userId: string;
     role: 'ADMIN' | 'MEMBER';
@@ -73,7 +83,9 @@ export default async function OrganizationsPage(
             ))}
           </select>
           <input name="website" className="text-input" placeholder="Website (optional)" />
-          <input name="country" className="text-input" placeholder="Country (default: Bangladesh)" />
+          <select name="country" className="role-select" defaultValue="Bangladesh" aria-label="Country">
+            {countryOptions().map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
           <input name="description" className="text-input" placeholder="Description (optional)" style={{ minWidth: '240px' }} />
           <button className="btn btn-secondary" type="submit">Create</button>
         </form>
@@ -110,7 +122,9 @@ export default async function OrganizationsPage(
                   ))}
                 </select>
                 <input name="website" className="text-input" placeholder="Website" defaultValue={org.website ?? ''} />
-                <input name="country" className="text-input" placeholder="Country" defaultValue={org.country} />
+                <select name="country" className="role-select" defaultValue={org.country} aria-label="Country">
+                  {countryOptions(org.country).map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
                 <input name="description" className="text-input" placeholder="Description" defaultValue={org.description ?? ''} style={{ minWidth: '240px' }} />
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.875rem' }}>
                   <input type="hidden" name="isVerified" value="false" />
@@ -128,6 +142,79 @@ export default async function OrganizationsPage(
                 <input type="hidden" name="id" value={org.id} />
                 <button className="btn btn-danger-outline btn-sm" type="submit">Delete organization</button>
               </form>
+            </details>
+
+            {/* Logo, photos and links */}
+            <details className="org-media" style={{ marginBottom: '1rem' }}>
+              <summary style={{ cursor: 'pointer', fontWeight: 500, fontSize: '0.875rem' }}>
+                Logo, photos and links
+                <span className="org-media-count"> · {org.logoUrl ? 'logo set' : 'no logo'} · {org.photos.length}/8 photos · {org.socialLinks.length} links</span>
+              </summary>
+
+              <div className="org-media-block">
+                <h3>Logo</h3>
+                <div className="org-media-logo-row">
+                  {org.logoUrl
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img className="org-media-logo" src={org.logoUrl} alt={`${org.name} logo`} />
+                    : <div className="org-media-logo org-media-logo--empty" aria-hidden="true">{org.name.slice(0, 1)}</div>}
+                  <form action={setOrganizationLogoAction} className="inline-form" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <input type="hidden" name="id" value={org.id} />
+                    <input type="file" name="file" accept="image/jpeg,image/png,image/webp" required />
+                    <button className="btn btn-secondary btn-sm" type="submit">{org.logoUrl ? 'Replace logo' : 'Upload logo'}</button>
+                  </form>
+                  {org.logoUrl && (
+                    <form action={removeOrganizationLogoAction}>
+                      <input type="hidden" name="id" value={org.id} />
+                      <button className="btn btn-danger-outline btn-sm" type="submit">Remove</button>
+                    </form>
+                  )}
+                </div>
+                <p className="org-media-hint">Square or wide images work; JPG, PNG or WebP up to 5 MB. Shown on cards at small size, so a simple mark reads best.</p>
+              </div>
+
+              <div className="org-media-block">
+                <h3>Photos</h3>
+                {org.photos.length > 0 && (
+                  <ul className="org-media-photos">
+                    {org.photos.map((photo) => (
+                      <li key={photo.id}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={photo.url} alt={photo.caption ?? 'Organization photo'} />
+                        <span>{photo.caption ?? 'No caption'}</span>
+                        <form action={removeOrganizationPhotoAction}>
+                          <input type="hidden" name="id" value={org.id} />
+                          <input type="hidden" name="photoId" value={photo.id} />
+                          <button className="btn btn-danger-outline btn-sm" type="submit">Remove</button>
+                        </form>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {org.photos.length < 8 ? (
+                  <form action={addOrganizationPhotoAction} className="inline-form" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <input type="hidden" name="id" value={org.id} />
+                    <input type="file" name="file" accept="image/jpeg,image/png,image/webp" required />
+                    <input name="caption" className="text-input" placeholder="Caption (optional)" maxLength={200} />
+                    <button className="btn btn-secondary btn-sm" type="submit">Add photo</button>
+                  </form>
+                ) : <p className="org-media-hint">The gallery is full (8 photos). Remove one to add another.</p>}
+              </div>
+
+              <div className="org-media-block">
+                <h3>Links</h3>
+                <form action={saveOrganizationLinksAction} className="org-media-links">
+                  <input type="hidden" name="id" value={org.id} />
+                  {ORG_LINK_PLATFORMS.map((platform) => (
+                    <label key={platform}>
+                      <span>{ORG_LINK_LABELS[platform]}</span>
+                      <input name={platform} className="text-input" type="url" placeholder="https://" defaultValue={org.socialLinks.find((l) => l.platform === platform)?.url ?? ''} />
+                    </label>
+                  ))}
+                  <button className="btn btn-secondary btn-sm" type="submit">Save links</button>
+                </form>
+                <p className="org-media-hint">Leave a field empty to remove that link. The website is edited above.</p>
+              </div>
             </details>
 
             {/* Members */}

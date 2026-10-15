@@ -25,6 +25,10 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+
+  // Organization logos and photos (up to 5 MB each) go through Server Actions.
+  experimental: { serverActions: { bodySizeLimit: '8mb' } },
+
   outputFileTracingRoot: path.join(__dirname, '../../'),
 
   async headers() {

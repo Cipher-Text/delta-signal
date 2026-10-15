@@ -319,7 +319,7 @@ export default async function ProfilePage(props: {
                     {user.organizations.map((org) => (
                       <li key={org.id}>
                         <Link href={`/organizations/${org.id}`}>{org.name}</Link>
-                        <span>{titleCase(org.type)}{org.isVerified ? ' · Verified' : ''} · {titleCase(org.membershipRole)}</span>
+                        <span>{titleCase(org.type)}{org.isVerified ? ' · Verified' : ''} · {titleCase(org.membershipRole)}{org.membershipRole === 'ADMIN' && <> · <Link href={`/organizations/${org.id}/edit`}>Edit profile</Link></>}</span>
                       </li>
                     ))}
                   </ul>

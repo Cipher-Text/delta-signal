@@ -124,3 +124,17 @@ export async function apiDeleteAuthed(path: string, accessToken: string): Promis
     throw new ApiError(res.status, extractErrorMessage(errorBody, `API request failed: ${res.status} ${path}`));
   }
 }
+
+export async function apiPutAuthed<T>(path: string, body: unknown, accessToken: string): Promise<T> {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new ApiError(res.status, extractErrorMessage(errorBody, `API request failed: ${res.status} ${path}`));
+  }
+  return res.json() as Promise<T>;
+}

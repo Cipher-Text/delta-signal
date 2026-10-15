@@ -87,3 +87,32 @@ export async function apiDelete<T>(path: string, accessToken: string, body?: unk
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
+
+export async function apiPut<T>(path: string, body: unknown, accessToken: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify(body),
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new ApiError(res.status, extractErrorMessage(errorBody, `PUT ${path} failed: ${res.status}`));
+  }
+  return res.json() as Promise<T>;
+}
+
+/** POST a multipart form (file uploads). The Content-Type boundary is set by fetch. */
+export async function apiPostForm<T>(path: string, form: FormData, accessToken: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: form,
+    cache: 'no-store',
+  });
+  if (!res.ok) {
+    const errorBody = await res.json().catch(() => null);
+    throw new ApiError(res.status, extractErrorMessage(errorBody, `POST ${path} failed: ${res.status}`));
+  }
+  return res.json() as Promise<T>;
+}

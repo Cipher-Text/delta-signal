@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
-import { apiDelete, apiPatch, apiPost, ApiError } from './api';
+import { apiDelete, apiPatch, apiPost, apiPostForm, apiPut, ApiError } from './api';
 import { ADMIN_ACCESS_TOKEN_COOKIE } from './session-constants';
 
 async function tokenOrRedirect() {
@@ -119,4 +119,87 @@ export async function removeMembershipAction(formData: FormData) {
   }
   revalidatePath('/organizations');
   redirect('/organizations?success=removed');
+}
+
+import { ORG_LINK_PLATFORMS } from './organization-links';
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function imageFrom(formData: FormData): File | null {
+  const file = formData.get('file');
+  return file instanceof File && file.size > 0 ? file : null;
+}
+
+export async function setOrganizationLogoAction(formData: FormData) {
+  const token = await tokenOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  const file = imageFrom(formData);
+  if (!file) redirect('/organizations?error=' + encodeURIComponent('Choose an image first.'));
+  if (file.size > MAX_IMAGE_BYTES) redirect('/organizations?error=' + encodeURIComponent('Images must be 5 MB or smaller.'));
+  const form = new FormData();
+  form.set('file', file);
+  try {
+    await apiPostForm(`/api/v1/admin/organizations/${id}/logo`, form, token);
+  } catch (err) {
+    redirect(`/organizations?error=${encodeURIComponent(errorMessage(err))}`);
+  }
+  revalidatePath('/organizations');
+  redirect('/organizations?success=updated');
+}
+
+export async function removeOrganizationLogoAction(formData: FormData) {
+  const token = await tokenOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  try {
+    await apiDelete(`/api/v1/admin/organizations/${id}/logo`, token);
+  } catch (err) {
+    redirect(`/organizations?error=${encodeURIComponent(errorMessage(err))}`);
+  }
+  revalidatePath('/organizations');
+  redirect('/organizations?success=updated');
+}
+
+export async function addOrganizationPhotoAction(formData: FormData) {
+  const token = await tokenOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  const file = imageFrom(formData);
+  if (!file) redirect('/organizations?error=' + encodeURIComponent('Choose an image first.'));
+  if (file.size > MAX_IMAGE_BYTES) redirect('/organizations?error=' + encodeURIComponent('Images must be 5 MB or smaller.'));
+  const form = new FormData();
+  form.set('file', file);
+  const caption = String(formData.get('caption') ?? '').trim();
+  if (caption) form.set('caption', caption);
+  try {
+    await apiPostForm(`/api/v1/admin/organizations/${id}/photos`, form, token);
+  } catch (err) {
+    redirect(`/organizations?error=${encodeURIComponent(errorMessage(err))}`);
+  }
+  revalidatePath('/organizations');
+  redirect('/organizations?success=updated');
+}
+
+export async function removeOrganizationPhotoAction(formData: FormData) {
+  const token = await tokenOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  const photoId = String(formData.get('photoId') ?? '');
+  try {
+    await apiDelete(`/api/v1/admin/organizations/${id}/photos/${photoId}`, token);
+  } catch (err) {
+    redirect(`/organizations?error=${encodeURIComponent(errorMessage(err))}`);
+  }
+  revalidatePath('/organizations');
+  redirect('/organizations?success=updated');
+}
+
+export async function saveOrganizationLinksAction(formData: FormData) {
+  const token = await tokenOrRedirect();
+  const id = String(formData.get('id') ?? '');
+  const links = ORG_LINK_PLATFORMS.map((platform) => ({ platform, url: String(formData.get(platform) ?? '').trim() }));
+  try {
+    await apiPut(`/api/v1/admin/organizations/${id}/links`, { links }, token);
+  } catch (err) {
+    redirect(`/organizations?error=${encodeURIComponent(errorMessage(err))}`);
+  }
+  revalidatePath('/organizations');
+  redirect('/organizations?success=updated');
 }

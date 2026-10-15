@@ -55,12 +55,22 @@ Authenticated citizens submit and view their own application through `POST /rese
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
 | GET | `/organizations` | Public | ✓ | List organizations (`?type=OrganizationType`) |
-| GET | `/organizations/:id` | Public | ✓ | Organization detail + providers |
+| GET | `/organizations/:id` | Public | ✓ | Organization detail: logo, photos, links, providers, restoration projects with progress counts; member names only when the caller is signed in (guests get `memberships: []` and the count in `_count`) |
 | POST | `/organizations` | Authenticated | ✗ | Request org creation |
-| PATCH | `/organizations/:id` | Org admin / Admin | ✗ | Update org |
+| GET | `/organizations/mine` | Authenticated | ✓ | Organizations the caller administers (organization-level `ADMIN` membership) |
+| PATCH | `/organizations/:id` | Org `ADMIN` member / platform Admin | ✓ | Edit own profile: description, website (http/https), country only; name, type and verification are rejected |
+| POST / DELETE | `/organizations/:id/logo` | Org `ADMIN` member / platform Admin | ✓ | Upload or remove the logo (same rules as the admin endpoint) |
+| POST | `/organizations/:id/photos` | Org `ADMIN` member / platform Admin | ✓ | Add a gallery photo |
+| DELETE | `/organizations/:id/photos/:photoId` | Org `ADMIN` member / platform Admin | ✓ | Remove a gallery photo |
+| PUT | `/organizations/:id/links` | Org `ADMIN` member / platform Admin | ✓ | Replace links |
 | GET | `/admin/organizations` | `organizations.manage` | ✓ | Admin organization list with memberships |
 | GET | `/admin/organizations/users` | `organizations.manage` | ✓ | Active users available for membership attachment |
 | POST | `/admin/organizations` | `organizations.manage` | ✓ | Create organization |
+| PATCH / DELETE | `/admin/organizations/:id` | `organizations.manage` | ✓ | Update (website must be http/https) or delete (also removes stored images) |
+| POST / DELETE | `/admin/organizations/:id/logo` | `organizations.manage` | ✓ | Upload (multipart `file`, JPG/PNG/WebP ≤ 5 MB, stored as ≤512 px WebP) or remove the logo |
+| POST | `/admin/organizations/:id/photos` | `organizations.manage` | ✓ | Add a gallery photo (multipart `file` + optional `caption`; max 8; stored as ≤1600 px WebP) |
+| DELETE | `/admin/organizations/:id/photos/:photoId` | `organizations.manage` | ✓ | Remove a gallery photo |
+| PUT | `/admin/organizations/:id/links` | `organizations.manage` | ✓ | Replace links: `{ links: [{ platform, url }] }` for facebook, linkedin, x, youtube, instagram, github, publications; blank URL removes one; non-http(s) rejected |
 | POST | `/admin/organizations/:id/members` | `organizations.manage` | ✓ | Attach or update a user membership |
 | PATCH | `/admin/organizations/:id/members/:userId` | `organizations.manage` | ✓ | Change membership role (`ADMIN` / `MEMBER`) |
 | DELETE | `/admin/organizations/:id/members/:userId` | `organizations.manage` | ✓ | Remove membership |

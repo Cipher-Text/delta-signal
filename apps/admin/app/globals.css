@@ -1802,3 +1802,19 @@ textarea:focus {
     padding: 20px 16px 32px;
   }
 }
+
+/* ── Organization logo / photos / links ── */
+.org-media { border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 14px; }
+.org-media-count { color: var(--text-muted); font-weight: 400; }
+.org-media-block { margin-top: 14px; }
+.org-media-block h3 { margin: 0 0 8px; font-size: 13px; font-weight: 650; }
+.org-media-hint { margin: 6px 0 0; color: var(--text-muted); font-size: 12px; }
+.org-media-logo-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.org-media-logo { width: 56px; height: 56px; border-radius: 10px; object-fit: contain; background: var(--surface); border: 1px solid var(--border); }
+.org-media-logo--empty { display: grid; place-items: center; font-weight: 700; color: var(--text-muted); }
+.org-media-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 0 0 12px; padding: 0; list-style: none; }
+.org-media-photos li { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.org-media-photos img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+.org-media-photos span { font-size: 12px; color: var(--text-secondary); overflow-wrap: anywhere; }
+.org-media-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; align-items: end; }
+.org-media-links label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--text-secondary); }
