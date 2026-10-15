@@ -145,7 +145,7 @@ export default async function OrganizationsPage(props: { searchParams: Promise<Q
         <ul className="org-grid">
           {orgs.map((o) => (
             <li key={o.id}>
-              <Link href={`/organizations/${o.id}`} className="org-card">
+              <Link href={`/organizations/${o.slug}`} className="org-card">
                 <span className="org-card-top">
                   <OrgLogo name={o.name} url={o.logoUrl} />
                   <span className="org-card-tags">

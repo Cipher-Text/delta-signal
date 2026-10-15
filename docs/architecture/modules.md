@@ -78,12 +78,14 @@ Owns NGOs, research groups, public agencies, community groups, and institutions.
 
 Admin management uses `OrganizationMembership` as a many-to-many link between users and organizations. Each membership is either `ADMIN` or `MEMBER`; users may belong to multiple organizations. The management endpoints use the RBAC permission `organizations.manage`, currently granted to the platform `ADMIN` role.
 
+Every organization has a unique `slug` (generated from the name, platform-admin editable, reserved words refused) used in public URLs; lookups accept the slug or the id.
+
 Profile media: `Organization.logoUrl`/`logoKey`, up to 8 `OrganizationPhoto` rows (url, storage key, caption, sort order) and one `OrganizationSocialLink` per platform (facebook, linkedin, x, youtube, instagram, github, publications; the website stays on the organization). Uploads accept JPG/PNG/WebP up to 5 MB, are re-encoded with `sharp` to WebP (logo ≤ 512 px, photos ≤ 1600 px) and stored at `organizations/{orgId}/…` through `StorageService`; replaced or deleted images are removed from the bucket. Link and website URLs must be http(s). Every organization mutation (create, update, verify change, delete, membership, logo, photo, links) writes an `ORGANIZATION_*` `AuditEvent`. Self-service: `OrganizationsService.assertCanEdit` allows platform admins and members holding the organization-level `ADMIN` role (403 otherwise, 404 for unknown organizations); the self-service DTO whitelists only description, website and country, so name, type and `isVerified` stay platform-admin only. The web app exposes this at `/organizations/:id/edit` (linked from the profile page and the organization page for eligible users). The public detail page lists the organization's restoration projects with description, dates, impact, latest activity and participant/target/activity counts.
 
 | Method | Path | Access |
 | --- | --- | --- |
 | GET | `/organizations` | Public (`?type`, `?page`, `?pageSize`) |
-| GET | `/organizations/:id` | Public (member names only when signed in) |
+| GET | `/organizations/:idOrSlug` | Public (member names only when signed in) |
 | GET/POST | `/admin/organizations` | `organizations.manage` |
 | PATCH/DELETE | `/admin/organizations/:id` | `organizations.manage` |
 | POST/DELETE | `/admin/organizations/:id/logo`, `/photos[/:photoId]` | `organizations.manage` |

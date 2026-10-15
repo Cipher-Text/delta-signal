@@ -13,14 +13,15 @@ const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 async function session(formData: FormData) {
   const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   const id = String(formData.get('id') ?? '');
-  if (!accessToken) redirect(`/login?next=/organizations/${id}/edit`);
-  return { accessToken, id };
+  const slug = String(formData.get('slug') ?? '') || id;
+  if (!accessToken) redirect(`/login?next=/organizations/${slug}/edit`);
+  return { accessToken, id, slug };
 }
 
-function done(id: string, ok: boolean, message: string): never {
+function done(slug: string, ok: boolean, message: string): never {
   revalidatePath('/organizations');
-  revalidatePath(`/organizations/${id}`);
-  redirect(`/organizations/${id}/edit?${ok ? 'saved' : 'error'}=${encodeURIComponent(message)}`);
+  revalidatePath(`/organizations/${slug}`);
+  redirect(`/organizations/${slug}/edit?${ok ? 'saved' : 'error'}=${encodeURIComponent(message)}`);
 }
 
 const fail = (error: unknown) => (error instanceof ApiError ? error.message : 'Something went wrong. Please try again.');
@@ -30,15 +31,15 @@ function imageFrom(formData: FormData): File | null {
   return file instanceof File && file.size > 0 ? file : null;
 }
 
-function checkImage(id: string, file: File | null): File {
-  if (!file) return done(id, false, 'Choose an image first.');
-  if (!IMAGE_TYPES.includes(file.type)) return done(id, false, 'Images must be JPG, PNG or WebP.');
-  if (file.size > MAX_IMAGE_BYTES) return done(id, false, 'Images must be 5 MB or smaller.');
+function checkImage(slug: string, file: File | null): File {
+  if (!file) return done(slug, false, 'Choose an image first.');
+  if (!IMAGE_TYPES.includes(file.type)) return done(slug, false, 'Images must be JPG, PNG or WebP.');
+  if (file.size > MAX_IMAGE_BYTES) return done(slug, false, 'Images must be 5 MB or smaller.');
   return file;
 }
 
 export async function updateOrganizationAboutAction(formData: FormData) {
-  const { accessToken, id } = await session(formData);
+  const { accessToken, id, slug } = await session(formData);
   const text = (key: string) => String(formData.get(key) ?? '').trim();
   try {
     await apiPatchAuthed(`/api/v1/organizations/${id}`, {
@@ -48,37 +49,37 @@ export async function updateOrganizationAboutAction(formData: FormData) {
       website: text('website') || null,
     }, accessToken);
   } catch (error) {
-    return done(id, false, fail(error));
+    return done(slug, false, fail(error));
   }
-  return done(id, true, 'Details saved');
+  return done(slug, true, 'Details saved');
 }
 
 export async function setOrganizationLogoAction(formData: FormData) {
-  const { accessToken, id } = await session(formData);
-  const file = checkImage(id, imageFrom(formData));
+  const { accessToken, id, slug } = await session(formData);
+  const file = checkImage(slug, imageFrom(formData));
   const body = new FormData();
   body.set('file', file);
   try {
     await apiUploadAuthed(`/api/v1/organizations/${id}/logo`, body, accessToken);
   } catch (error) {
-    return done(id, false, fail(error));
+    return done(slug, false, fail(error));
   }
-  return done(id, true, 'Logo updated');
+  return done(slug, true, 'Logo updated');
 }
 
 export async function removeOrganizationLogoAction(formData: FormData) {
-  const { accessToken, id } = await session(formData);
+  const { accessToken, id, slug } = await session(formData);
   try {
     await apiDeleteAuthed(`/api/v1/organizations/${id}/logo`, accessToken);
   } catch (error) {
-    return done(id, false, fail(error));
+    return done(slug, false, fail(error));
   }
-  return done(id, true, 'Logo removed');
+  return done(slug, true, 'Logo removed');
 }
 
 export async function addOrganizationPhotoAction(formData: FormData) {
-  const { accessToken, id } = await session(formData);
-  const file = checkImage(id, imageFrom(formData));
+  const { accessToken, id, slug } = await session(formData);
+  const file = checkImage(slug, imageFrom(formData));
   const body = new FormData();
   body.set('file', file);
   const caption = String(formData.get('caption') ?? '').trim();
@@ -86,29 +87,29 @@ export async function addOrganizationPhotoAction(formData: FormData) {
   try {
     await apiUploadAuthed(`/api/v1/organizations/${id}/photos`, body, accessToken);
   } catch (error) {
-    return done(id, false, fail(error));
+    return done(slug, false, fail(error));
   }
-  return done(id, true, 'Photo added');
+  return done(slug, true, 'Photo added');
 }
 
 export async function removeOrganizationPhotoAction(formData: FormData) {
-  const { accessToken, id } = await session(formData);
+  const { accessToken, id, slug } = await session(formData);
   const photoId = String(formData.get('photoId') ?? '');
   try {
     await apiDeleteAuthed(`/api/v1/organizations/${id}/photos/${photoId}`, accessToken);
   } catch (error) {
-    return done(id, false, fail(error));
+    return done(slug, false, fail(error));
   }
-  return done(id, true, 'Photo removed');
+  return done(slug, true, 'Photo removed');
 }
 
 export async function saveOrganizationLinksAction(formData: FormData) {
-  const { accessToken, id } = await session(formData);
+  const { accessToken, id, slug } = await session(formData);
   const links = ORG_LINK_ORDER.map((platform) => ({ platform, url: String(formData.get(platform) ?? '').trim() }));
   try {
     await apiPutAuthed(`/api/v1/organizations/${id}/links`, { links }, accessToken);
   } catch (error) {
-    return done(id, false, fail(error));
+    return done(slug, false, fail(error));
   }
-  return done(id, true, 'Links saved');
+  return done(slug, true, 'Links saved');
 }

@@ -55,7 +55,7 @@ Authenticated citizens submit and view their own application through `POST /rese
 | Method | Path | Access | Status | Purpose |
 | --- | --- | --- | --- | --- |
 | GET | `/organizations` | Public | ✓ | List organizations (`?type=OrganizationType`) |
-| GET | `/organizations/:id` | Public | ✓ | Organization detail: logo, photos, links, providers, restoration projects with progress counts; member names only when the caller is signed in (guests get `memberships: []` and the count in `_count`) |
+| GET | `/organizations/:idOrSlug` | Public | ✓ | Organization detail: logo, photos, links, providers, restoration projects with progress counts; member names only when the caller is signed in (guests get `memberships: []` and the count in `_count`) |
 | POST | `/organizations` | Authenticated | ✗ | Request org creation |
 | GET | `/organizations/mine` | Authenticated | ✓ | Organizations the caller administers (organization-level `ADMIN` membership) |
 | PATCH | `/organizations/:id` | Org `ADMIN` member / platform Admin | ✓ | Edit own profile: description, website (http/https), country only; name, type and verification are rejected |
@@ -65,8 +65,8 @@ Authenticated citizens submit and view their own application through `POST /rese
 | PUT | `/organizations/:id/links` | Org `ADMIN` member / platform Admin | ✓ | Replace links |
 | GET | `/admin/organizations` | `organizations.manage` | ✓ | Admin organization list with memberships |
 | GET | `/admin/organizations/users` | `organizations.manage` | ✓ | Active users available for membership attachment |
-| POST | `/admin/organizations` | `organizations.manage` | ✓ | Create organization |
-| PATCH / DELETE | `/admin/organizations/:id` | `organizations.manage` | ✓ | Update (website must be http/https) or delete (also removes stored images) |
+| POST | `/admin/organizations` | `organizations.manage` | ✓ | Create organization; optional `slug` (otherwise generated from the name; 409 if taken) |
+| PATCH / DELETE | `/admin/organizations/:id` | `organizations.manage` | ✓ | Update (optional `slug` change, 409 if taken; website must be http/https) or delete (also removes stored images) |
 | POST / DELETE | `/admin/organizations/:id/logo` | `organizations.manage` | ✓ | Upload (multipart `file`, JPG/PNG/WebP ≤ 5 MB, stored as ≤512 px WebP) or remove the logo |
 | POST | `/admin/organizations/:id/photos` | `organizations.manage` | ✓ | Add a gallery photo (multipart `file` + optional `caption`; max 8; stored as ≤1600 px WebP) |
 | DELETE | `/admin/organizations/:id/photos/:photoId` | `organizations.manage` | ✓ | Remove a gallery photo |

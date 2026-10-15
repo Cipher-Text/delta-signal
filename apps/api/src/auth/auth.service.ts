@@ -135,7 +135,7 @@ export class AuthService {
         organizationMemberships: {
           select: {
             role: true,
-            organization: { select: { id: true, name: true, type: true, isVerified: true } },
+            organization: { select: { id: true, name: true, slug: true, type: true, isVerified: true } },
           },
           orderBy: { organization: { name: 'asc' } },
         },

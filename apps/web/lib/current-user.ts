@@ -16,6 +16,7 @@ export interface CurrentUser {
   organizations: Array<{
     id: string;
     name: string;
+    slug: string;
     type: string;
     isVerified: boolean;
     membershipRole: 'ADMIN' | 'MEMBER';

@@ -82,7 +82,7 @@ Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.
 
 ### Database (Prisma)
 
-Schema: `packages/database/prisma/schema.prisma` — 65 models, 38 enums. Migrations applied (latest: `20261016000100_add_organization_audit_actions`).
+Schema: `packages/database/prisma/schema.prisma` — 65 models, 38 enums. Migrations applied (latest: `20261016000200_add_organization_slug`).
 
 **All IDs are Prisma CUIDs** (e.g. `cmstewlrj0012usw17sqz1d3n`). Use `@IsString()` in DTO validators, never `@IsUUID()`.
 
@@ -102,6 +102,7 @@ Notable schema decisions:
 - `Occurrence.gbifOccurrenceKey` is `BigInt` — real GBIF keys exceed `INT4` range (caught on first live sync)
 - `District.geom` is `Unsupported("geography(Point, 4326)")` — PostGIS point geometry now active via migration `20260901000000_postgis_geometry`. `District.coastLat`/`coastLng` hold the representative coastal coordinate used by the marine module.
 - `OrganizationMembership` model links users to organizations with `ADMIN` or `MEMBER` role — users may belong to multiple organizations. `ORGANIZATION_ADMIN` is also a platform-level role in `UserRole`, separate from org-scoped membership.
+- `Organization.slug` — unique, URL-friendly (`^[a-z0-9]+(-[a-z0-9]+)*$`, 3–80 chars, reserved words like `mine`/`count`/`new`/`edit` refused); generated from the name on create (`-2`, `-3` on collision), editable only by platform admins (name changes never rewrite it). Public URLs are `/organizations/{slug}`; `GET /organizations/:idOrSlug` accepts either and the web pages redirect id links to the slug. Mutation endpoints still take the id.
 - `Organization.logoUrl`/`logoKey`, `OrganizationPhoto` (gallery, max 8) and `OrganizationSocialLink` (one per platform; allowlist in `organization-media.constants.ts`) — uploaded through admin endpoints, re-encoded to WebP with `sharp`, stored under `organizations/{orgId}/`. Organization mutations write `ORGANIZATION_*` audit actions. Organization-level `ADMIN` members (and platform admins) can edit their own organization's description, website, country, logo, photos and links through `/organizations/:id/…` (web page `/organizations/:id/edit`); name, type, verification, members and deletion remain `organizations.manage` (admin console) only.
 - All 4 geography models (`Division`, `District`, `Upazila`, `Union`) carry 11 climate columns (`avgTemp30d`, `minTemp30d`, `maxTemp30d`, `avgHumidity30d`, `totalPrecip30d`, `avgWindSpeed30d`, `avgCloudCover30d`, `avgPm25_30d`, `avgPm10_30d`, `avgUvIndex30d`, `climateUpdatedAt`) — populated nightly by `LocationClimateModule`
 - `UnionDailyClimate` — raw daily history per union; the source for 30-day rolling averages
@@ -129,7 +130,7 @@ Next.js 15 App Router, Server Components throughout — no Redux, no Zustand. Al
 Route groups:
 - `(public)` — `/`, `/register`, `/forgot-password`, `/reset-password` (each redirects signed-in users to `/dashboard` via `redirectIfSignedIn()`); landing page and `/methodology`
 - `(auth)` — `/login`, a split-panel layout of its own (Google button, seed-account shortcuts, "Keep me signed in" via the `ng_session_only` cookie marker)
-- `(app)` — authenticated pages behind the sidebar + top bar shell (grouped nav, collapse state in cookie `ds_sidebar`, bell popover of active alerts, global search at `/search`): `/dashboard`, `/profile`, `/search`, `/alerts`, `/alerts/:id`, `/observations`, `/observations/:id`, `/biodiversity`, `/biodiversity/species/:id`, `/community`, `/community/:id`, `/reports`, `/reports/:id`, `/locations`, `/locations/divisions/:id`, `/locations/districts/:id`, `/locations/upazilas/:id`, `/locations/unions/:id`, `/restoration`, `/restoration/:id`, `/data`, `/data/:id`, `/ecobrief`, `/organizations`, `/organizations/:id`, `/organizations/:id/edit` (org admins), `/industrial-sites` (tabbed: `?tab=companies` or default sites), `/industrial-sites/:id`, `/industrial-sites/companies/:id`, `/water-bodies` (tabbed: `?tab=stations`), `/water-bodies/:slug`, `/marine`, `/radiation`, `/emissions`, `/members`, `/members/:id`, `/researcher-application` (`/members` is auth-only — the only `(app)` page with no guest-readable API fallback, protected in `middleware.ts`)
+- `(app)` — authenticated pages behind the sidebar + top bar shell (grouped nav, collapse state in cookie `ds_sidebar`, bell popover of active alerts, global search at `/search`): `/dashboard`, `/profile`, `/search`, `/alerts`, `/alerts/:id`, `/observations`, `/observations/:id`, `/biodiversity`, `/biodiversity/species/:id`, `/community`, `/community/:id`, `/reports`, `/reports/:id`, `/locations`, `/locations/divisions/:id`, `/locations/districts/:id`, `/locations/upazilas/:id`, `/locations/unions/:id`, `/restoration`, `/restoration/:id`, `/data`, `/data/:id`, `/ecobrief`, `/organizations`, `/organizations/:slug`, `/organizations/:slug/edit` (org admins), `/industrial-sites` (tabbed: `?tab=companies` or default sites), `/industrial-sites/:id`, `/industrial-sites/companies/:id`, `/water-bodies` (tabbed: `?tab=stations`), `/water-bodies/:slug`, `/marine`, `/radiation`, `/emissions`, `/members`, `/members/:id`, `/researcher-application` (`/members` is auth-only — the only `(app)` page with no guest-readable API fallback, protected in `middleware.ts`)
 
 The user menu has two items: Profile and Sign out. Theme is the top-bar icon button.
 
@@ -282,7 +283,7 @@ The list endpoints return counts beside the page (types in the shared block of `
 
 ### Testing
 
-225 unit tests in 20 spec files under `apps/api/src/` (all fully mocked — no DB, no running server):
+232 unit tests in 20 spec files under `apps/api/src/` (all fully mocked — no DB, no running server):
 - `roles.guard.spec.ts` — all 6 roles, case-sensitivity regression (9 tests)
 - `jwt-auth.guard.spec.ts` — `@Public()` bypass, error handling (5 tests)
 - `auth.service.spec.ts` — register/login/refresh/logout, token rotation, audit events, `USER_LOGIN_FAILED` in all three failure branches (24 tests)

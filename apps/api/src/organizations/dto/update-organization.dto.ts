@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsUrl, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsIn, IsUrl, Matches, IsOptional, Length, IsString, MaxLength } from 'class-validator';
 import type { OrganizationType } from '@delta-signal/shared';
 
 const ORGANIZATION_TYPES: OrganizationType[] = [
@@ -20,6 +20,13 @@ export class UpdateOrganizationDto {
   @IsOptional()
   @IsIn(ORGANIZATION_TYPES)
   type?: OrganizationType;
+
+  /** Lowercase letters, digits and single hyphens (3–80 characters). Generated from the name when omitted on create. */
+  @IsOptional()
+  @IsString()
+  @Length(3, 80)
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, { message: 'slug may only contain lowercase letters, digits and single hyphens' })
+  slug?: string;
 
   @IsOptional()
   @IsString()

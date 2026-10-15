@@ -22,6 +22,7 @@ export async function createOrganizationAction(formData: FormData) {
   try {
     await apiPost('/api/v1/admin/organizations', {
       name: String(formData.get('name') ?? ''),
+      slug: String(formData.get('slug') ?? '').trim().toLowerCase() || undefined,
       type: String(formData.get('type') ?? 'OTHER'),
       description: String(formData.get('description') ?? '') || undefined,
       website: String(formData.get('website') ?? '') || undefined,
@@ -41,6 +42,9 @@ export async function updateOrganizationAction(formData: FormData) {
 
   const name = String(formData.get('name') ?? '');
   if (name) payload.name = name;
+
+  const slug = String(formData.get('slug') ?? '').trim().toLowerCase();
+  if (slug) payload.slug = slug;
 
   const type = String(formData.get('type') ?? '');
   if (type) payload.type = type;

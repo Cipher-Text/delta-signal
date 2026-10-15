@@ -19,6 +19,7 @@ import PageHeader from '../../../../../components/page-header';
 type Org = {
   id: string;
   name: string;
+  slug: string;
   description: string | null;
   website: string | null;
   country: string;
@@ -34,22 +35,26 @@ export default async function EditOrganizationPage(props: {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ saved?: string; error?: string }>;
 }) {
-  const { id } = await props.params;
+  const { id: param } = await props.params;
   const sp = await props.searchParams;
   const user = await getCurrentUser();
-  if (!user) redirect(`/login?next=/organizations/${id}/edit`);
-  if (!canEditOrganization(user, id)) redirect(`/organizations/${id}`);
+  if (!user) redirect(`/login?next=/organizations/${param}/edit`);
 
   let org: Org;
   try {
-    org = await apiGet<Org>(`/api/v1/organizations/${id}`, 0);
+    org = await apiGet<Org>(`/api/v1/organizations/${param}`, 0);
   } catch {
     notFound();
   }
+  if (!canEditOrganization(user, org.id)) redirect(`/organizations/${org.slug}`);
+  // Old id-based links land on the canonical slug URL.
+  if (param !== org.slug) redirect(`/organizations/${org.slug}/edit`);
+  const id = org.id;
+  const slug = org.slug;
 
   return (
     <div className="page-stack org-edit">
-      <Link href={`/organizations/${id}`} className="text-link">Back to profile</Link>
+      <Link href={`/organizations/${slug}`} className="text-link">Back to profile</Link>
       <PageHeader title="Edit organization profile" description={`${org.name} · name, type, verification and members are managed by the platform team.`} />
 
       {sp.saved && <div className="pf-notice pf-notice--ok" role="status"><NavIcon name="check" />{sp.saved}</div>}
@@ -62,12 +67,14 @@ export default async function EditOrganizationPage(props: {
             <OrgLogo name={org.name} url={org.logoUrl} size="lg" />
             <form action={setOrganizationLogoAction} className="org-edit-row">
               <input type="hidden" name="id" value={id} />
+              <input type="hidden" name="slug" value={slug} />
               <input type="file" name="file" accept="image/jpeg,image/png,image/webp" required aria-label="Logo image" />
               <button type="submit" className="pf-btn-solid">{org.logoUrl ? 'Replace logo' : 'Upload logo'}</button>
             </form>
             {org.logoUrl && (
               <form action={removeOrganizationLogoAction}>
                 <input type="hidden" name="id" value={id} />
+              <input type="hidden" name="slug" value={slug} />
                 <button type="submit" className="pf-btn-outline">Remove</button>
               </form>
             )}
@@ -76,6 +83,7 @@ export default async function EditOrganizationPage(props: {
 
         <form action={updateOrganizationAboutAction} className="pf-section pf-section--stack">
           <input type="hidden" name="id" value={id} />
+              <input type="hidden" name="slug" value={slug} />
           <div className="pf-section-head"><h3>About</h3><p>Shown on the directory card and your public profile.</p></div>
           <div className="pf-section-body">
             <label className="pf-field pf-field--wide">
@@ -110,6 +118,7 @@ export default async function EditOrganizationPage(props: {
                   </figure>
                   <form action={removeOrganizationPhotoAction}>
                     <input type="hidden" name="id" value={id} />
+              <input type="hidden" name="slug" value={slug} />
                     <input type="hidden" name="photoId" value={photo.id} />
                     <button type="submit" className="pf-btn-outline">Remove</button>
                   </form>
@@ -120,6 +129,7 @@ export default async function EditOrganizationPage(props: {
           {org.photos.length < MAX_PHOTOS ? (
             <form action={addOrganizationPhotoAction} className="org-edit-row">
               <input type="hidden" name="id" value={id} />
+              <input type="hidden" name="slug" value={slug} />
               <input type="file" name="file" accept="image/jpeg,image/png,image/webp" required aria-label="Photo" />
               <input name="caption" className="org-edit-caption" maxLength={200} placeholder="Caption (optional)" aria-label="Caption" />
               <button type="submit" className="pf-btn-solid">Add photo</button>
@@ -129,6 +139,7 @@ export default async function EditOrganizationPage(props: {
 
         <form action={saveOrganizationLinksAction} className="pf-section pf-section--stack">
           <input type="hidden" name="id" value={id} />
+              <input type="hidden" name="slug" value={slug} />
           <div className="pf-section-head"><h3>Links</h3><p>One address per platform. Leave a field empty to remove that link.</p></div>
           <div className="pf-section-body">
             {ORG_LINK_ORDER.map((platform) => (

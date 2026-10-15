@@ -34,7 +34,7 @@ const PROJECT_SELECT = {
   createdById: true,
   createdAt: true,
   updatedAt: true,
-  organization: { select: { id: true, name: true } },
+  organization: { select: { id: true, name: true, slug: true } },
   ...GEO_SELECT,
   _count: { select: { participants: true } },
 } as const;
@@ -56,7 +56,7 @@ const PROJECT_DETAIL_SELECT = {
   createdById: true,
   createdAt: true,
   updatedAt: true,
-  organization: { select: { id: true, name: true } },
+  organization: { select: { id: true, name: true, slug: true } },
   ...GEO_SELECT,
   _count: { select: { participants: true } },
   targets: {

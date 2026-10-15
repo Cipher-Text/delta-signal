@@ -20,6 +20,7 @@ import { ORG_LINK_LABELS, ORG_LINK_PLATFORMS } from '../../../lib/organization-l
 type Organization = {
   id: string;
   name: string;
+  slug: string;
   type: string;
   description: string | null;
   website: string | null;
@@ -77,6 +78,7 @@ export default async function OrganizationsPage(
         <h2>Create organization</h2>
         <form action={createOrganizationAction} className="inline-form" style={{ flexWrap: 'wrap', gap: '0.5rem' }}>
           <input name="name" className="text-input" placeholder="Organization name" required />
+          <input name="slug" className="text-input" placeholder="URL slug (optional, auto from name)" pattern="[a-z0-9]+(-[a-z0-9]+)*" minLength={3} maxLength={80} title="Lowercase letters, digits and single hyphens" />
           <select name="type" className="role-select" defaultValue="NGO">
             {ORG_TYPES.map((t) => (
               <option key={t} value={t}>{titleCase(t)}</option>
@@ -103,7 +105,7 @@ export default async function OrganizationsPage(
                   {org.isVerified && <span style={{ color: '#16a34a', marginLeft: '0.5rem', fontSize: '0.875rem' }}>Verified</span>}
                 </h2>
                 <p>
-                  {titleCase(org.type)} · {org.country} · {org.memberships.length} member{org.memberships.length !== 1 ? 's' : ''}
+                  {titleCase(org.type)} · {org.country} · <code>/organizations/{org.slug}</code> · {org.memberships.length} member{org.memberships.length !== 1 ? 's' : ''}
                   {org.website && <> · <a href={org.website} target="_blank" rel="noopener noreferrer">{org.website}</a></>}
                 </p>
                 {org.description && <p style={{ marginTop: '0.25rem', opacity: 0.7 }}>{org.description}</p>}
@@ -116,6 +118,7 @@ export default async function OrganizationsPage(
               <form action={updateOrganizationAction} className="inline-form" style={{ flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
                 <input type="hidden" name="id" value={org.id} />
                 <input name="name" className="text-input" placeholder="Name" defaultValue={org.name} required />
+                <input name="slug" className="text-input" placeholder="URL slug" defaultValue={org.slug} pattern="[a-z0-9]+(-[a-z0-9]+)*" minLength={3} maxLength={80} required title="Lowercase letters, digits and single hyphens. Changing it changes the public link." />
                 <select name="type" className="role-select" defaultValue={org.type}>
                   {ORG_TYPES.map((t) => (
                     <option key={t} value={t}>{titleCase(t)}</option>

@@ -1,3 +1,4 @@
+import { slugify } from '../organizations/organization-slug';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { OrganizationType, UserRole } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
@@ -221,7 +222,7 @@ export class SeedService implements OnModuleInit {
       return;
     }
 
-    const organization = await this.prisma.organization.create({ data: SEED_ORGANIZATION });
+    const organization = await this.prisma.organization.create({ data: { ...SEED_ORGANIZATION, slug: await this.freeOrganizationSlug(SEED_ORGANIZATION.name) } });
     const admin = await this.prisma.user.findUnique({
       where: { email: 'organization.admin@deltasignal.org' },
       select: { id: true },
@@ -234,13 +235,22 @@ export class SeedService implements OnModuleInit {
     this.logger.log(`Seed organization ready: ${SEED_ORGANIZATION.name}`);
   }
 
+  /** Slug for a newly seeded organization; existing rows keep whatever slug an admin chose. */
+  private async freeOrganizationSlug(name: string): Promise<string> {
+    const base = slugify(name);
+    for (let n = 1; ; n++) {
+      const candidate = n === 1 ? base : `${base}-${n}`;
+      if (!(await this.prisma.organization.findUnique({ where: { slug: candidate }, select: { id: true } }))) return candidate;
+    }
+  }
+
   private async seedRealOrganizations() {
     for (const org of SEED_ORGANIZATIONS) {
       const existing = await this.prisma.organization.findFirst({ where: { name: org.name } });
       if (existing) {
         await this.prisma.organization.update({ where: { id: existing.id }, data: org });
       } else {
-        await this.prisma.organization.create({ data: org });
+        await this.prisma.organization.create({ data: { ...org, slug: await this.freeOrganizationSlug(org.name) } });
       }
     }
     this.logger.log(`Real organizations seeded: ${SEED_ORGANIZATIONS.length} records`);

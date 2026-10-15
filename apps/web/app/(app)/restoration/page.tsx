@@ -205,7 +205,7 @@ export default async function RestorationPage(props: { searchParams: Promise<Que
                 <h3><Link href={`/restoration/${p.id}`}>{p.title}</Link></h3>
                 <p className="rs-where">
                   <NavIcon name="organizations" />
-                  {p.organization ? <Link href={`/organizations/${p.organization.id}`}>{p.organization.name}</Link> : 'No organization'}
+                  {p.organization ? <Link href={`/organizations/${p.organization.slug}`}>{p.organization.name}</Link> : 'No organization'}
                   <span aria-hidden="true">·</span>
                   <NavIcon name="locations" />
                   {p.district?.name ?? 'District not set'}

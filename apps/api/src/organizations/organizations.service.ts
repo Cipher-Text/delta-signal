@@ -1,12 +1,13 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
-import { AuditAction, OrganizationMemberRole, OrganizationType } from '@prisma/client';
+import { AuditAction, OrganizationMemberRole, OrganizationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { clampPagination } from '../common/pagination';
 import { UpdateOrganizationDto } from './dto/update-organization.dto';
 import type { JwtPayload } from '../common/decorators/current-user.decorator';
 import { StorageService } from '../media/storage.service';
+import { isValidSlug, slugify, SLUG_MAX } from './organization-slug';
 import {
   ORG_IMAGE_MAX_BYTES,
   ORG_IMAGE_MIME_TYPES,
@@ -19,6 +20,7 @@ import {
 const ORG_SELECT = {
   id: true,
   name: true,
+  slug: true,
   type: true,
   description: true,
   website: true,
@@ -42,6 +44,24 @@ export class OrganizationsService {
     return this.prisma.auditEvent.create({
       data: { action, userId: actor.sub, entityType: 'Organization', entityId, ...(meta ? { meta: meta as object } : {}) },
     });
+  }
+
+  /** A free slug derived from `base`: `base`, then `base-2`, `base-3`, … */
+  private async uniqueSlug(base: string): Promise<string> {
+    for (let n = 1; n < 1000; n++) {
+      const suffix = n === 1 ? '' : `-${n}`;
+      const candidate = `${base.slice(0, SLUG_MAX - suffix.length).replace(/-+$/g, '')}${suffix}`;
+      const taken = await this.prisma.organization.findUnique({ where: { slug: candidate }, select: { id: true } });
+      if (!taken) return candidate;
+    }
+    throw new ConflictException('Could not generate a unique slug; please choose one.');
+  }
+
+  /** Validates an explicitly chosen slug and makes sure no other organization owns it. */
+  private async assertSlugAvailable(slug: string, exceptId?: string) {
+    if (!isValidSlug(slug)) throw new BadRequestException('Slug must be 3–80 lowercase letters, digits or single hyphens, and not a reserved word.');
+    const owner = await this.prisma.organization.findUnique({ where: { slug }, select: { id: true } });
+    if (owner && owner.id !== exceptId) throw new ConflictException(`The slug "${slug}" is already used by another organization.`);
   }
 
   private async removeObjects(keys: Array<string | null | undefined>) {
@@ -92,17 +112,25 @@ export class OrganizationsService {
     });
   }
 
-  async create(actor: JwtPayload, dto: { name: string; type: OrganizationType; description?: string; website?: string; country?: string }) {
+  async create(actor: JwtPayload, dto: { name: string; slug?: string; type: OrganizationType; description?: string; website?: string; country?: string }) {
+    let slug: string;
+    if (dto.slug) {
+      await this.assertSlugAvailable(dto.slug);
+      slug = dto.slug;
+    } else {
+      slug = await this.uniqueSlug(slugify(dto.name));
+    }
     const created = await this.prisma.organization.create({
       data: {
         name: dto.name,
+        slug,
         type: dto.type,
         description: dto.description,
         website: dto.website,
         country: dto.country ?? 'Bangladesh',
       },
     });
-    await this.audit(actor, 'ORGANIZATION_CREATE', created.id, { name: created.name });
+    await this.audit(actor, 'ORGANIZATION_CREATE', created.id, { name: created.name, slug });
     return created;
   }
 
@@ -182,9 +210,10 @@ export class OrganizationsService {
   }
 
   /** `includeMembers` is false for guests: the team list is for signed-in users, guests only get the count. */
-  async getById(id: string, includeMembers = true) {
-    const org = await this.prisma.organization.findUnique({
-      where: { id },
+  async getById(idOrSlug: string, includeMembers = true) {
+    // Public URLs use the slug; ids keep working so older links and internal callers are unaffected.
+    const org = await this.prisma.organization.findFirst({
+      where: { OR: [{ id: idOrSlug }, { slug: idOrSlug }] },
       select: {
         ...ORG_SELECT,
         providers: { select: { id: true, name: true, type: true, isActive: true } },
@@ -225,10 +254,13 @@ export class OrganizationsService {
 
   async update(actor: JwtPayload, id: string, dto: UpdateOrganizationDto) {
     const before = await this.getById(id);
-    const updated = await this.prisma.organization.update({
+    if (dto.slug !== undefined && dto.slug !== before.slug) await this.assertSlugAvailable(dto.slug, before.id);
+    const updated = await this.prisma.organization
+      .update({
       where: { id },
       data: {
         ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.slug !== undefined && { slug: dto.slug }),
         ...(dto.type !== undefined && { type: dto.type }),
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.website !== undefined && { website: dto.website }),
@@ -236,9 +268,15 @@ export class OrganizationsService {
         ...(dto.isVerified !== undefined && { isVerified: dto.isVerified }),
       },
       select: ORG_SELECT,
-    });
+    })
+      .catch((error: unknown) => {
+        // Two admins claiming the same slug at once: the unique index decides.
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') throw new ConflictException('That slug is already used by another organization.');
+        throw error;
+      });
     await this.audit(actor, dto.isVerified !== undefined && dto.isVerified !== before.isVerified ? 'ORGANIZATION_VERIFY_CHANGE' : 'ORGANIZATION_UPDATE', id, {
       fields: Object.keys(dto),
+      ...(dto.slug !== undefined && dto.slug !== before.slug ? { slugFrom: before.slug, slugTo: dto.slug } : {}),
       ...(dto.isVerified !== undefined ? { isVerified: dto.isVerified } : {}),
     });
     return updated;

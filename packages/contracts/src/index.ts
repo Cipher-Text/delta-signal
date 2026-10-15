@@ -753,6 +753,8 @@ export interface ObservationListParams extends PaginationParams, LocationFilterP
 export interface Organization {
   id: string;
   name: string;
+  /** URL-friendly identifier used in public links (`/organizations/{slug}`). */
+  slug: string;
   type: OrganizationType;
   description: string | null;
   website: string | null;
@@ -838,7 +840,7 @@ export interface Provider {
   type: ProviderType;
   country: string;
   isActive: boolean;
-  organization: { id: string; name: string } | null;
+  organization: { id: string; name: string; slug: string } | null;
 }
 
 export interface Dataset {
@@ -878,7 +880,7 @@ export interface RestorationProject {
   createdById: string;
   createdAt: string;
   updatedAt: string;
-  organization: { id: string; name: string } | null;
+  organization: { id: string; name: string; slug: string } | null;
   district: DistrictSummary | null;
   _count: { participants: number };
 }

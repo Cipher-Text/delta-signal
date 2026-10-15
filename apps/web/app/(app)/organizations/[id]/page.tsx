@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { apiGet, apiGetAuthed } from '../../../../lib/api';
@@ -13,6 +13,7 @@ import { ORG_LINK_LABELS, ORG_LINK_ORDER, canEditOrganization } from '../../../.
 type Organization = {
   id: string;
   name: string;
+  slug: string;
   type: string;
   description: string | null;
   website: string | null;
@@ -67,6 +68,9 @@ export default async function OrganizationDetailPage(
     notFound();
   }
 
+  // Old id-based links land on the canonical slug URL.
+  if (params.id !== org.slug) redirect(`/organizations/${org.slug}`);
+
   const canEdit = canEditOrganization(user, org.id);
   const projects = [...org.restorationProjects].sort(
     (x, y) => STATUSES.findIndex((st) => st.value === x.status) - STATUSES.findIndex((st) => st.value === y.status),
@@ -97,7 +101,7 @@ export default async function OrganizationDetailPage(
             <span>{org._count.memberships} member{org._count.memberships !== 1 ? 's' : ''}</span>
             <span>{pluralize(org._count.restorationProjects, 'restoration project')}</span>
           </div>
-          {canEdit && <Link href={`/organizations/${org.id}/edit`} className="pf-btn-outline" style={{ marginTop: '0.75rem' }}>Edit profile</Link>}
+          {canEdit && <Link href={`/organizations/${org.slug}/edit`} className="pf-btn-outline" style={{ marginTop: '0.75rem' }}>Edit profile</Link>}
         </div>
       </header>
 
@@ -144,7 +148,7 @@ export default async function OrganizationDetailPage(
         <section>
           <h2>Team ({org._count.memberships})</h2>
           <p className="rs-muted">
-            <Link href={`/login?next=/organizations/${org.id}`} className="text-link">Sign in</Link> to see who is on this team.
+            <Link href={`/login?next=/organizations/${org.slug}`} className="text-link">Sign in</Link> to see who is on this team.
           </p>
         </section>
       )}

@@ -9,7 +9,7 @@ const PROVIDER_SELECT = {
   type: true,
   country: true,
   isActive: true,
-  organization: { select: { id: true, name: true } },
+  organization: { select: { id: true, name: true, slug: true } },
 } as const;
 
 export const OPENMETEO_PROVIDER_NAME = 'OpenMeteo';
@@ -59,7 +59,7 @@ export class ProvidersService implements OnModuleInit {
     const provider = await this.prisma.provider.findUnique({
       where: { id },
       include: {
-        organization: { select: { id: true, name: true } },
+        organization: { select: { id: true, name: true, slug: true } },
         datasets: { select: { id: true, name: true, category: true } },
       },
     });
