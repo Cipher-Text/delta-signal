@@ -1797,8 +1797,10 @@ a {
     width: 100%;
   }
 
+  /* Relative + z-index (not static) so the mobile menu panel paints above the page content below the bar. */
   .public-nav {
-    position: static;
+    position: relative;
+    z-index: 40;
     flex-wrap: wrap;
   }
 

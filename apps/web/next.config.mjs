@@ -30,6 +30,11 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // react-leaflet 4 creates its map in a ref callback; React's dev-only StrictMode effect double-invoke re-runs it
+  // against the initialised container ("Map container is already initialized"), crashing /map and /dashboard maps
+  // before hydration so the page's controls (including the mobile menu) stop responding. Production is unaffected.
+  reactStrictMode: false,
+
   // Produce a self-contained server bundle for Docker.
   output: 'standalone',
 
