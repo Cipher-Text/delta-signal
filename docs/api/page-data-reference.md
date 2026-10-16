@@ -75,7 +75,7 @@ Admin page responses often use interfaces declared in the page file rather than 
 | `/datasets` | `GET /datasets/admin` | Local `{data: Dataset[]}` shape. | `PATCH /datasets/:id` updates publication or access policy. |
 | `/users` | `GET /users` with filters/page | Local paged user records `{data,total,page,pageSize}`. | Change role, deactivate/reactivate via user endpoints. |
 | `/researcher-applications` | `GET /users/researcher-applications` with status/page | Local result `{data,total,page,pageSize}` with applicant, profile/publication links, application details. | `PATCH /users/researcher-applications/:id/review`. |
-| `/organizations` | `GET /admin/organizations`; `GET /admin/organizations/users` | `Organization[]` and eligible `User[]`. | Create/edit org; add/change/remove members. |
+| `/organizations` | `GET /admin/organizations`; `GET /admin/organizations/users` | `Organization[]` (each with `slug`, `logoUrl`, `photos`, `socialLinks` and `memberships` with user email) and eligible `User[]`. | Create (optional slug) / edit (slug, website, verification) / delete org; add/change/remove members; upload or remove the logo; add or remove gallery photos (max 8); replace links. Image uploads go through server actions (8 MB body limit). |
 | `/permissions` | `GET /admin/permissions` | `PermissionRow[]` (permission and role assignments). | Add/remove role permission via `/admin/permissions/roles`. |
 | `/restoration` | `GET /restoration/projects` with status/page | Local paged project shape `{data,total,page,pageSize}`. | `PATCH /restoration/projects/:id` status. |
 | `/audit` | `GET /users/audit-events` with filters/page | Local paged audit event records `{data,total,page,pageSize}`. | Read-only. |
@@ -522,19 +522,29 @@ type AdminSocialDraft = {
     createdAt: string; platformAccount: { id: string; platform: string; displayName: string } }>;
 };
 type NationalSuggestion = {
-  id: string; cadence: string; series: string; headline: string; reason: string; quality: string;
+  id: string; cadence: string; series: string;
+  /** HIGHEST rankings are always offered (River Watch only when notable); LOWEST ones (COLD_WATCH, DRY_WATCH, CLEAN_AIR_WATCH, LOW_FLOW_WATCH) only when notable. */
+  direction: 'HIGHEST' | 'LOWEST';
+  headline: string; reason: string; quality: string;
   sourceLabel: string; windowStart: string; windowEnd: string;
   coverage: { available: number; expected: number; percentage: number };
   sourceSnapshot: { rows: Array<Record<string, unknown>> };
 };
 type OrganizationDetailPageResponse = {
-  id: string; name: string; type: string; description: string | null; website: string | null;
-  country: string; isVerified: boolean; createdAt: string; updatedAt: string;
+  id: string; name: string; slug: string; type: string; description: string | null; website: string | null;
+  country: string; isVerified: boolean; logoUrl: string | null; createdAt: string; updatedAt: string;
   providers: Array<{ id: string; name: string; type: string; isActive: boolean }>;
+  /** Names are returned only to signed-in callers; guests get []. */
   memberships: Array<{ role: string; user: { id: string; displayName: string } }>;
-  restorationProjects: Array<{ id: string; title: string; category: string; status: string;
-    district: { id: string; name: string } | null }>;
+  photos: Array<{ id: string; url: string; caption: string | null }>;
+  socialLinks: Array<{ platform: string; url: string }>;
+  restorationProjects: Array<{ id: string; title: string; description: string; category: string; status: string;
+    startDate: string | null; endDate: string | null; impactSummary: string | null;
+    district: { id: string; name: string } | null; upazila: { id: string; name: string } | null;
+    _count: { participants: number; targets: number; activities: number };
+    activities: Array<{ title: string; activityDate: string }> }>;
   _count: { memberships: number; restorationProjects: number };
+};
 };
 type PlatformMetrics = {
   activeAlerts: number; emergencyAlerts: number; verifiedReports: number; publicDatasets: number;
