@@ -9,8 +9,6 @@ import EmptyState from '../../../components/empty-state';
 import NavIcon from '../../../components/nav-icons';
 import OrgLogo from '../../../components/org-logo';
 import { TypePill, VerifiedPill } from '../../../components/org-pills';
-import PublicNav from '../../../components/public-nav';
-import PublicFooter from '../../../components/public-footer';
 
 export const metadata: Metadata = {
   title: 'Organizations — Delta Signal',
@@ -73,9 +71,7 @@ export default async function OrganizationsPage(props: { searchParams: Promise<Q
   const verifiedCount = all.filter((o) => o.isVerified).length;
 
   return (
-    <>
-      <PublicNav />
-      <main className="orgp-page">
+    <div className="orgp-page">
         <header className="orgp-head">
           <p className="eyebrow">Directory</p>
           <h1>Organizations working on Bangladesh&rsquo;s environment</h1>
@@ -179,8 +175,6 @@ export default async function OrganizationsPage(props: { searchParams: Promise<Q
           </div>
           <Link href="/contact" className="button">Contact us</Link>
         </section>
-      </main>
-      <PublicFooter />
-    </>
+    </div>
   );
 }

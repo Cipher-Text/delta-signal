@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { routes } from '@delta-signal/contracts';
@@ -46,7 +47,7 @@ export interface CurrentUser {
  * Server Components can't set cookies, so there's no refresh-on-401 here;
  * middleware.ts is what keeps the access token from going stale.
  */
-export async function getCurrentUser(): Promise<CurrentUser | null> {
+export const getCurrentUser = cache(async function getCurrentUser(): Promise<CurrentUser | null> {
   const accessToken = (await cookies()).get(ACCESS_TOKEN_COOKIE)?.value;
   if (!accessToken) return null;
 
@@ -55,7 +56,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   } catch {
     return null;
   }
-}
+});
 
 /**
  * For pages that need a signed-in user. Middleware already redirects guests

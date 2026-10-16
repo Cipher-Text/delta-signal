@@ -7976,3 +7976,23 @@ a.dv-row:hover { background: var(--ds-surface-2); }
   .orgp-cta { padding: 20px; }
   .orgp-cta .button { width: 100%; }
 }
+
+/* ── Adaptive frame (app/(site)/layout.tsx) ──
+   Same content, framed by viewer: guests get the public frame (spacious, §13), signed-in users the workspace
+   shell (denser, §14: 24–28px page titles, smaller section headings, no extra top padding). */
+.site-frame { min-width: 0; }
+.site-frame--workspace .orgp-page,
+.site-frame--workspace .orgl { max-width: 1180px; margin: 0; padding: 0 0 40px; gap: 24px; }
+.site-frame--workspace .orgp-head h1,
+.site-frame--workspace .orgl-hero h1 { font-size: clamp(1.5rem, 2.4vw, 1.75rem); max-width: none; }
+.site-frame--workspace .orgp-lead { font-size: 0.9375rem; margin-top: 8px; }
+.site-frame--workspace .orgp-facts { margin-top: 12px; font-size: 0.875rem; }
+.site-frame--workspace .orgl-hero-body { padding: 20px 24px; }
+.site-frame--workspace .orgl-cover + .orgl-hero-body { padding-top: 0; }
+.site-frame--workspace .orgl-section { gap: 12px; }
+.site-frame--workspace .orgl-section h2 { font-size: 1.125rem; }
+.site-frame--workspace .orgl-about { font-size: 1rem; line-height: 1.65; }
+.site-frame--workspace .orgl-stat { padding: 16px 18px; }
+.site-frame--workspace .orgl-stat strong { font-size: 1.5rem; }
+.site-frame--workspace .orgp-cta { padding: 20px; }
+.site-frame--workspace .orgp-cta h2 { font-size: 1.0625rem; }

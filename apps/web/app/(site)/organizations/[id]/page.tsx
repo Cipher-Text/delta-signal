@@ -14,8 +14,6 @@ import { domainOf, safeHttpUrl } from '../../../../lib/safe-url';
 import NavIcon from '../../../../components/nav-icons';
 import OrgLogo from '../../../../components/org-logo';
 import { TypePill, VerifiedPill } from '../../../../components/org-pills';
-import PublicNav from '../../../../components/public-nav';
-import PublicFooter from '../../../../components/public-footer';
 
 type OrgDetail = Organization & {
   providers: Array<{ id: string; name: string; type: string; isActive: boolean }>;
@@ -113,9 +111,7 @@ export default async function OrganizationLandingPage(props: { params: Promise<{
   )?.data.filter((o) => o.id !== org.id).slice(0, 3) ?? [];
 
   return (
-    <>
-      <PublicNav />
-      <main className="orgl">
+    <div className="orgl">
         <nav aria-label="Breadcrumb" className="orgl-crumbs">
           <Link href="/organizations">Organizations</Link>
           <span aria-hidden="true">/</span>
@@ -294,8 +290,6 @@ export default async function OrganizationLandingPage(props: { params: Promise<{
             <p><Link href="/organizations" className="text-link">See all organizations →</Link></p>
           </section>
         )}
-      </main>
-      <PublicFooter />
-    </>
+    </div>
   );
 }

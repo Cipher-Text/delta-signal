@@ -233,6 +233,27 @@ Every public page's server HTML must include:
 - a page-specific `<title>` and meta description
 - all primary sections, in the same order they appear visually
 
+## 3.1.1 One Page, Two Frames
+
+A page that guests may read is built once and framed by the viewer, never
+forked by URL.
+
+- Guests get the public frame: top navigation and footer, public density (§13).
+- Signed-in users get the workspace frame: sidebar, top bar and workspace
+  density (§14), with the matching sidebar item active. Opening a page from
+  the workspace must not drop the user into the public layout.
+- The content components are shared. Only the frame, the page-title and
+  section sizes, and viewer-specific extras (team list, edit actions) differ.
+  Extras are enforced by the API, not only hidden in the interface.
+- Calls to action that only make sense for guests (sign in, create an
+  account) are not shown to signed-in users.
+- The frame is chosen in a layout (`app/(site)/layout.tsx`), not repeated in
+  each page. Pages render one `<h1>` and no `<main>`, navigation or footer.
+- Immersive tools (the public map) may keep the public frame and must offer a
+  clear way back to the workspace when signed in.
+
+---
+
 ## 3.4 Markup Order and Responsive Structure
 
 - The HTML source order must match the visual reading order. Do not reorder
