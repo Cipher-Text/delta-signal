@@ -52,8 +52,9 @@ Use this document when redesigning the web or admin UI. It maps each current rou
 | `/industrial-sites` | `GET /locations/districts`; `GET /facilities` or `GET /companies`, depending on selected view and filters | `FacilityPagedResponse` (`data: FacilitySummary[]`, total/page/pageSize) or `CompanyPagedResponse` (`data: CompanySummary[]`, total/page/pageSize). | |
 | `/industrial-sites/[id]` | `GET /facilities/:id` | `FacilityDetail`: facility summary, description/capacity/ETP, location, company and report summaries. | |
 | `/industrial-sites/companies/[id]` | `GET /companies/:id` | `CompanyDetail`: company summary/contact/description, subsidiaries, facility summaries. | |
-| `/organizations` | `GET /organizations?page=N&pageSize=100` (loops until all are loaded; public) | `PaginatedEnvelope<Organization>`. | Type, verified-only and search filtering and per-type counts are computed in the page, so the directory must stay small. |
-| `/organizations/[id]` | `GET /organizations/:id` | `Organization` with organization metadata and providers. | |
+| `/organizations` | `GET /organizations?page=N&pageSize=100` (loops until all are loaded; public) | `PaginatedEnvelope<Organization>`; each item has `slug`, `logoUrl` and `_count.restorationProjects`. | Type, verified-only and search filtering and per-type counts are computed in the page, so the directory must stay small. |
+| `/organizations/[id]` (the segment is the slug; an id redirects to it) | `GET /organizations/:idOrSlug` (bearer token when signed in) | `Organization` with `slug`, `logoUrl`, `photos`, `socialLinks`, providers, restoration projects with participant/target/activity counts and latest activity, and `_count`. `memberships` (names) are returned only to signed-in callers; guests get `[]` and the count. | Public page in the adaptive frame (workspace shell when signed in). Org admins also get the edit page below. |
+| `/organizations/[id]/edit` | `GET /organizations/:idOrSlug`; `PATCH /organizations/:id` (description, website, country); `POST/DELETE /organizations/:id/logo`; `POST /organizations/:id/photos`, `DELETE …/photos/:photoId`; `PUT /organizations/:id/links` | `Organization` (see above). | Organization `ADMIN` members and platform admins only; others are redirected to the public page. Server actions return to `/organizations/:slug/edit?saved=…` or `?error=…`. |
 | `/restoration` | `GET /restoration/projects` with category/status/district filters and page (bearer token when signed in); districts; organizations for creators | `RestorationProjectListResponse`: `PaginatedEnvelope<RestorationProjectListItem>` (a `RestorationProject` plus `joinedByMe`), platform-wide `stats` and `categoryCounts`. District options; optional organization options. | Register (organization admins and admins) and join actions mutate projects; the register drawer also sends optional start/end dates. |
 | `/restoration/[id]` | `GET /restoration/projects/:id` | `RestorationProject`. | |
 | `/profile` (tabs: Profile, Alert emails, Security) | Auth profile (via current-user helper); own reports; own observations; notification subscriptions; districts; gamification summary | Current user profile; `PaginatedEnvelope<CitizenReport>`; `PaginatedEnvelope<Observation>`; `AlertSubscription[]`; district options; `GamificationSummary` (points/level/completeness/missing fields/badges). | Location is a section of the Profile tab, not its own tab. Profile fields, strength, contributions and badges must be sourced from these responses. Old `?tab=location`, `contributions` and `achievements` URLs fall back to Profile. |
@@ -215,7 +216,7 @@ type StationFloodForecast = {
 
 type Provider = {
   id: string; name: string; type: ProviderType; country: string; isActive: boolean;
-  organization: { id: string; name: string } | null;
+  organization: { id: string; name: string; slug: string } | null;
 };
 type Dataset = {
   id: string; name: string; category: DatasetCategory; accessPolicy: DatasetAccessPolicy; source: string;
@@ -227,13 +228,16 @@ type RestorationProject = {
   id: string; title: string; description: string; category: RestorationCategory; status: ProjectStatus;
   organizationId: string | null; districtId: string | null; startDate: string | null; endDate: string | null;
   impactSummary: string | null; createdById: string; createdAt: string; updatedAt: string;
-  organization: { id: string; name: string } | null; district: DistrictSummary | null;
+  organization: { id: string; name: string; slug: string } | null; district: DistrictSummary | null;
   _count: { participants: number };
 };
 type Organization = {
-  id: string; name: string; type: OrganizationType; description: string | null; website: string | null;
-  country: string; isVerified: boolean; createdAt: string;
+  id: string; name: string; slug: string; type: OrganizationType; description: string | null; website: string | null;
+  country: string; isVerified: boolean; logoUrl: string | null; createdAt: string;
+  _count?: { restorationProjects: number };
   providers?: Array<{ id: string; name: string; type: ProviderType; isActive: boolean }>;
+  photos?: Array<{ id: string; url: string; caption: string | null }>;
+  socialLinks?: Array<{ platform: string; url: string }>;
 };
 type MemberSummary = {
   id: string; displayName: string; role: UserRole; createdAt: string;
@@ -475,7 +479,7 @@ type AdminRestorationListResponse = {
   data: Array<{ id: string; title: string; description: string;
     category: 'TREE_PLANTING' | 'WETLAND_RESTORATION' | 'RIVERBANK_PROTECTION' | 'MANGROVE' | 'WASTE_MANAGEMENT' | 'OTHER';
     status: 'PLANNED' | 'ACTIVE' | 'COMPLETED' | 'PAUSED'; startDate: string | null; endDate: string | null;
-    createdAt: string; organization: { id: string; name: string } | null;
+    createdAt: string; organization: { id: string; name: string; slug: string } | null;
     district: { id: string; name: string; division?: { name: string } } | null;
     _count: { participants: number } }>;
   total: number; page: number; pageSize: number;

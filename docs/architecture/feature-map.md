@@ -102,8 +102,9 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 
 | Feature | Module / App | Status |
 | --- | --- | --- |
-| Reviewed social cards, source snapshots, deterministic rendering, approval/download | `social-content`, `apps/admin` | **Done** |
-| On-demand nationwide post suggestions | `social-content`, `apps/admin` | **Done** — suggestions are not persisted or scheduled |
+| Reviewed social cards, source snapshots, deterministic rendering, approval/download | `social-content`, `apps/admin` | **Done** — ranking cards plus district snapshot, coastal watch, weekly/monthly summary and custom editorial cards |
+| 7-day retention of drafts, cards, publish history and stored images | `social-content` | **Done** — daily 03:00 cron; sweeps untracked files in production (`SOCIAL_CONTENT_STORAGE_SWEEP` elsewhere); audit events are kept |
+| On-demand nationwide post suggestions | `social-content`, `apps/admin` | **Done** — Daily/Weekly/Monthly switch; suggestions are not persisted or scheduled |
 | Human-triggered Facebook Page publishing | `social-publishing`, `apps/admin` | **Done** — requires configured platform credentials; Instagram is not implemented |
 
 ---
@@ -140,7 +141,8 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | User management (role change, deactivate, reactivate) | `apps/admin` | **Done** |
 | Alert management (create, cancel, status tabs) | `apps/admin` | **Done** |
 | Dataset management (publish toggle, access policy) | `apps/admin` | **Done** |
-| Organization management and memberships | `apps/admin` | **Done** — RBAC permission `organizations.manage`; users can belong to multiple organizations |
+| Organization management and memberships | `apps/admin` | **Done** — RBAC permission `organizations.manage`; users can belong to multiple organizations; admins also set the URL slug, logo, up to 8 photos and links |
+| Organization self-service profile | `organizations`, `apps/web` | **Done** — organization `ADMIN` members edit description, website, country, logo, photos and links at `/organizations/:slug/edit` |
 | Ingestion monitoring dashboard | `apps/admin` | **Done** — status tabs, per-job detail, provider name, error messages |
 | Permission management (grant/revoke per role) | `permissions` | **Done** — `GET/POST/DELETE /admin/permissions/roles`; admin matrix view |
 | Role-scoped analytics dashboards | `analytics`, `apps/web` | **Done** — admin/moderator/government/researcher/orgadmin endpoints with tailored aggregations; `/dashboard` has a responsive live-status/KPI/panel presentation |
@@ -173,7 +175,9 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | `/community/:id` | `GET /community/posts/:id` | **Done** — post body, poll with vote bars + vote form, flat comment list, add/delete comment |
 | `/profile` | `GET /auth/profile`, `GET /reports/mine`, `GET /observations/mine`, `GET /notifications/subscriptions`, `GET /gamification/me` | **Done** — summary column (identity, profile strength with badges, contributions) beside three tabs (Profile, Alert emails, Security) |
 | `/members` | `GET /members`, `GET /members/districts` | **Done** — role segments with counts, search and district filter, newest first |
-| `/organizations` | `GET /organizations` | **Done** — type segments with counts, verified-only and search filters, card grid |
+| `/organizations` | `GET /organizations` | **Done** — public directory (adaptive frame: workspace shell when signed in, public nav for guests); type segments with counts, verified-only and search filters, cards with logo and project count |
+| `/organizations/:slug` | `GET /organizations/:idOrSlug` | **Done** — landing page: hero with cover, logo and links, at-a-glance numbers, About, restoration work, places, photos, team (signed-in only), related organizations; id links redirect to the slug |
+| `/organizations/:slug/edit` | `GET /organizations/:idOrSlug`, `PATCH/POST/DELETE/PUT /organizations/:id/…` | **Done** — organization admins and platform admins only |
 | `/ecobrief` | `GET /ecobriefs` | **Done** — journal-style report (abstract, methods, results with tables and figures, limitations, citation, appendices); CSV, JSON, print/PDF; research-grade observation filter |
 | `/industrial-sites` | `GET /facilities`, `GET /companies` | **Done** (2026-09-02) — tabbed: sites tab (filter by type, compliance, district) + companies tab (filter by type, district); `?tab=companies` switches views |
 | `/industrial-sites/:id` | `GET /facilities/:id` | **Done** — compliance badge, facility details grid, linked citizen reports, OpenStreetMap link |

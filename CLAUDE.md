@@ -82,7 +82,7 @@ Each feature module follows: `*.module.ts` → `*.controller.ts` → `*.service.
 
 ### Database (Prisma)
 
-Schema: `packages/database/prisma/schema.prisma` — 65 models, 38 enums. Migrations applied (latest: `20261016000200_add_organization_slug`).
+Schema: `packages/database/prisma/schema.prisma` — 68 models, 39 enums. Migrations applied (latest: `20261016000200_add_organization_slug`).
 
 **All IDs are Prisma CUIDs** (e.g. `cmstewlrj0012usw17sqz1d3n`). Use `@IsString()` in DTO validators, never `@IsUUID()`.
 
@@ -133,7 +133,7 @@ Route groups:
 - `(auth)` — `/login`, a split-panel layout of its own (Google button, seed-account shortcuts, "Keep me signed in" via the `ng_session_only` cookie marker)
 - `(app)` — authenticated pages behind the sidebar + top bar shell (grouped nav, collapse state in cookie `ds_sidebar`, bell popover of active alerts, global search at `/search`): `/dashboard`, `/profile`, `/search`, `/alerts`, `/alerts/:id`, `/observations`, `/observations/:id`, `/biodiversity`, `/biodiversity/species/:id`, `/community`, `/community/:id`, `/reports`, `/reports/:id`, `/locations`, `/locations/divisions/:id`, `/locations/districts/:id`, `/locations/upazilas/:id`, `/locations/unions/:id`, `/restoration`, `/restoration/:id`, `/data`, `/data/:id`, `/ecobrief`, `/organizations/:slug/edit` (org admins), `/industrial-sites` (tabbed: `?tab=companies` or default sites), `/industrial-sites/:id`, `/industrial-sites/companies/:id`, `/water-bodies` (tabbed: `?tab=stations`), `/water-bodies/:slug`, `/marine`, `/radiation`, `/emissions`, `/members`, `/members/:id`, `/researcher-application` (`/members` is auth-only — the only `(app)` page with no guest-readable API fallback, protected in `middleware.ts`)
 
-The user menu has two items: Profile and Sign out. Theme is the top-bar icon button.
+The user menu has two items: Profile and Sign out. Theme is the top-bar icon button; on phones, where the top bar hides theme and help, the navigation drawer carries a "Theme" row and a "Help and methodology" link (`.sidebar-utilities` in `app-sidebar.tsx`).
 
 Edge middleware (`middleware.ts`) guards `/profile` and auto-refreshes expired access tokens before page render.
 

@@ -1892,8 +1892,13 @@ Active item: Delta Green 600 background with white text, or a Delta Green
 left indicator on a Secondary Surface background. Use one style
 consistently.
 
-The profile/account area belongs in the top utility bar user menu. The
-sidebar footer may show a compact collapse control only.
+The profile/account area belongs in the top utility bar user menu. On desktop
+the sidebar footer may show a compact collapse control only.
+
+On phones the top bar has no room for the theme switch and the help link, so
+the navigation drawer carries them as two rows above the footer ("Theme:
+Light/Dark" and "Help and methodology"). The user menu stays at Profile and
+Sign out.
 
 ---
 
@@ -2365,7 +2370,8 @@ Primary actions on mobile are full width, 48px tall.
 
 Sidebar becomes:
 
-drawer / compact navigation
+drawer / compact navigation, which also hosts the theme switch and help link
+that the top bar hides at this size (§32)
 
 Filters become:
 
@@ -2847,6 +2853,8 @@ Fill in once and keep current. AI agents use only these.
 - Authentication layout and form rules expanded (§3.3).
 - Sidebar groups updated for all current modules; account moved to top bar
   user menu (§32, §33).
+- Mobile drawer carries theme and help (§32, §49); guest-readable pages use
+  one adaptive frame, not separate public and workspace copies (§3.1.1).
 - Role-based dashboard home (§34A) and data source health requirement
   (§35.1).
 - Empty-state rules now apply to public summaries too (§38); no zero counters
