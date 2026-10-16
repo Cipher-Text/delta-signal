@@ -61,6 +61,7 @@ export default function AppShell({
       {navOpen && <div className="sidebar-overlay" onClick={() => setNavOpen(false)} aria-hidden="true" />}
       <AppSidebar
         user={user}
+        theme={theme}
         collapsed={collapsed}
         open={navOpen}
         onClose={() => setNavOpen(false)}

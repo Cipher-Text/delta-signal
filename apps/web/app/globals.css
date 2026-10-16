@@ -5743,6 +5743,15 @@ a.dashboard-secondary-stat:hover {
 .bar-pct { margin-left: 6px; color: var(--muted); font-size: 0.7rem; font-weight: 500; }
 
 
+/* ── Drawer utilities (phones only): theme switch and help, hidden from the top bar at this size ── */
+.sidebar-utilities { display: none; flex-direction: column; gap: 2px; flex-shrink: 0; padding: 10px 0 12px; border-top: 1px solid var(--border); }
+.sidebar-utilities .theme-toggle,
+.sidebar-utility-link { display: flex; align-items: center; justify-content: flex-start; gap: 12px; width: 100%; min-height: 44px; box-sizing: border-box; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--foreground); font: inherit; font-size: 0.9375rem; font-weight: 500; text-decoration: none; cursor: pointer; }
+.sidebar-utilities .theme-toggle:hover,
+.sidebar-utility-link:hover { background: var(--surface-2); color: var(--foreground); }
+.sidebar-utilities .theme-toggle svg,
+.sidebar-utility-link .nav-icon { width: 20px; height: 20px; flex-shrink: 0; color: var(--muted); }
+
 /* ── Sidebar footer: collapse control only (§32) ── */
 .sidebar-footer {
   flex-shrink: 0;
@@ -5981,6 +5990,7 @@ a.dashboard-secondary-stat:hover {
   .sidebar.sidebar-open { left: 0; box-shadow: 6px 0 32px rgba(18, 48, 38, 0.15); }
   .sidebar-close-btn { display: flex; align-items: center; justify-content: center; }
   .sidebar-footer { display: none; }
+  .sidebar-utilities { display: flex; }
 
   .topbar { gap: var(--ds-space-8); padding: 0 var(--ds-space-8) 0 var(--ds-space-12); height: 56px; }
   .topbar .topbar-menu-btn { display: inline-grid; }

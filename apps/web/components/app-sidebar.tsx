@@ -3,7 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { CurrentUser } from '../lib/current-user';
+import type { Theme } from '../lib/theme';
 import NavIcon from './nav-icons';
+import ThemeToggle from './theme-toggle';
 
 const DASHBOARD_ROLES = new Set([
   'CITIZEN',
@@ -54,6 +56,7 @@ const NAV_SECTIONS: readonly { label: string; links: readonly NavLink[] }[] = [
 
 interface AppSidebarProps {
   user: CurrentUser;
+  theme: Theme | undefined;
   collapsed: boolean;
   /** Mobile drawer state. */
   open: boolean;
@@ -61,7 +64,7 @@ interface AppSidebarProps {
   onToggleCollapsed: () => void;
 }
 
-export default function AppSidebar({ user, collapsed, open, onClose, onToggleCollapsed }: AppSidebarProps) {
+export default function AppSidebar({ user, theme, collapsed, open, onClose, onToggleCollapsed }: AppSidebarProps) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -116,6 +119,15 @@ export default function AppSidebar({ user, collapsed, open, onClose, onToggleCol
           </div>
         ))}
       </nav>
+
+      {/* Drawer-only utilities: the top bar hides theme and help on phones, so they live here (CSS shows this block below the drawer breakpoint). */}
+      <div className="sidebar-utilities">
+        <ThemeToggle theme={theme} />
+        <Link href="/methodology" className="sidebar-utility-link" onClick={onClose}>
+          <NavIcon name="help" />
+          <span>Help and methodology</span>
+        </Link>
+      </div>
 
       <div className="sidebar-footer">
         <button
