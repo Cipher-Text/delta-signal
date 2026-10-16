@@ -64,6 +64,14 @@ const SERIES: Record<string, { theme: keyof typeof THEMES; label: string; eviden
   CUSTOM_EDITORIAL: { theme: 'SKY', label: 'DELTA SIGNAL NOTE', evidence: 'EDITORIAL' },
 };
 
+/** Lowest-value variants keep the card type but change the series, colour and wording (see `source.direction`). */
+const LOWEST_SERIES: Record<string, { theme: keyof typeof THEMES; label: string }> = {
+  NATIONAL_HEAT_WATCH: { theme: 'SKY', label: 'BANGLADESH COLD WATCH' },
+  NATIONAL_RAIN_WATCH: { theme: 'HEAT', label: 'BANGLADESH DRY SPELL WATCH' },
+  NATIONAL_AIR_QUALITY_WATCH: { theme: 'WILD', label: 'BANGLADESH CLEAN AIR WATCH' },
+  NATIONAL_RIVER_WATCH: { theme: 'RIVER', label: 'RIVER LOW-FLOW WATCH' },
+};
+
 const SEVERITY: Record<string, { fg: string; bg: string }> = {
   EMERGENCY: { fg: '#ffffff', bg: '#c23b3b' },
   WARNING: { fg: '#ffffff', bg: '#d9601a' },
@@ -181,7 +189,7 @@ function rankingRows(type: string, source: Record<string, any>): Row[] {
     case 'NATIONAL_AIR_QUALITY_WATCH':
       return rows.map((r) => ({ name: r.district, amount: Number(r.pm25 ?? r.avgPm25), value: n(r.pm25 ?? r.avgPm25), unit: 'µg/m³' }));
     case 'NATIONAL_HEAT_WATCH':
-      return rows.map((r) => ({ name: r.district, amount: Number(r.apparentTemperature ?? r.avgTemperature), value: n(r.apparentTemperature ?? r.avgTemperature), unit: '°C' }));
+      return rows.map((r) => ({ name: r.district, amount: Number(r.minTemperature ?? r.apparentTemperature ?? r.avgTemperature), value: n(r.minTemperature ?? r.apparentTemperature ?? r.avgTemperature), unit: '°C' }));
     case 'NATIONAL_RIVER_WATCH':
       return rows.map((r) => ({
         name: r.station,
@@ -340,7 +348,8 @@ function heroFor(type: string, source: Record<string, any>, location: string): H
 
 export function renderSocialCardSvg(input: SocialCardInput): string {
   const { width: W, height: H } = input;
-  const meta = SERIES[input.type] ?? { theme: 'COMMUNITY', label: title(input.type).toUpperCase(), evidence: 'MODEL DATA' };
+  const baseMeta = SERIES[input.type] ?? { theme: 'COMMUNITY', label: title(input.type).toUpperCase(), evidence: 'MODEL DATA' };
+  const meta = input.source?.direction === 'LOWEST' && LOWEST_SERIES[input.type] ? { ...baseMeta, ...LOWEST_SERIES[input.type] } : baseMeta;
   const custom = input.type === 'CUSTOM_EDITORIAL';
   const customTheme = custom && typeof input.source.theme === 'string' && THEMES[input.source.theme] ? input.source.theme : meta.theme;
   const customKicker = custom && typeof input.source.kicker === 'string' && input.source.kicker.trim() ? input.source.kicker.trim().toUpperCase() : meta.label;
@@ -416,7 +425,7 @@ export function renderSocialCardSvg(input: SocialCardInput): string {
   const hero = custom ? null : heroFor(input.type, input.source, input.location);
   if (custom) parts.push(drawEditorial(input.summary ?? '', Array.isArray(input.source.highlights) ? input.source.highlights : [], theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait));
   else if (hero) parts.push(drawHero(hero, theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait));
-  else if (national) parts.push(drawRanking(rankingRows(input.type, input.source), theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait));
+  else if (national) parts.push(drawRanking(rankingRows(input.type, input.source), theme, innerX, contentTop, innerW, contentBottom - contentTop, portrait, input.source?.direction === 'LOWEST'));
 
   // footer
   const fy = contentBottom;
@@ -443,11 +452,15 @@ export function renderSocialCardSvg(input: SocialCardInput): string {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${parts.join('')}</svg>`;
 }
 
-function drawRanking(rows: Row[], theme: Theme, x: number, topIn: number, w: number, h: number, portrait: boolean): string {
+/** `inverse` is for lowest-value rankings: the most extreme (lowest) value gets the longest bar. */
+function drawRanking(rows: Row[], theme: Theme, x: number, topIn: number, w: number, h: number, portrait: boolean, inverse = false): string {
   if (!rows.length) return '';
   let top = topIn;
   const hasBars = rows.some((r) => r.amount != null && Number.isFinite(r.amount));
-  const max = Math.max(...rows.map((r) => (Number.isFinite(r.amount as number) ? (r.amount as number) : 0)), 1);
+  const amounts = rows.map((r) => (Number.isFinite(r.amount as number) ? (r.amount as number) : 0));
+  const max = Math.max(...amounts, 1);
+  const lo = Math.min(...amounts);
+  const hi = Math.max(...amounts);
   const pitch = Math.min(hasBars ? (portrait ? 172 : 128) : portrait ? 200 : 150, h / rows.length);
   top += Math.max(0, (h - pitch * rows.length) / 2);
   const nameSize = portrait ? 33 : 30;
@@ -493,7 +506,12 @@ function drawRanking(rows: Row[], theme: Theme, x: number, topIn: number, w: num
     if (hasBars && Number.isFinite(r.amount as number)) {
       const by = ry + pitch * 0.36 + 44;
       const bw = w - 78;
-      const fill = Math.max(10, ((r.amount as number) / max) * bw);
+      // Lowest-value cards: the lowest value gets the full bar and the rest shrink in proportion to it (lowest / value), so
+      // small gaps stay small. When the lowest is zero a ratio is meaningless, so the bars spread between lowest and highest.
+      const share = inverse
+        ? lo > 0 ? lo / (r.amount as number) : hi === lo ? 1 : 1 - 0.82 * (((r.amount as number) - lo) / (hi - lo))
+        : (r.amount as number) / max;
+      const fill = Math.max(10, share * bw);
       out.push(
         `<rect x="${nameX}" y="${by}" width="${bw}" height="14" rx="7" fill="${theme.tint}"/>`,
         `<rect x="${nameX}" y="${by}" width="${fill}" height="14" rx="7" fill="${theme.a}" fill-opacity="${first ? 1 : 0.62}"/>`,

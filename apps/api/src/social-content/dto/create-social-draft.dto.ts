@@ -36,6 +36,14 @@ export class CreateSocialDraftDto {
   @IsString()
   stationId?: string;
 
+  /**
+   * Ranking direction for the rain, air-quality, heat and river cards. LOWEST gives the driest / cleanest-air /
+   * coolest / low-flow variant, which only exists when the data is notable.
+   */
+  @IsOptional()
+  @IsIn(['HIGHEST', 'LOWEST'])
+  variant?: 'HIGHEST' | 'LOWEST';
+
   @IsOptional()
   @IsEnum(SocialCardFormat)
   format?: SocialCardFormat;

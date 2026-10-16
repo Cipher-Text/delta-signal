@@ -171,4 +171,29 @@ describe('renderSocialCardSvg', () => {
     expect(svg).toContain('&lt;b&gt;');
     expect(svg).not.toContain('<b>');
   });
+
+  it.each([
+    ['NATIONAL_HEAT_WATCH', 'BANGLADESH COLD WATCH', { minTemperature: 7.2 }, '7.2'],
+    ['NATIONAL_RAIN_WATCH', 'BANGLADESH DRY SPELL WATCH', { rainfallMm: 3 }, '3.0'],
+    ['NATIONAL_AIR_QUALITY_WATCH', 'BANGLADESH CLEAN AIR WATCH', { pm25: 6.4 }, '6.4'],
+    ['NATIONAL_RIVER_WATCH', 'RIVER LOW-FLOW WATCH', { station: 'Bamna', ratio: 0.31 }, '0.3×'],
+  ])('lowest-value %s cards use their own series label and the lowest value', (type, label, row, value) => {
+    const svg = renderSocialCardSvg({ ...base, type, headline: 'Lowest values', source: { direction: 'LOWEST', ...ranking([{ district: 'Sylhet', ...row }]) } });
+    expect(svg).toContain(label);
+    expect(svg).toContain(value);
+    const highest = renderSocialCardSvg({ ...base, type, headline: 'Highest values', source: ranking([{ district: 'Sylhet', ...row }]) });
+    expect(highest).not.toContain(label);
+  });
+
+  it('lowest-value rankings give the most extreme value the longest bar; highest-value rankings the reverse', () => {
+    const rows = [{ district: 'A', minTemperature: 7 }, { district: 'B', minTemperature: 9 }, { district: 'C', minTemperature: 12 }];
+    const widths = (svg: string) => [...svg.matchAll(/fill-opacity="[^"]*"\/>/g)].length && [...svg.matchAll(/<rect x="\d+" y="[\d.]+" width="([\d.]+)" height="14" rx="7" fill="#[0-9a-f]{6}"/g)].map((m) => Number(m[1]));
+    const low = widths(renderSocialCardSvg({ ...base, type: 'NATIONAL_HEAT_WATCH', headline: 'Coolest', source: { direction: 'LOWEST', ...ranking(rows) } })) as number[];
+    // pairs of (track, fill): the fill is every second rect
+    const fills = (all: number[]) => all.filter((_, i) => i % 2 === 1);
+    expect(fills(low)[0]).toBeGreaterThan(fills(low)[1]);
+    expect(fills(low)[1]).toBeGreaterThan(fills(low)[2]);
+    const high = widths(renderSocialCardSvg({ ...base, type: 'NATIONAL_HEAT_WATCH', headline: 'Hottest', source: ranking(rows) })) as number[];
+    expect(fills(high)[0]).toBeLessThan(fills(high)[2]);
+  });
 });

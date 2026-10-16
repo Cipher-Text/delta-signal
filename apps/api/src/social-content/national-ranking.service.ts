@@ -8,6 +8,8 @@ export type NationalSuggestion = {
   cadence: NationalCadence;
   type: 'WEATHER_FORECAST' | 'CURRENT_WEATHER' | 'RIVER_SIGNAL' | 'ENVIRONMENTAL_ALERT' | 'BIODIVERSITY_OBSERVATION';
   series: string;
+  /** HIGHEST rankings are hazards/extremes at the top; LOWEST ones (cold, dry, clean air, low flow) only appear when notable. */
+  direction: 'HIGHEST' | 'LOWEST';
   headline: string;
   reason: string;
   quality: 'HIGH' | 'REVIEW' | 'UNAVAILABLE';
@@ -52,6 +54,24 @@ const endOfDhakaDay = (date: Date) => {
   return value;
 };
 
+/**
+ * When a card is "notable". Lowest-value cards (coolest, driest, cleanest air, low river flow) and River Watch only
+ * appear when the data crosses these lines, so the list never fills with routine numbers. Rain, heat, air quality
+ * and coastal highest-value cards are always offered.
+ */
+export const NOTABLE = {
+  /** River discharge relative to the station's modeled mean. */
+  river: { high: 1.5, low: 0.5 },
+  /** Coolest districts: forecast minimum temperature today (Bangladesh mild cold wave is ≤ 10 °C); 30-day mean for monthly. */
+  cold: { dailyMinC: 10, monthlyAvgC: 15 },
+  /** Driest districts: total rainfall over the window. */
+  dry: { weeklyMm: 5, monthlyMm: 20 },
+  /** Cleanest air: modeled PM2.5 at the EPA "Good" level, and at least this many districts at it (daily); lowest mean (weekly/monthly). */
+  cleanAir: { pm25: 9.0, minDistricts: 3 },
+} as const;
+
+type Direction = 'HIGHEST' | 'LOWEST';
+
 const percent = (available: number, expected: number) => expected === 0 ? 0 : Math.round((available / expected) * 100);
 
 const QUALITY_RANK: Record<NationalSuggestion['quality'], number> = { HIGH: 0, REVIEW: 1, UNAVAILABLE: 2 };
@@ -63,35 +83,48 @@ export class NationalRankingService {
   async getSuggestions(cadence: NationalCadence = 'DAILY'): Promise<NationalSuggestion[]> {
     const now = new Date();
     const districtCount = await this.prisma.district.count();
-    const [rain, air, heat, rivers, alerts, coastal, summary] = cadence === 'DAILY'
-      ? await Promise.all([
+    const tasks = cadence === 'DAILY'
+      ? [
         this.rainSuggestion(now, districtCount, cadence),
-        this.airSuggestion(now, districtCount, cadence),
+        this.airSuggestion(now, districtCount, cadence, 'HIGHEST'),
         this.heatSuggestion(now, districtCount, cadence),
-        this.riverSuggestion(now, cadence),
+        this.riverSuggestion(now, cadence, 'HIGHEST'),
+        this.coldSuggestion(now, districtCount, cadence),
+        this.airSuggestion(now, districtCount, cadence, 'LOWEST'),
+        this.riverSuggestion(now, cadence, 'LOWEST'),
         this.alertSuggestion(now, cadence),
         this.coastalSuggestion(now, cadence),
-        null,
-      ])
-      : await Promise.all([
-        this.climateSummarySuggestion(now, districtCount, cadence),
-        this.climateAirSummarySuggestion(now, districtCount, cadence),
-        this.climateHeatSummarySuggestion(now, districtCount, cadence),
-        null,
+      ]
+      : [
+        this.climateSummarySuggestion(now, districtCount, cadence, 'HIGHEST'),
+        this.climateAirSummarySuggestion(now, districtCount, cadence, 'HIGHEST'),
+        this.climateHeatSummarySuggestion(now, districtCount, cadence, 'HIGHEST'),
+        this.climateSummarySuggestion(now, districtCount, cadence, 'LOWEST'),
+        this.climateAirSummarySuggestion(now, districtCount, cadence, 'LOWEST'),
+        this.climateHeatSummarySuggestion(now, districtCount, cadence, 'LOWEST'),
         this.alertSuggestion(now, cadence),
-        null,
         this.periodSummarySuggestion(now, districtCount, cadence),
-      ]);
+      ];
 
-    return [rain, air, heat, rivers, alerts, coastal, summary]
+    return (await Promise.all(tasks))
       .filter((suggestion): suggestion is NationalSuggestion => suggestion !== null)
       .sort((a, b) => QUALITY_RANK[a.quality] - QUALITY_RANK[b.quality]);
   }
 
-  private async climateSummarySuggestion(now: Date, expected: number, cadence: NationalCadence) {
+  /** Rolling windows: weekly from union daily climate, monthly from the 30-day district columns. */
+  private async climateSummarySuggestion(now: Date, expected: number, cadence: NationalCadence, direction: Direction) {
+    const lowest = direction === 'LOWEST';
+    const order = lowest ? 'asc' : 'desc';
     if (cadence === 'MONTHLY') {
-      const rows = await this.prisma.district.findMany({ where: { totalPrecip30d: { not: null } }, select: { id: true, name: true, bnName: true, totalPrecip30d: true, climateUpdatedAt: true }, orderBy: { totalPrecip30d: 'desc' }, take: 5 });
-      return this.suggestion('MONTHLY_RAIN_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 districts by 30-day rainfall`, `Highest rolling 30-day precipitation totals`, 'Delta Signal 30-day climate rollup', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now, await this.prisma.district.count({ where: { totalPrecip30d: { not: null } } }), expected, rows.map((row) => ({ districtId: row.id, district: row.name, districtBn: row.bnName, rainfallMm: row.totalPrecip30d, updatedAt: row.climateUpdatedAt })));
+      const rows = await this.prisma.district.findMany({ where: { totalPrecip30d: { not: null } }, select: { id: true, name: true, bnName: true, totalPrecip30d: true, climateUpdatedAt: true }, orderBy: { totalPrecip30d: order }, take: 5 });
+      if (rows.length === 0) return null;
+      if (lowest && (rows[0].totalPrecip30d ?? Infinity) > NOTABLE.dry.monthlyMm) return null;
+      const available = await this.prisma.district.count({ where: { totalPrecip30d: { not: null } } });
+      return this.suggestion(lowest ? 'MONTHLY_DRY_WATCH' : 'MONTHLY_RAIN_WATCH', 'CURRENT_WEATHER', cadence,
+        lowest ? 'Top 5 driest districts over 30 days' : 'Top 5 districts by 30-day rainfall',
+        lowest ? 'Lowest rolling 30-day precipitation totals' : 'Highest rolling 30-day precipitation totals',
+        'Delta Signal 30-day climate rollup', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now, available, expected,
+        rows.map((row) => ({ districtId: row.id, district: row.name, districtBn: row.bnName, rainfallMm: row.totalPrecip30d, updatedAt: row.climateUpdatedAt })), direction);
     }
     const windowStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const rows = await this.prisma.unionDailyClimate.findMany({ where: { date: { gte: startOfDhakaDay(windowStart), lt: endOfDhakaDay(now) }, totalPrecip: { not: null } }, select: { date: true, totalPrecip: true, union: { select: { upazila: { select: { district: { select: { id: true, name: true, bnName: true } } } } } } } });
@@ -102,15 +135,29 @@ export class NationalRankingService {
       current.total += row.totalPrecip ?? 0;
       totals.set(district.id, current);
     }
-    const ranked = [...totals.values()].sort((a, b) => b.total - a.total).slice(0, 5);
+    const ranked = [...totals.values()].sort((a, b) => (lowest ? a.total - b.total : b.total - a.total)).slice(0, 5);
     if (ranked.length === 0) return null;
-    return this.suggestion('WEEKLY_RAIN_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 wettest districts this week`, `Highest aggregated rainfall across the last 7 days`, 'Union daily climate aggregates', windowStart, now, totals.size, expected, ranked.map(({ district, total }) => ({ districtId: district.id, district: district.name, districtBn: district.bnName, rainfallMm: Number(total.toFixed(1)) })));
+    if (lowest && ranked[0].total > NOTABLE.dry.weeklyMm) return null;
+    return this.suggestion(lowest ? 'WEEKLY_DRY_WATCH' : 'WEEKLY_RAIN_WATCH', 'CURRENT_WEATHER', cadence,
+      lowest ? 'Top 5 driest districts this week' : 'Top 5 wettest districts this week',
+      lowest ? 'Lowest aggregated rainfall across the last 7 days' : 'Highest aggregated rainfall across the last 7 days',
+      'Union daily climate aggregates', windowStart, now, totals.size, expected,
+      ranked.map(({ district, total }) => ({ districtId: district.id, district: district.name, districtBn: district.bnName, rainfallMm: Number(total.toFixed(1)) })), direction);
   }
 
-  private async climateAirSummarySuggestion(now: Date, expected: number, cadence: NationalCadence) {
+  private async climateAirSummarySuggestion(now: Date, expected: number, cadence: NationalCadence, direction: Direction) {
+    const lowest = direction === 'LOWEST';
+    const order = lowest ? 'asc' : 'desc';
     if (cadence === 'MONTHLY') {
-      const rows = await this.prisma.district.findMany({ where: { avgPm25_30d: { not: null } }, select: { id: true, name: true, bnName: true, avgPm25_30d: true, climateUpdatedAt: true }, orderBy: { avgPm25_30d: 'desc' }, take: 5 });
-      return this.suggestion('MONTHLY_AIR_QUALITY_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 districts by 30-day modeled PM2.5`, `Highest rolling 30-day modeled PM2.5 averages`, 'Delta Signal 30-day climate rollup', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now, await this.prisma.district.count({ where: { avgPm25_30d: { not: null } } }), expected, rows.map((row) => ({ districtId: row.id, district: row.name, districtBn: row.bnName, avgPm25: row.avgPm25_30d, updatedAt: row.climateUpdatedAt })));
+      const rows = await this.prisma.district.findMany({ where: { avgPm25_30d: { not: null } }, select: { id: true, name: true, bnName: true, avgPm25_30d: true, climateUpdatedAt: true }, orderBy: { avgPm25_30d: order }, take: 5 });
+      if (rows.length === 0) return null;
+      if (lowest && (rows[0].avgPm25_30d ?? Infinity) > NOTABLE.cleanAir.pm25) return null;
+      const available = await this.prisma.district.count({ where: { avgPm25_30d: { not: null } } });
+      return this.suggestion(lowest ? 'MONTHLY_CLEAN_AIR_WATCH' : 'MONTHLY_AIR_QUALITY_WATCH', 'CURRENT_WEATHER', cadence,
+        lowest ? 'Top 5 districts with the cleanest air over 30 days' : 'Top 5 districts by 30-day modeled PM2.5',
+        lowest ? 'Lowest rolling 30-day modeled PM2.5 averages' : 'Highest rolling 30-day modeled PM2.5 averages',
+        'Delta Signal 30-day climate rollup', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now, available, expected,
+        rows.map((row) => ({ districtId: row.id, district: row.name, districtBn: row.bnName, avgPm25: row.avgPm25_30d, updatedAt: row.climateUpdatedAt })), direction);
     }
     const windowStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const rows = await this.prisma.unionDailyClimate.findMany({ where: { date: { gte: startOfDhakaDay(windowStart), lt: endOfDhakaDay(now) }, avgPm25: { not: null } }, select: { avgPm25: true, union: { select: { upazila: { select: { district: { select: { id: true, name: true, bnName: true } } } } } } } });
@@ -122,17 +169,29 @@ export class NationalRankingService {
       current.count += 1;
       totals.set(district.id, current);
     }
-    const ranked = [...totals.values()].map((item) => ({ ...item, average: item.sum / item.count })).sort((a, b) => b.average - a.average).slice(0, 5);
+    const ranked = [...totals.values()].map((item) => ({ ...item, average: item.sum / item.count })).sort((a, b) => (lowest ? a.average - b.average : b.average - a.average)).slice(0, 5);
     if (ranked.length === 0) return null;
-    return this.suggestion('WEEKLY_AIR_QUALITY_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 districts by weekly modeled PM2.5`, `Highest average modeled PM2.5 across the last 7 days`, 'Union daily climate aggregates', windowStart, now, totals.size, expected, ranked.map(({ district, average }) => ({ districtId: district.id, district: district.name, districtBn: district.bnName, avgPm25: Number(average.toFixed(1)) })));
+    if (lowest && ranked[0].average > NOTABLE.cleanAir.pm25) return null;
+    return this.suggestion(lowest ? 'WEEKLY_CLEAN_AIR_WATCH' : 'WEEKLY_AIR_QUALITY_WATCH', 'CURRENT_WEATHER', cadence,
+      lowest ? 'Top 5 districts with the cleanest air this week' : 'Top 5 districts by weekly modeled PM2.5',
+      lowest ? 'Lowest average modeled PM2.5 across the last 7 days' : 'Highest average modeled PM2.5 across the last 7 days',
+      'Union daily climate aggregates', windowStart, now, totals.size, expected,
+      ranked.map(({ district, average }) => ({ districtId: district.id, district: district.name, districtBn: district.bnName, avgPm25: Number(average.toFixed(1)) })), direction);
   }
 
-  private async climateHeatSummarySuggestion(now: Date, expected: number, cadence: NationalCadence) {
-    if (cadence === 'MONTHLY') {
-      const rows = await this.prisma.district.findMany({ where: { avgTemp30d: { not: null } }, select: { id: true, name: true, bnName: true, avgTemp30d: true, climateUpdatedAt: true }, orderBy: { avgTemp30d: 'desc' }, take: 5 });
-      return this.suggestion('MONTHLY_HEAT_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 districts by 30-day average temperature`, `Highest rolling 30-day average temperatures`, 'Delta Signal 30-day climate rollup', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now, await this.prisma.district.count({ where: { avgTemp30d: { not: null } } }), expected, rows.map((row) => ({ districtId: row.id, district: row.name, districtBn: row.bnName, avgTemperature: row.avgTemp30d, updatedAt: row.climateUpdatedAt })));
-    }
-    return null;
+  private async climateHeatSummarySuggestion(now: Date, expected: number, cadence: NationalCadence, direction: Direction) {
+    // Only the monthly 30-day mean exists for temperature; there is no weekly temperature aggregate.
+    if (cadence !== 'MONTHLY') return null;
+    const lowest = direction === 'LOWEST';
+    const rows = await this.prisma.district.findMany({ where: { avgTemp30d: { not: null } }, select: { id: true, name: true, bnName: true, avgTemp30d: true, climateUpdatedAt: true }, orderBy: { avgTemp30d: lowest ? 'asc' : 'desc' }, take: 5 });
+    if (rows.length === 0) return null;
+    if (lowest && (rows[0].avgTemp30d ?? Infinity) > NOTABLE.cold.monthlyAvgC) return null;
+    const available = await this.prisma.district.count({ where: { avgTemp30d: { not: null } } });
+    return this.suggestion(lowest ? 'MONTHLY_COLD_WATCH' : 'MONTHLY_HEAT_WATCH', 'CURRENT_WEATHER', cadence,
+      lowest ? 'Top 5 coolest districts over 30 days' : 'Top 5 districts by 30-day average temperature',
+      lowest ? 'Lowest rolling 30-day average temperatures' : 'Highest rolling 30-day average temperatures',
+      'Delta Signal 30-day climate rollup', new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), now, available, expected,
+      rows.map((row) => ({ districtId: row.id, district: row.name, districtBn: row.bnName, avgTemperature: row.avgTemp30d, updatedAt: row.climateUpdatedAt })), direction);
   }
 
   private async rainSuggestion(now: Date, expected: number, cadence: NationalCadence) {
@@ -150,7 +209,9 @@ export class NationalRankingService {
     return this.suggestion('RAIN_WATCH', 'WEATHER_FORECAST', cadence, `Top 5 districts by rain forecast`, `Highest forecast rainfall over the next ${cadence === 'DAILY' ? '24' : '48'} hours`, 'Open-Meteo daily forecast', startOfDhakaDay(now), windowEnd, available, expected, ranked.map((row) => ({ districtId: row.districtId, district: row.district.name, districtBn: row.district.bnName, rainfallMm: row.precipitationSum, forecastDate: row.forecastDate })));
   }
 
-  private async airSuggestion(now: Date, expected: number, cadence: NationalCadence) {
+  /** PM2.5 now: highest always offered; cleanest only when at least a few districts are at the EPA "Good" level. */
+  private async airSuggestion(now: Date, expected: number, cadence: NationalCadence, direction: Direction) {
+    const lowest = direction === 'LOWEST';
     const windowStart = new Date(now.getTime() - 6 * 60 * 60 * 1000);
     const rows = await this.prisma.hourlyAirQuality.findMany({
       where: { forecastTime: { gte: windowStart, lte: now }, pm25: { not: null } },
@@ -158,9 +219,15 @@ export class NationalRankingService {
       orderBy: [{ districtId: 'asc' }, { forecastTime: 'desc' }],
       include: { district: { select: { id: true, name: true, bnName: true } } },
     });
-    const ranked = rows.filter((row) => row.pm25 != null).sort((a, b) => (b.pm25 ?? 0) - (a.pm25 ?? 0)).slice(0, 5);
+    const valid = rows.filter((row) => row.pm25 != null);
+    const ranked = [...valid].sort((a, b) => (lowest ? (a.pm25 ?? 0) - (b.pm25 ?? 0) : (b.pm25 ?? 0) - (a.pm25 ?? 0))).slice(0, 5);
     if (ranked.length === 0) return null;
-    return this.suggestion('AIR_QUALITY_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 modeled PM2.5 districts`, `Highest modeled PM2.5 values in the latest comparable data window`, 'Open-Meteo air-quality model', windowStart, now, rows.length, expected, ranked.map((row) => ({ districtId: row.districtId, district: row.district.name, districtBn: row.district.bnName, pm25: row.pm25, forecastTime: row.forecastTime })));
+    if (lowest && valid.filter((row) => (row.pm25 ?? Infinity) <= NOTABLE.cleanAir.pm25).length < NOTABLE.cleanAir.minDistricts) return null;
+    return this.suggestion(lowest ? 'CLEAN_AIR_WATCH' : 'AIR_QUALITY_WATCH', 'CURRENT_WEATHER', cadence,
+      lowest ? 'Top 5 districts with the cleanest air' : 'Top 5 modeled PM2.5 districts',
+      lowest ? 'Lowest modeled PM2.5 values in the latest comparable data window' : 'Highest modeled PM2.5 values in the latest comparable data window',
+      'Open-Meteo air-quality model', windowStart, now, rows.length, expected,
+      ranked.map((row) => ({ districtId: row.districtId, district: row.district.name, districtBn: row.district.bnName, pm25: row.pm25, forecastTime: row.forecastTime })), direction);
   }
 
   private async heatSuggestion(now: Date, expected: number, cadence: NationalCadence) {
@@ -175,17 +242,44 @@ export class NationalRankingService {
     return this.suggestion('HEAT_WATCH', 'CURRENT_WEATHER', cadence, `Top 5 districts by apparent temperature`, `Highest recent model-based apparent temperature readings`, 'Open-Meteo current weather', new Date(now.getTime() - 3 * 60 * 60 * 1000), now, rows.length, expected, ranked.map((row) => ({ districtId: row.districtId, district: row.district.name, districtBn: row.district.bnName, apparentTemperature: row.apparentTemperature, readingTime: row.readingTime })));
   }
 
-  private async riverSuggestion(now: Date, cadence: NationalCadence) {
+  /** Coolest districts by today's forecast minimum temperature; offered only during a cold spell. */
+  private async coldSuggestion(now: Date, expected: number, cadence: NationalCadence) {
+    const from = startOfDhakaDay(now);
+    const to = endOfDhakaDay(now);
+    const rows = await this.prisma.dailyWeatherForecast.findMany({
+      where: { forecastDate: { gte: from, lt: to }, temperature2mMin: { not: null } },
+      orderBy: [{ forecastDate: 'asc' }],
+      include: { district: { select: { id: true, name: true, bnName: true } } },
+    });
+    const byDistrict = new Map<string, typeof rows[number]>();
+    for (const row of rows) if (!byDistrict.has(row.districtId)) byDistrict.set(row.districtId, row);
+    const ranked = [...byDistrict.values()].sort((a, b) => (a.temperature2mMin ?? 0) - (b.temperature2mMin ?? 0)).slice(0, 5);
+    if (ranked.length === 0) return null;
+    if ((ranked[0].temperature2mMin ?? Infinity) > NOTABLE.cold.dailyMinC) return null;
+    return this.suggestion('COLD_WATCH', 'WEATHER_FORECAST', cadence, `Top 5 coolest districts`, `Lowest forecast minimum temperatures today`, 'Open-Meteo daily forecast', from, to, byDistrict.size, expected,
+      ranked.map((row) => ({ districtId: row.districtId, district: row.district.name, districtBn: row.district.bnName, minTemperature: row.temperature2mMin, forecastDate: row.forecastDate })), 'LOWEST');
+  }
+
+  /** River discharge against each station's modeled mean: well above (flood signal) or well below (low flow). Only when notable. */
+  private async riverSuggestion(now: Date, cadence: NationalCadence, direction: Direction) {
+    const lowest = direction === 'LOWEST';
     const rows = await this.prisma.stationFloodForecast.findMany({
       where: { forecastDate: { gte: startOfDay(now), lt: new Date(now.getTime() + 48 * 60 * 60 * 1000) }, riverDischarge: { not: null } },
       distinct: ['stationId'],
       orderBy: [{ stationId: 'asc' }, { forecastDate: 'asc' }],
       include: { station: { select: { id: true, name: true, riverName: true, district: { select: { name: true } } } } },
     });
-    const ranked = rows.map((row) => ({ row, ratio: row.riverDischargeMean && row.riverDischargeMean > 0 ? (row.riverDischarge ?? 0) / row.riverDischargeMean : 0 }))
-      .sort((a, b) => b.ratio - a.ratio).slice(0, 5);
+    // A station without a usable mean has no meaningful ratio, so it can appear in neither direction.
+    const measured = rows.filter((row) => row.riverDischargeMean != null && row.riverDischargeMean > 0)
+      .map((row) => ({ row, ratio: (row.riverDischarge ?? 0) / (row.riverDischargeMean as number) }));
+    const ranked = measured.sort((a, b) => (lowest ? a.ratio - b.ratio : b.ratio - a.ratio)).slice(0, 5);
     if (ranked.length === 0) return null;
-    return this.suggestion('RIVER_WATCH', 'RIVER_SIGNAL', cadence, `Top 5 river forecast signals`, `Stations with the highest forecast discharge relative to their modeled mean`, 'Open-Meteo/GloFAS discharge forecast', startOfDay(now), new Date(now.getTime() + 48 * 60 * 60 * 1000), rows.length, rows.length, ranked.map(({ row, ratio }) => ({ stationId: row.stationId, station: row.station.name, river: row.station.riverName, district: row.station.district?.name, discharge: row.riverDischarge, historicalMean: row.riverDischargeMean, ratio: Number(ratio.toFixed(2)), forecastDate: row.forecastDate })));
+    if (lowest ? ranked[0].ratio > NOTABLE.river.low : ranked[0].ratio < NOTABLE.river.high) return null;
+    return this.suggestion(lowest ? 'LOW_FLOW_WATCH' : 'RIVER_WATCH', 'RIVER_SIGNAL', cadence,
+      lowest ? 'Top 5 river low-flow signals' : 'Top 5 river forecast signals',
+      lowest ? 'Stations with the lowest forecast discharge relative to their modeled mean' : 'Stations with the highest forecast discharge relative to their modeled mean',
+      'Open-Meteo/GloFAS discharge forecast', startOfDay(now), new Date(now.getTime() + 48 * 60 * 60 * 1000), rows.length, rows.length,
+      ranked.map(({ row, ratio }) => ({ stationId: row.stationId, station: row.station.name, river: row.station.riverName, district: row.station.district?.name, discharge: row.riverDischarge, historicalMean: row.riverDischargeMean, ratio: Number(ratio.toFixed(2)), forecastDate: row.forecastDate })), direction);
   }
 
   private async alertSuggestion(now: Date, cadence: NationalCadence) {
@@ -273,13 +367,14 @@ export class NationalRankingService {
     );
   }
 
-  private suggestion(series: string, type: NationalSuggestion['type'], cadence: NationalCadence, headline: string, reason: string, sourceLabel: string, windowStart: Date, windowEnd: Date, available: number, expected: number, rows: unknown[]): NationalSuggestion {
+  private suggestion(series: string, type: NationalSuggestion['type'], cadence: NationalCadence, headline: string, reason: string, sourceLabel: string, windowStart: Date, windowEnd: Date, available: number, expected: number, rows: unknown[], direction: Direction = 'HIGHEST'): NationalSuggestion {
     const coverage = { available, expected, percentage: percent(available, expected) };
     return {
       id: `${series.toLowerCase()}-${cadence.toLowerCase()}-${windowEnd.toISOString().slice(0, 10)}`,
       cadence,
       type,
       series,
+      direction,
       headline,
       reason,
       quality: coverage.percentage >= 80 ? 'HIGH' : coverage.percentage >= 50 ? 'REVIEW' : 'UNAVAILABLE',

@@ -31,6 +31,7 @@ export async function createSocialDraftAction(formData: FormData) {
       type: String(formData.get('type') ?? ''),
       districtId: String(formData.get('districtId') ?? '').trim() || undefined,
       cadence: String(formData.get('cadence') ?? 'DAILY'),
+      variant: String(formData.get('variant') ?? '') === 'LOWEST' ? 'LOWEST' : undefined,
       sourceId: String(formData.get('sourceId') ?? '').trim() || undefined,
       stationId: String(formData.get('stationId') ?? '').trim() || undefined,
       format: String(formData.get('format') ?? 'PORTRAIT_4_5'),

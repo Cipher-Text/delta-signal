@@ -104,7 +104,7 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | --- | --- | --- |
 | Reviewed social cards, source snapshots, deterministic rendering, approval/download | `social-content`, `apps/admin` | **Done** — ranking cards plus district snapshot, coastal watch, weekly/monthly summary and custom editorial cards |
 | 7-day retention of drafts, cards, publish history and stored images | `social-content` | **Done** — daily 03:00 cron; sweeps untracked files in production (`SOCIAL_CONTENT_STORAGE_SWEEP` elsewhere); audit events are kept |
-| On-demand nationwide post suggestions | `social-content`, `apps/admin` | **Done** — Daily/Weekly/Monthly switch; suggestions are not persisted or scheduled |
+| On-demand nationwide post suggestions | `social-content`, `apps/admin` | **Done** — Daily/Weekly/Monthly switch; highest-value cards plus lowest-value variants (coolest, driest, cleanest air, low river flow) that appear only when notable; suggestions are not persisted or scheduled |
 | Human-triggered Facebook Page publishing | `social-publishing`, `apps/admin` | **Done** — requires configured platform credentials; Instagram is not implemented |
 
 ---

@@ -49,6 +49,7 @@ type NationalSuggestion = {
   id: string;
   cadence: string;
   series: string;
+  direction: 'HIGHEST' | 'LOWEST';
   headline: string;
   reason: string;
   quality: string;
@@ -98,31 +99,33 @@ const SERIES_LABELS: Record<string, string> = {
 function seriesLabel(value: string) {
   return SERIES_LABELS[value] ?? label(value);
 }
-// Weekly/monthly rankings are named WEEKLY_RAIN_WATCH / MONTHLY_RAIN_WATCH by the API but create the same card type.
-const NATIONAL_TYPE_BY_SERIES: Record<string, string> = {
+// Weekly/monthly rankings are named WEEKLY_RAIN_WATCH / MONTHLY_RAIN_WATCH by the API but create the same card type, and the
+// lowest-value series (cold, dry, clean air, low flow) create the same card type with variant=LOWEST.
+const NATIONAL_TYPE_BY_BASE: Record<string, string> = {
   RAIN_WATCH: 'NATIONAL_RAIN_WATCH',
-  WEEKLY_RAIN_WATCH: 'NATIONAL_RAIN_WATCH',
-  MONTHLY_RAIN_WATCH: 'NATIONAL_RAIN_WATCH',
+  DRY_WATCH: 'NATIONAL_RAIN_WATCH',
   AIR_QUALITY_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
-  WEEKLY_AIR_QUALITY_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
-  MONTHLY_AIR_QUALITY_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
+  CLEAN_AIR_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
   HEAT_WATCH: 'NATIONAL_HEAT_WATCH',
-  WEEKLY_HEAT_WATCH: 'NATIONAL_HEAT_WATCH',
-  MONTHLY_HEAT_WATCH: 'NATIONAL_HEAT_WATCH',
+  COLD_WATCH: 'NATIONAL_HEAT_WATCH',
   COASTAL_WATCH: 'NATIONAL_COASTAL_WATCH',
   PERIOD_SUMMARY: 'NATIONAL_PERIOD_SUMMARY',
   RIVER_WATCH: 'NATIONAL_RIVER_WATCH',
+  LOW_FLOW_WATCH: 'NATIONAL_RIVER_WATCH',
   ALERT_WATCH: 'NATIONAL_ALERT_WATCH',
 };
+const nationalType = (series: string) => NATIONAL_TYPE_BY_BASE[series.replace(/^(WEEKLY|MONTHLY)_/, '')] ?? '';
+/** Cards that only exist when the data is notable: every lowest-value card, and River Watch. */
+const isNotableOnly = (suggestion: { series: string; direction: string }) => suggestion.direction === 'LOWEST' || suggestion.series === 'RIVER_WATCH';
 const CADENCES = [['DAILY', 'Daily'], ['WEEKLY', 'Weekly'], ['MONTHLY', 'Monthly']] as const;
 const num = (v: unknown, digits = 1) => (v == null || Number.isNaN(Number(v)) ? '—' : Number(v).toLocaleString('en-GB', { maximumFractionDigits: digits }));
 
 /** Right-hand text for a suggestion row, in the same units the card shows. */
 function rowValue(series: string, row: Record<string, unknown>): string {
-  if (series.endsWith('RAIN_WATCH')) return `${num(row.rainfallMm)} mm`;
-  if (series.endsWith('AIR_QUALITY_WATCH')) return `${num(row.pm25 ?? row.avgPm25)} µg/m³`;
-  if (series.endsWith('HEAT_WATCH')) return `${num(row.apparentTemperature ?? row.avgTemperature)} °C`;
-  if (series === 'RIVER_WATCH') return `${num(row.ratio)}× mean`;
+  if (series.endsWith('RAIN_WATCH') || series.endsWith('DRY_WATCH')) return `${num(row.rainfallMm)} mm`;
+  if (series.endsWith('AIR_QUALITY_WATCH') || series.endsWith('CLEAN_AIR_WATCH')) return `${num(row.pm25 ?? row.avgPm25)} µg/m³`;
+  if (series.endsWith('HEAT_WATCH') || series.endsWith('COLD_WATCH')) return `${num(row.minTemperature ?? row.apparentTemperature ?? row.avgTemperature)} °C`;
+  if (series === 'RIVER_WATCH' || series === 'LOW_FLOW_WATCH') return `${num(row.ratio)}× mean`;
   if (series === 'COASTAL_WATCH') return `${num(row.waveHeightM)} m`;
   if (series === 'ALERT_WATCH') return String(row.severity ?? '');
   return '';
@@ -171,14 +174,14 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
     <section className="social-suggestions">
       <div className="section-heading"><div><h2>Suggested Posts</h2><p>Live national rankings from current environmental data. Suggestions require editorial review.</p></div><nav className="social-status-tabs" aria-label="Suggestion window">{CADENCES.map(([value, text]) => <a className={cadence === value ? 'active' : ''} href={`/social-content?${new URLSearchParams({ ...(selectedStatus ? { status: selectedStatus } : {}), cadence: value })}`} key={value}>{text}</a>)}</nav></div>
       {suggestions.length === 0 ? <div className="empty-state">No {cadence.toLowerCase()} suggestions meet the data requirements right now.</div> : <div className="social-suggestion-grid">{suggestions.map((suggestion) => <article className="social-suggestion-card" key={suggestion.id}>
-        <div className="social-suggestion-top"><span className="badge badge-info">{label(suggestion.series)}</span><span className={`tag ${suggestion.quality === 'HIGH' ? 'tag-success' : suggestion.quality === 'REVIEW' ? 'tag-warning' : 'tag-danger'}`}>{suggestion.quality === 'HIGH' ? 'Ready' : suggestion.quality === 'REVIEW' ? 'Partial data' : 'Too little data'}</span></div>
+        <div className="social-suggestion-top"><span className="badge badge-info">{label(suggestion.series)}</span>{isNotableOnly(suggestion) && <span className="tag tag-warning">Notable</span>}<span className={`tag ${suggestion.quality === 'HIGH' ? 'tag-success' : suggestion.quality === 'REVIEW' ? 'tag-warning' : 'tag-danger'}`}>{suggestion.quality === 'HIGH' ? 'Ready' : suggestion.quality === 'REVIEW' ? 'Partial data' : 'Too little data'}</span></div>
         <h3>{suggestion.headline}</h3>
         <p>{suggestion.reason}</p>
         <p className="social-draft-meta">{suggestion.sourceLabel} · {date(suggestion.windowStart)} – {date(suggestion.windowEnd)} · {suggestion.coverage.available}/{suggestion.coverage.expected} covered ({suggestion.coverage.percentage}%)</p>
         {suggestion.series === 'PERIOD_SUMMARY'
           ? <ul className="social-ranking-list">{summaryLines(suggestion.sourceSnapshot.rows[0] ?? {}).map((line) => <li key={line}><span>{line}</span></li>)}</ul>
           : <ol className="social-ranking-list">{suggestion.sourceSnapshot.rows.slice(0, 5).map((row, index) => <li key={`${suggestion.id}-${index}`}><strong>{index + 1}. {String(row.district ?? row.station ?? row.species ?? row.title ?? 'Bangladesh')}</strong><span>{rowValue(suggestion.series, row)}</span></li>)}</ol>}
-        <div className="form-actions"><form action={createSocialDraftAction}><input type="hidden" name="type" value={NATIONAL_TYPE_BY_SERIES[suggestion.series] ?? ''} /><input type="hidden" name="cadence" value={suggestion.cadence} /><input type="hidden" name="format" value="PORTRAIT_4_5" /><input type="hidden" name="locale" value="en" /><button className="btn btn-primary" type="submit" disabled={!NATIONAL_TYPE_BY_SERIES[suggestion.series]}>Create Post from Suggestion</button></form><span className="form-actions-note">Review source evidence before approval.</span></div>
+        <div className="form-actions"><form action={createSocialDraftAction}><input type="hidden" name="type" value={nationalType(suggestion.series)} />{suggestion.direction === 'LOWEST' && <input type="hidden" name="variant" value="LOWEST" />}<input type="hidden" name="cadence" value={suggestion.cadence} /><input type="hidden" name="format" value="PORTRAIT_4_5" /><input type="hidden" name="locale" value="en" /><button className="btn btn-primary" type="submit" disabled={!nationalType(suggestion.series)}>Create Post from Suggestion</button></form><span className="form-actions-note">Review source evidence before approval.</span></div>
       </article>)}</div>}
     </section>
 
@@ -190,6 +193,7 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
             <div className="field field-grow"><label htmlFor="type">Content type</label><select id="type" name="type" className="role-select" required>{TYPES.map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select></div>
             <div className="field field-grow"><label htmlFor="districtId">District <span className="field-optional">(required for local cards)</span></label><select id="districtId" name="districtId" className="role-select"><option value="">Bangladesh / national</option>{districts.map((district) => <option key={district.id} value={district.id}>{district.name}{district.division ? ` — ${district.division.name}` : ''}</option>)}</select></div>
             <div className="field field-fixed"><label htmlFor="cadence">Window</label><select id="cadence" name="cadence" className="role-select"><option value="DAILY">24 hours</option><option value="WEEKLY">Weekly</option><option value="MONTHLY">30 days</option></select></div>
+            <div className="field field-fixed"><label htmlFor="variant" title="Lowest values apply to the rain (driest), air-quality (cleanest), heat (coolest) and river (low flow) cards, and only exist when notable">Ranking</label><select id="variant" name="variant" className="role-select"><option value="HIGHEST">Highest values</option><option value="LOWEST">Lowest values</option></select></div>
             <div className="field field-fixed"><label htmlFor="format">Format</label><select id="format" name="format" className="role-select"><option value="PORTRAIT_4_5">4:5 portrait</option><option value="SQUARE_1_1">1:1 square</option></select></div>
           </div>
           <div className="form-row"><div className="field field-grow"><label htmlFor="sourceId">Source record <span className="field-optional">(alerts/species only)</span></label><select id="sourceId" name="sourceId" className="role-select"><option value="">Automatic/latest source</option><optgroup label="Active alerts">{alerts.data.map((alert) => <option key={alert.id} value={alert.id}>{alert.title} · {alert.severity}</option>)}</optgroup><optgroup label="Biodiversity occurrences">{occurrences.data.map((occurrence) => <option key={occurrence.id} value={occurrence.id}>{occurrence.species.canonicalName} · {occurrence.district?.name ?? 'Unknown district'}</option>)}</optgroup></select></div><div className="field field-grow"><label htmlFor="stationId">River station <span className="field-optional">(river cards only)</span></label><select id="stationId" name="stationId" className="role-select"><option value="">Select station</option>{stations.map((item) => <option key={item.station.id} value={item.station.id}>{item.station.riverName} · {item.station.name}</option>)}</select></div><div className="field field-fixed"><label htmlFor="locale">Language</label><select id="locale" name="locale" className="role-select"><option value="en">English</option><option value="bn">Bengali</option></select></div></div>

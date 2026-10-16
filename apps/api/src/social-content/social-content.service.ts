@@ -219,19 +219,29 @@ export class SocialContentService {
       const base = baseByType[dto.type];
       // Community Signals and Wild Bangladesh rankings are no longer produced (suggestions ignore citizen reports and observations).
       if (!base) throw new BadRequestException('This national card type is no longer produced from suggestions');
-      const prefixed = cadence !== 'DAILY' && ['RAIN_WATCH', 'AIR_QUALITY_WATCH', 'HEAT_WATCH'].includes(base);
-      const wanted = prefixed ? `${cadence}_${base}` : base;
+      // LOWEST variants: coolest, driest, cleanest air and low river flow. They exist only when the data is notable.
+      const lowestBase: Record<string, string> = { RAIN_WATCH: 'DRY_WATCH', AIR_QUALITY_WATCH: 'CLEAN_AIR_WATCH', HEAT_WATCH: 'COLD_WATCH', RIVER_WATCH: 'LOW_FLOW_WATCH' };
+      const lowest = dto.variant === 'LOWEST';
+      if (lowest && !lowestBase[base]) throw new BadRequestException('Only the rain, air-quality, heat and river cards have a lowest-value variant');
+      const series = lowest ? lowestBase[base] : base;
+      const prefixed = cadence !== 'DAILY' && ['RAIN_WATCH', 'AIR_QUALITY_WATCH', 'HEAT_WATCH', 'DRY_WATCH', 'CLEAN_AIR_WATCH', 'COLD_WATCH'].includes(series);
+      const wanted = prefixed ? `${cadence}_${series}` : series;
       if (dto.type === SocialContentType.NATIONAL_PERIOD_SUMMARY && cadence === 'DAILY') throw new BadRequestException('Period summaries need a weekly or monthly cadence');
       const suggestion = suggestions.find((item) => item.series === wanted);
-      if (!suggestion) throw new BadRequestException(`No ${cadence.toLowerCase()} data is currently available for this national card`);
+      if (!suggestion) {
+        const notableOnly = lowest || base === 'RIVER_WATCH';
+        throw new BadRequestException(notableOnly
+          ? `Nothing notable right now: the ${cadence.toLowerCase()} data does not cross the threshold for this card`
+          : `No ${cadence.toLowerCase()} data is currently available for this national card`);
+      }
       return {
         sourceId: suggestion.id,
         sourceLabel: suggestion.sourceLabel,
         observedAt: new Date(suggestion.windowEnd),
-        snapshot: { kind: dto.type, series: suggestion.series, cadence, headline: suggestion.headline, reason: suggestion.reason, coverage: suggestion.coverage, ranking: suggestion.sourceSnapshot },
+        snapshot: { kind: dto.type, series: suggestion.series, direction: suggestion.direction, cadence, headline: suggestion.headline, reason: suggestion.reason, coverage: suggestion.coverage, ranking: suggestion.sourceSnapshot },
         defaultHeadline: suggestion.headline,
         defaultSummary: suggestion.reason,
-        defaultDisclaimer: suggestion.series === 'AIR_QUALITY_WATCH' ? 'Modeled PM2.5 values are not direct ground-station measurements or an official AQI.' : 'National ranking generated from the available source data for the stated time window.',
+        defaultDisclaimer: /AIR_QUALITY_WATCH|CLEAN_AIR_WATCH/.test(suggestion.series) ? 'Modeled PM2.5 values are not direct ground-station measurements or an official AQI.' : 'National ranking generated from the available source data for the stated time window.',
       };
     }
     if (!dto.districtId) throw new BadRequestException('A district is required for district-level cards');
