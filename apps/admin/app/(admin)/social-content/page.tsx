@@ -215,7 +215,7 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
     </details>
 
     <section className="social-drafts-section">
-      <div className="section-heading"><div><h2>Drafts</h2><p>Open a draft only when you need to edit, preview, or approve it.</p></div></div>
+      <div className="section-heading"><div><h2>Drafts</h2><p>Open a draft only when you need to edit, preview, or approve it. Drafts, cards and publish history are deleted automatically 7 days after they are created, so download or publish an approved card before then.</p></div></div>
       <nav className="social-status-tabs" aria-label="Draft status filter">
         {[['', 'All'], ['DRAFT', 'Drafts'], ['RENDERED', 'Ready for approval'], ['APPROVED', 'Approved'], ['ARCHIVED', 'Archived']].map(([value, text]) => <a className={!selectedStatus && !value || selectedStatus === value ? 'active' : ''} href={value ? `/social-content?status=${value}` : '/social-content'} key={value || 'all'}>{text}</a>)}
       </nav>

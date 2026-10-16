@@ -4,7 +4,9 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
   HeadBucketCommand,
+  ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -94,6 +96,38 @@ export class StorageService {
     await this.client!.send(
       new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
     );
+  }
+
+  /** Deletes many objects (S3 allows 1,000 per request). Returns how many keys were submitted; missing keys are not an error. */
+  async deleteMany(keys: string[]): Promise<number> {
+    this.assertConfigured();
+    for (let i = 0; i < keys.length; i += 1000) {
+      const batch = keys.slice(i, i + 1000);
+      const result = await this.client!.send(
+        new DeleteObjectsCommand({ Bucket: this.bucket, Delete: { Objects: batch.map((Key) => ({ Key })), Quiet: true } }),
+      );
+      if (result.Errors?.length) {
+        this.logger.warn(`Failed to delete ${result.Errors.length} object(s), first: ${result.Errors[0].Key} (${result.Errors[0].Code})`);
+      }
+    }
+    return keys.length;
+  }
+
+  /** Keys under `prefix` last modified before `cutoff` (paginated listing). */
+  async listKeysOlderThan(prefix: string, cutoff: Date): Promise<string[]> {
+    this.assertConfigured();
+    const keys: string[] = [];
+    let token: string | undefined;
+    do {
+      const page = await this.client!.send(
+        new ListObjectsV2Command({ Bucket: this.bucket, Prefix: prefix, ContinuationToken: token }),
+      );
+      for (const object of page.Contents ?? []) {
+        if (object.Key && object.LastModified && object.LastModified < cutoff) keys.push(object.Key);
+      }
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
+    return keys;
   }
 
   /**
