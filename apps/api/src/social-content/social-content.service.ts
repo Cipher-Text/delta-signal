@@ -212,13 +212,13 @@ export class SocialContentService {
         NATIONAL_HEAT_WATCH: 'HEAT_WATCH',
         NATIONAL_RIVER_WATCH: 'RIVER_WATCH',
         NATIONAL_ALERT_WATCH: 'ALERT_WATCH',
-        NATIONAL_COMMUNITY_SIGNALS: 'COMMUNITY_SIGNALS',
-        NATIONAL_BIODIVERSITY: 'WILD_BANGLADESH',
         NATIONAL_COASTAL_WATCH: 'COASTAL_WATCH',
         NATIONAL_PERIOD_SUMMARY: 'PERIOD_SUMMARY',
       };
       // Weather rankings are cadence-prefixed (WEEKLY_RAIN_WATCH); the others keep one name across cadences.
       const base = baseByType[dto.type];
+      // Community Signals and Wild Bangladesh rankings are no longer produced (suggestions ignore citizen reports and observations).
+      if (!base) throw new BadRequestException('This national card type is no longer produced from suggestions');
       const prefixed = cadence !== 'DAILY' && ['RAIN_WATCH', 'AIR_QUALITY_WATCH', 'HEAT_WATCH'].includes(base);
       const wanted = prefixed ? `${cadence}_${base}` : base;
       if (dto.type === SocialContentType.NATIONAL_PERIOD_SUMMARY && cadence === 'DAILY') throw new BadRequestException('Period summaries need a weekly or monthly cadence');

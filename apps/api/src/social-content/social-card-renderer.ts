@@ -60,7 +60,7 @@ const SERIES: Record<string, { theme: keyof typeof THEMES; label: string; eviden
   NATIONAL_BIODIVERSITY: { theme: 'WILD', label: 'WILD BANGLADESH', evidence: 'GBIF OBSERVATION' },
   DISTRICT_SNAPSHOT: { theme: 'SKY', label: 'DISTRICT SNAPSHOT', evidence: 'MODEL DATA' },
   NATIONAL_COASTAL_WATCH: { theme: 'SEA', label: 'COASTAL WATCH', evidence: 'MARINE FORECAST' },
-  NATIONAL_PERIOD_SUMMARY: { theme: 'DIGEST', label: 'BANGLADESH IN REVIEW', evidence: 'PLATFORM DATA' },
+  NATIONAL_PERIOD_SUMMARY: { theme: 'DIGEST', label: 'BANGLADESH IN REVIEW', evidence: 'ALERTS & CLIMATE' },
   CUSTOM_EDITORIAL: { theme: 'SKY', label: 'DELTA SIGNAL NOTE', evidence: 'EDITORIAL' },
 };
 
@@ -325,9 +325,6 @@ function heroFor(type: string, source: Record<string, any>, location: string): H
         unit: s.alerts?.issued === 1 ? 'alert' : 'alerts',
         sub: hi ? `Highest severity: ${title(hi)}` : 'No alerts issued in this period',
         tiles: [
-          { label: 'Verified reports', value: n(s.verifiedReports ?? 0, 0) },
-          { label: 'Observations', value: n(s.observations?.total ?? 0, 0) },
-          { label: 'Species records', value: n(s.speciesRecords ?? 0, 0) },
           { label: s.wettest ? `Rain · ${s.wettest.district}` : 'Wettest (30d)', value: s.wettest ? `${n(s.wettest.rainfallMm, 0)} mm` : '—' },
           { label: s.hottest ? `Heat · ${s.hottest.district}` : 'Warmest (30d)', value: s.hottest ? `${n(s.hottest.avgTemperature)} °C` : '—' },
           { label: s.airQuality ? `PM2.5 · ${s.airQuality.district}` : 'PM2.5 (30d)', value: s.airQuality ? `${n(s.airQuality.avgPm25, 0)} µg/m³` : '—' },

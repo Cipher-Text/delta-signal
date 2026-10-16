@@ -70,8 +70,6 @@ const TYPES = [
   ['NATIONAL_HEAT_WATCH', 'Bangladesh Heat Watch — apparent temperature'],
   ['NATIONAL_RIVER_WATCH', 'River Watch Bangladesh — ranked stations'],
   ['NATIONAL_ALERT_WATCH', 'Bangladesh Alert Watch — active alerts'],
-  ['NATIONAL_COMMUNITY_SIGNALS', 'Community Signals Bangladesh — verified reports'],
-  ['NATIONAL_BIODIVERSITY', 'Wild Bangladesh — recent observations'],
   ['DISTRICT_SNAPSHOT', 'District Snapshot — weather, air and alerts (pick a district)'],
   ['NATIONAL_COASTAL_WATCH', 'Coastal Watch — wave height along the coast'],
   ['NATIONAL_PERIOD_SUMMARY', 'Bangladesh in Review — weekly / monthly summary (use Weekly or 30 days)'],
@@ -115,8 +113,6 @@ const NATIONAL_TYPE_BY_SERIES: Record<string, string> = {
   PERIOD_SUMMARY: 'NATIONAL_PERIOD_SUMMARY',
   RIVER_WATCH: 'NATIONAL_RIVER_WATCH',
   ALERT_WATCH: 'NATIONAL_ALERT_WATCH',
-  COMMUNITY_SIGNALS: 'NATIONAL_COMMUNITY_SIGNALS',
-  WILD_BANGLADESH: 'NATIONAL_BIODIVERSITY',
 };
 const CADENCES = [['DAILY', 'Daily'], ['WEEKLY', 'Weekly'], ['MONTHLY', 'Monthly']] as const;
 const num = (v: unknown, digits = 1) => (v == null || Number.isNaN(Number(v)) ? '—' : Number(v).toLocaleString('en-GB', { maximumFractionDigits: digits }));
@@ -129,15 +125,13 @@ function rowValue(series: string, row: Record<string, unknown>): string {
   if (series === 'RIVER_WATCH') return `${num(row.ratio)}× mean`;
   if (series === 'COASTAL_WATCH') return `${num(row.waveHeightM)} m`;
   if (series === 'ALERT_WATCH') return String(row.severity ?? '');
-  if (series === 'COMMUNITY_SIGNALS') return label(String(row.category ?? ''));
   return '';
 }
 
 /** Plain-language lines for the period summary, which has one object rather than ranked rows. */
 function summaryLines(row: Record<string, any>): string[] {
   return [
-    `${row.alerts?.issued ?? 0} alert${row.alerts?.issued === 1 ? '' : 's'} issued${row.alerts?.highestSeverity ? ` (highest: ${label(String(row.alerts.highestSeverity))})` : ''}`,
-    `${row.verifiedReports ?? 0} verified reports · ${row.observations?.total ?? 0} observations · ${row.speciesRecords ?? 0} species records`,
+    `${row.alerts?.issued ?? 0} alert${row.alerts?.issued === 1 ? '' : 's'} issued${row.alerts?.highestSeverity ? ` (highest: ${label(String(row.alerts.highestSeverity).toLowerCase())})` : ''}`,
     row.wettest ? `Wettest (30 d): ${row.wettest.district}, ${num(row.wettest.rainfallMm, 0)} mm` : '',
     row.hottest ? `Warmest (30 d): ${row.hottest.district}, ${num(row.hottest.avgTemperature)} °C` : '',
     row.airQuality ? `Highest PM2.5 (30 d): ${row.airQuality.district}, ${num(row.airQuality.avgPm25, 0)} µg/m³` : '',

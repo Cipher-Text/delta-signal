@@ -1,6 +1,6 @@
 # Photocard Types and Editorial System
 
-> **Implementation status (2026-10-16):** this document is the design rationale. Since it was written the admin console also ships a District Snapshot card (`DISTRICT_SNAPSHOT`), a Coastal Watch ranking (`NATIONAL_COASTAL_WATCH`, daily), a Weekly/Monthly summary (`NATIONAL_PERIOD_SUMMARY`; climate lines are always the 30-day rollup) and a Custom Editorial card (`CUSTOM_EDITORIAL`: headline, summary, colour, label and up to four figures). Drafts, cards and publish history are kept for 7 days. See `docs/architecture/modules.md` (social-content).
+> **Implementation status (2026-10-16):** this document is the design rationale. Since it was written the admin console also ships a District Snapshot card (`DISTRICT_SNAPSHOT`), a Coastal Watch ranking (`NATIONAL_COASTAL_WATCH`, daily), a Weekly/Monthly summary (`NATIONAL_PERIOD_SUMMARY`; climate lines are always the 30-day rollup) and a Custom Editorial card (`CUSTOM_EDITORIAL`: headline, summary, colour, label and up to four figures). Drafts, cards and publish history are kept for 7 days. See `docs/architecture/modules.md` (social-content). Suggested posts do not use citizen reports, observations or species records.
 
 
 ## Editorial position

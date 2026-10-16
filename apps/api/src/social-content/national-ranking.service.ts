@@ -63,15 +63,13 @@ export class NationalRankingService {
   async getSuggestions(cadence: NationalCadence = 'DAILY'): Promise<NationalSuggestion[]> {
     const now = new Date();
     const districtCount = await this.prisma.district.count();
-    const [rain, air, heat, rivers, alerts, reports, species, coastal, summary] = cadence === 'DAILY'
+    const [rain, air, heat, rivers, alerts, coastal, summary] = cadence === 'DAILY'
       ? await Promise.all([
         this.rainSuggestion(now, districtCount, cadence),
         this.airSuggestion(now, districtCount, cadence),
         this.heatSuggestion(now, districtCount, cadence),
         this.riverSuggestion(now, cadence),
         this.alertSuggestion(now, cadence),
-        this.reportSuggestion(now, cadence),
-        this.biodiversitySuggestion(now, cadence),
         this.coastalSuggestion(now, cadence),
         null,
       ])
@@ -81,13 +79,11 @@ export class NationalRankingService {
         this.climateHeatSummarySuggestion(now, districtCount, cadence),
         null,
         this.alertSuggestion(now, cadence),
-        this.reportSuggestion(now, cadence),
-        this.biodiversitySuggestion(now, cadence),
         null,
         this.periodSummarySuggestion(now, districtCount, cadence),
       ]);
 
-    return [rain, air, heat, rivers, alerts, reports, species, coastal, summary]
+    return [rain, air, heat, rivers, alerts, coastal, summary]
       .filter((suggestion): suggestion is NationalSuggestion => suggestion !== null)
       .sort((a, b) => QUALITY_RANK[a.quality] - QUALITY_RANK[b.quality]);
   }
@@ -198,20 +194,6 @@ export class NationalRankingService {
     return this.suggestion('ALERT_WATCH', 'ENVIRONMENTAL_ALERT', cadence, `Bangladesh alert watch`, `${rows.length} active environmental alert${rows.length === 1 ? '' : 's'} require editorial review`, 'Delta Signal active alerts', rows.reduce((earliest, row) => row.issuedAt < earliest ? row.issuedAt : earliest, now), now, rows.length, rows.length, rows.map((row) => ({ alertId: row.id, title: row.title, severity: row.severity, issuedAt: row.issuedAt, expiresAt: row.expiresAt, districts: row.areas.map((area) => area.district?.name).filter(Boolean) })));
   }
 
-  private async reportSuggestion(now: Date, cadence: NationalCadence) {
-    const windowStart = new Date(now.getTime() - (cadence === 'MONTHLY' ? 30 : 7) * 24 * 60 * 60 * 1000);
-    const rows = await this.prisma.citizenReport.findMany({ where: { status: { in: ['VERIFIED', 'RESOLVED'] }, createdAt: { gte: windowStart } }, include: { district: { select: { name: true } } }, orderBy: { createdAt: 'desc' }, take: 20 });
-    if (rows.length === 0) return null;
-    return this.suggestion('COMMUNITY_SIGNALS', 'ENVIRONMENTAL_ALERT', cadence, `Verified community environmental signals`, `${rows.length} verified or resolved reports were recorded in the last ${cadence === 'MONTHLY' ? '30 days' : '7 days'}`, 'Delta Signal verified citizen reports', windowStart, now, rows.length, 1, rows.slice(0, 5).map((row) => ({ reportId: row.id, category: row.category, district: row.district?.name, reportedAt: row.createdAt })));
-  }
-
-  private async biodiversitySuggestion(now: Date, cadence: NationalCadence) {
-    const windowStart = new Date(now.getTime() - (cadence === 'MONTHLY' ? 30 : 7) * 24 * 60 * 60 * 1000);
-    const rows = await this.prisma.occurrence.findMany({ where: { observedAt: { gte: windowStart } }, include: { species: { select: { canonicalName: true, vernacularName: true, imageUrl: true } }, district: { select: { name: true } } }, orderBy: { observedAt: 'desc' }, take: 5 });
-    if (rows.length === 0) return null;
-    return this.suggestion('WILD_BANGLADESH', 'BIODIVERSITY_OBSERVATION', cadence, `Recent biodiversity observations`, `${rows.length} recent GBIF occurrence record${rows.length === 1 ? '' : 's'} are available for editorial review`, 'GBIF biodiversity occurrences', windowStart, now, rows.length, 1, rows.map((row) => ({ occurrenceId: row.id, species: row.species.canonicalName, commonName: row.species.vernacularName, district: row.district?.name, observedAt: row.observedAt, imageUrl: row.species.imageUrl })));
-  }
-
   /** Coastal districts ranked by forecast wave height for the next Dhaka day with data (marine forecast). */
   private async coastalSuggestion(now: Date, cadence: NationalCadence) {
     const from = startOfDhakaDay(now);
@@ -252,19 +234,16 @@ export class NationalRankingService {
   }
 
   /**
-   * "This week / this month in Bangladesh": platform activity inside the window (alerts issued, verified reports,
-   * observations, species records) plus the latest 30-day climate extremes. The climate lines are always the 30-day
-   * rollup, because daily climate history is not retained, and the card labels them that way.
+   * "This week / this month in Bangladesh": alerts issued inside the window plus the latest 30-day climate extremes.
+   * Suggested posts are built from environmental data and alerts only; citizen reports and observations are
+   * deliberately not read. The climate lines are always the 30-day rollup, because daily climate history is not
+   * retained, and the card labels them that way.
    */
   private async periodSummarySuggestion(now: Date, expected: number, cadence: NationalCadence) {
     const days = cadence === 'MONTHLY' ? 30 : 7;
     const windowStart = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-    const [alerts, reports, observations, researchGrade, occurrences, wettest, hottest, smokiest, withClimate] = await Promise.all([
+    const [alerts, wettest, hottest, smokiest, withClimate] = await Promise.all([
       this.prisma.alert.findMany({ where: { issuedAt: { gte: windowStart } }, select: { severity: true } }),
-      this.prisma.citizenReport.count({ where: { status: { in: ['VERIFIED', 'RESOLVED'] }, createdAt: { gte: windowStart } } }),
-      this.prisma.observation.count({ where: { observedAt: { gte: windowStart }, trustLevel: { not: 'FLAGGED' } } }),
-      this.prisma.observation.count({ where: { observedAt: { gte: windowStart }, trustLevel: 'RESEARCH_GRADE' } }),
-      this.prisma.occurrence.count({ where: { observedAt: { gte: windowStart } } }),
       this.prisma.district.findFirst({ where: { totalPrecip30d: { not: null } }, orderBy: { totalPrecip30d: 'desc' }, select: { name: true, totalPrecip30d: true, climateUpdatedAt: true } }),
       this.prisma.district.findFirst({ where: { avgTemp30d: { not: null } }, orderBy: { avgTemp30d: 'desc' }, select: { name: true, avgTemp30d: true } }),
       this.prisma.district.findFirst({ where: { avgPm25_30d: { not: null } }, orderBy: { avgPm25_30d: 'desc' }, select: { name: true, avgPm25_30d: true } }),
@@ -275,9 +254,6 @@ export class NationalRankingService {
     const summary = {
       days,
       alerts: { issued: alerts.length, highestSeverity: highest },
-      verifiedReports: reports,
-      observations: { total: observations, researchGrade },
-      speciesRecords: occurrences,
       wettest: wettest ? { district: wettest.name, rainfallMm: wettest.totalPrecip30d } : null,
       hottest: hottest ? { district: hottest.name, avgTemperature: hottest.avgTemp30d } : null,
       airQuality: smokiest ? { district: smokiest.name, avgPm25: smokiest.avgPm25_30d } : null,
@@ -287,8 +263,8 @@ export class NationalRankingService {
       'CURRENT_WEATHER',
       cadence,
       cadence === 'MONTHLY' ? 'Bangladesh this month' : 'Bangladesh this week',
-      `Platform activity over the last ${days} days and the latest 30-day climate highlights`,
-      'Delta Signal platform records and 30-day climate rollup',
+      `Alerts issued over the last ${days} days and the latest 30-day climate highlights`,
+      'Delta Signal alerts and 30-day climate rollup',
       windowStart,
       now,
       withClimate,

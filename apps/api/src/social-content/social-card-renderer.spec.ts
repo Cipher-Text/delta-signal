@@ -142,16 +142,19 @@ describe('renderSocialCardSvg', () => {
     expect(svg.match(/rx="28"/g)?.length).toBe(4);
   });
 
-  it('summarises a period with six tiles and tolerates missing climate data', () => {
+  it('summarises a period from alerts and climate only, with three tiles, and tolerates missing climate data', () => {
     const svg = renderSocialCardSvg({
       ...base,
       type: 'NATIONAL_PERIOD_SUMMARY',
       headline: 'Bangladesh this week',
-      source: { ranking: { rows: [{ days: 7, alerts: { issued: 1, highestSeverity: 'WARNING' }, verifiedReports: 2, observations: { total: 0 }, speciesRecords: 10, wettest: null, hottest: null, airQuality: null }] } },
+      source: { ranking: { rows: [{ days: 7, alerts: { issued: 1, highestSeverity: 'WARNING' }, verifiedReports: 9, observations: { total: 9 }, speciesRecords: 99, wettest: null, hottest: { district: 'Dhaka', avgTemperature: 29.9 }, airQuality: null }] } },
     });
     expect(svg).toContain('Highest severity: Warning');
     expect(svg).toContain('>alert<');
-    expect(svg.match(/rx="28"/g)?.length).toBe(6);
+    expect(svg).toContain('HEAT · DHAKA');
+    expect(svg.match(/rx="28"/g)?.length).toBe(3);
+    // Older snapshots may still carry citizen-report and observation counts; they are never drawn.
+    expect(svg).not.toMatch(/Verified reports|Observations|Species records/i);
   });
 
   it('renders a custom editorial card with its own theme, kicker and highlights, and escapes markup', () => {
