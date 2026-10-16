@@ -36,6 +36,7 @@ import { FacilitiesModule } from './facilities/facilities.module';
 import { CompaniesModule } from './companies/companies.module';
 import { SocialContentModule } from './social-content/social-content.module';
 import { SocialPublishingModule } from './social-publishing/social-publishing.module';
+import { SocialAutopostModule } from './social-autopost/social-autopost.module';
 import { MembersModule } from './members/members.module';
 import { EcoBriefModule } from './ecobrief/ecobrief.module';
 import { HealthController } from './health.controller';
@@ -97,6 +98,7 @@ import { SeedService } from './seed/seed.service';
     CompaniesModule,
     SocialContentModule,
     SocialPublishingModule,
+    SocialAutopostModule,
     MembersModule,
     EcoBriefModule,
   ],

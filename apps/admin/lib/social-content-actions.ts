@@ -26,6 +26,8 @@ function parseHighlights(text: string) {
 
 export async function createSocialDraftAction(formData: FormData) {
   const accessToken = await token();
+  // Posts made from a suggestion return to the Suggested Posts page (an allowlist, never a free redirect).
+  const home = String(formData.get('returnTo') ?? '').startsWith('/suggested-posts') ? '/suggested-posts?tab=suggestions&' : '/social-content?';
   try {
     await apiPost('/api/v1/social-content/drafts', {
       type: String(formData.get('type') ?? ''),
@@ -47,10 +49,10 @@ export async function createSocialDraftAction(formData: FormData) {
       } : {}),
     }, accessToken);
   } catch (error) {
-    redirect(`/social-content?error=${encodeURIComponent(fail(error))}`);
+    redirect(`${home}error=${encodeURIComponent(fail(error))}`);
   }
   revalidatePath('/social-content');
-  redirect('/social-content?success=created');
+  redirect(`${home}success=created`);
 }
 
 export async function updateSocialDraftAction(formData: FormData) {

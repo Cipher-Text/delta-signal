@@ -12,6 +12,7 @@ function build(opts: { configured?: boolean; stale?: Array<{ id: string; keys: s
     },
     socialRenderedAsset: { deleteMany: jest.fn((args) => (calls.push('assets'), { args })) },
     socialPublication: { deleteMany: jest.fn((args) => (calls.push('publications'), { args })) },
+    socialAutopostRun: { deleteMany: jest.fn().mockResolvedValue({ count: 0 }) },
     $transaction: jest.fn().mockResolvedValue([]),
   };
   const storage: any = {
@@ -92,5 +93,12 @@ describe('SocialContentCleanupScheduler.purgeExpired', () => {
     failing.storage.listKeysOlderThan.mockRejectedValue(new Error('list failed'));
     await expect(failing.scheduler.purgeExpired(NOW)).resolves.toEqual({ drafts: 1, files: 0 });
     expect(failing.prisma.$transaction).toHaveBeenCalled();
+  });
+
+  it('also removes auto-post run history older than the cutoff', async () => {
+    const { scheduler, prisma } = build();
+    prisma.socialAutopostRun.deleteMany.mockResolvedValue({ count: 3 });
+    await scheduler.purgeExpired(NOW);
+    expect(prisma.socialAutopostRun.deleteMany).toHaveBeenCalledWith({ where: { createdAt: { lt: new Date(NOW.getTime() - 7 * DAY) } } });
   });
 });

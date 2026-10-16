@@ -42,11 +42,18 @@ export async function apiGetAuthed<T>(path: string, accessToken: string): Promis
  * when a DTO fails validation (e.g. "title must be longer than or equal to
  * 5 characters"), not a single string — extract whichever shape is present.
  */
+/**
+ * Reads the human message out of the API's error body. The API's exception filter nests the framework's response under
+ * `message` (`{ message: { message: 'text' | ['text', …], … } }`), so look one level down as well as at the top.
+ */
 function extractErrorMessage(errorBody: unknown, fallback: string): string {
+  const read = (value: unknown): string | null => {
+    if (typeof value === 'string' && value.trim()) return value;
+    if (Array.isArray(value) && value.length > 0) return value.filter((v) => typeof v === 'string').join('; ') || null;
+    return null;
+  };
   const message = (errorBody as { message?: unknown } | null)?.message;
-  if (typeof message === 'string') return message;
-  if (Array.isArray(message) && message.length > 0) return message.join('; ');
-  return fallback;
+  return read(message) ?? read((message as { message?: unknown } | null)?.message) ?? fallback;
 }
 
 /** POST for mutations — never cached. Surfaces the backend's error message when available. */

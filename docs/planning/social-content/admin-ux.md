@@ -1,6 +1,6 @@
 # Social Content Admin UX
 
-> **Implementation status (2026-10-16):** the Suggested Posts queue is built as a live list of national rankings with a Daily/Weekly/Monthly switch, quality and coverage labels, three cards per row, and "Create Post from Suggestion". Not built from this design: per-suggestion preview before creating, dismissal with a reason, and ranking by editorial usefulness. Cards that exist only when notable carry a "Notable" tag. Drafts are deleted 7 days after creation.
+> **Implementation status (2026-10-16):** the Suggested Posts queue is built as a live list of national rankings with a Daily/Weekly/Monthly switch, quality and coverage labels, three cards per row, and "Create Post from Suggestion". Not built from this design: per-suggestion preview before creating, dismissal with a reason, and ranking by editorial usefulness. Cards that exist only when notable carry a "Notable" tag. Drafts are deleted 7 days after creation. The suggestions list now has its own admin menu item, **Suggested Posts**, which also holds the ADMIN-only weekly auto-post routine (per-day switch, Bangladesh time and content, master switch off by default, preview, run history); this goes beyond the original human-approval-only design and is guarded by an explicit acknowledgement, production-only execution and a never-post-late rule.
 
 
 > Planning snapshot. Some items below describe an earlier proposed navigation

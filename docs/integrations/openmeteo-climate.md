@@ -17,7 +17,7 @@ Delta Signal now uses the OpenMeteo forecast and air-quality APIs to build opera
 
 Up to 1,000 union coordinates are sent per HTTP request. With 4,540 unions, the full nightly run completes in 6 HTTP requests total. The service reuses `WeatherOpenMeteoClient` exported from `WeatherModule`.
 
-**`LocationClimateScheduler`** runs daily at midnight via `@Cron('0 0 0 * * *')`.
+**`LocationClimateScheduler`** runs daily at 01:30 server time via `@Cron('0 30 1 * * *')`.
 
 **Storage:**
 
@@ -37,7 +37,7 @@ Up to 1,000 union coordinates are sent per HTTP request. With 4,540 unions, the 
 | Official docs | `https://open-meteo.com/en/docs/climate-api` |
 | Endpoint | `https://climate-api.open-meteo.com/v1/climate` |
 | Current client | `LocationClimateService` (reuses `WeatherOpenMeteoClient`) |
-| Current scheduler | `LocationClimateScheduler` — daily at midnight |
+| Current scheduler | `LocationClimateScheduler` — daily at 01:30 server time |
 | Current storage | `UnionDailyClimate` + 11 rolling-average columns on each geography model |
 
 ## Available Data

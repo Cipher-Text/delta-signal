@@ -9,5 +9,6 @@ import { SocialContentCleanupScheduler } from './social-content-cleanup.schedule
   imports: [MediaModule],
   controllers: [SocialContentController],
   providers: [SocialContentService, NationalRankingService, SocialContentCleanupScheduler],
+  exports: [SocialContentService, NationalRankingService],
 })
 export class SocialContentModule {}

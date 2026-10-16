@@ -217,6 +217,9 @@ enum AuditAction {
   ORGANIZATION_PHOTO_ADD
   ORGANIZATION_PHOTO_REMOVE
   ORGANIZATION_LINKS_SET
+  SOCIAL_AUTOPOST_UPDATE
+  SOCIAL_AUTOPOST_TOGGLE
+  SOCIAL_AUTOPOST_RUN
 }
 
 enum SocialContentType {
@@ -1930,4 +1933,63 @@ model PollVote {
   @@index([pollId])
   @@index([optionId])
   @@index([userId])
+}
+
+// ─── Social auto-posting ──────────────────────────────────────────────────────
+
+enum SocialAutopostRunStatus {
+  QUEUED   // card created, rendered, approved and handed to the publish queue (the publication row holds the final outcome)
+  SKIPPED  // nothing suitable to post, or the slot was missed
+  FAILED   // something went wrong before the publish was queued
+}
+
+/// Singleton (id "default"): the master switch and what the weekly routine posts as. Off by default.
+/// `platformAccountId` and `enabledById` are plain ids (validated by the service), so removing an account or user never blocks the routine's history.
+model SocialAutopostSettings {
+  id                String   @id @default("default")
+  enabled           Boolean  @default(false)
+  platformAccountId String?
+  captionFooter     String   @default("#DeltaSignal #Bangladesh")
+  /// The administrator who last turned the routine on; the routine posts as them.
+  enabledById       String?
+  updatedById       String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+/// Up to three posting times per weekday (`position` 0, 1 and 2). 0 = Sunday … 6 = Saturday as JavaScript counts; times are Asia/Dhaka.
+model SocialAutopostSlot {
+  id        String           @id @default(cuid())
+  dayOfWeek Int
+  /// 0 = first, 1 = second, 2 = third post of the day.
+  position  Int              @default(0)
+  enabled   Boolean          @default(false)
+  /// "HH:mm" in Asia/Dhaka.
+  timeOfDay String           @default("08:00")
+  /// AUTO | NOTABLE | RAIN_WATCH | AIR_QUALITY_WATCH | HEAT_WATCH | COASTAL_WATCH | WEEKLY_SUMMARY
+  content   String           @default("AUTO")
+  format    SocialCardFormat @default(PORTRAIT_4_5)
+  /// Dhaka calendar date of the last run attempt; a slot runs at most once a day.
+  lastRunOn DateTime?        @db.Date
+  updatedAt DateTime         @updatedAt
+
+  @@unique([dayOfWeek, position])
+}
+
+/// Outcome of each scheduled attempt. Kept for 7 days like the rest of the social data.
+model SocialAutopostRun {
+  id            String                  @id @default(cuid())
+  dayOfWeek     Int
+  /// Which of the day's two slots ran.
+  position      Int                     @default(0)
+  scheduledFor  DateTime
+  status        SocialAutopostRunStatus
+  reason        String?
+  series        String?
+  headline      String?
+  draftId       String?
+  publicationId String?
+  createdAt     DateTime                @default(now())
+
+  @@index([createdAt])
 }

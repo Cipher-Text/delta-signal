@@ -70,6 +70,9 @@ export class SocialContentCleanupScheduler {
       ]);
     }
 
+    // Auto-post run history follows the same 7-day retention (the drafts and publications it points at are gone too).
+    const runs = await this.prisma.socialAutopostRun.deleteMany({ where: { createdAt: { lt: cutoff } } });
+
     let files = 0;
     if (this.storage.isConfigured) {
       const doomed = new Set(trackedKeys);
@@ -90,9 +93,9 @@ export class SocialContentCleanupScheduler {
       }
     }
 
-    if (draftIds.length > 0 || files > 0) {
+    if (draftIds.length > 0 || files > 0 || runs.count > 0) {
       this.logger.log(
-        `Social content retention (${SOCIAL_RETENTION_DAYS} days): removed ${draftIds.length} draft(s) and ${files} stored file(s)`,
+        `Social content retention (${SOCIAL_RETENTION_DAYS} days): removed ${draftIds.length} draft(s), ${runs.count} auto-post run(s) and ${files} stored file(s)`,
       );
     }
     return { drafts: draftIds.length, files };

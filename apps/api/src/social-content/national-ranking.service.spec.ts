@@ -86,4 +86,26 @@ describe('NationalRankingService suggestions', () => {
       expect(result).toEqual(expect.arrayContaining(['RAIN_WATCH', 'HEAT_WATCH']));
     });
   });
+
+  describe('severity flag on routine cards', () => {
+    const district = (id: string) => ({ id, name: `D${id}`, bnName: `D${id}` });
+    const flags = async (overrides: Record<string, unknown>) => {
+      const { service } = build(overrides);
+      return Object.fromEntries((await service.getSuggestions('DAILY')).map((s) => [s.series, s.notable]));
+    };
+    it('heat, rain and air quality are notable only at a hazard level', async () => {
+      const mild = await flags({
+        'dailyWeatherForecast.findMany': [{ districtId: '1', precipitationSum: 43.9, forecastDate: new Date(), district: district('1') }],
+        'currentWeatherReading.findMany': [{ districtId: '1', apparentTemperature: 34.9, readingTime: new Date(), district: district('1') }],
+        'hourlyAirQuality.findMany': [{ districtId: '1', pm25: 55.4, forecastTime: new Date(), district: district('1') }],
+      });
+      expect([mild.RAIN_WATCH, mild.HEAT_WATCH, mild.AIR_QUALITY_WATCH]).toEqual([false, false, false]);
+      const severe = await flags({
+        'dailyWeatherForecast.findMany': [{ districtId: '1', precipitationSum: 44, forecastDate: new Date(), district: district('1') }],
+        'currentWeatherReading.findMany': [{ districtId: '1', apparentTemperature: 35, readingTime: new Date(), district: district('1') }],
+        'hourlyAirQuality.findMany': [{ districtId: '1', pm25: 55.5, forecastTime: new Date(), district: district('1') }],
+      });
+      expect([severe.RAIN_WATCH, severe.HEAT_WATCH, severe.AIR_QUALITY_WATCH]).toEqual([true, true, true]);
+    });
+  });
 });

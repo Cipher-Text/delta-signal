@@ -105,6 +105,8 @@ Legend: **Done** | **Partial** | *Planned* | ~~Deferred~~
 | Reviewed social cards, source snapshots, deterministic rendering, approval/download | `social-content`, `apps/admin` | **Done** — ranking cards plus district snapshot, coastal watch, weekly/monthly summary and custom editorial cards |
 | 7-day retention of drafts, cards, publish history and stored images | `social-content` | **Done** — daily 03:00 cron; sweeps untracked files in production (`SOCIAL_CONTENT_STORAGE_SWEEP` elsewhere); audit events are kept |
 | On-demand nationwide post suggestions | `social-content`, `apps/admin` | **Done** — Daily/Weekly/Monthly switch; highest-value cards plus lowest-value variants (coolest, driest, cleanest air, low river flow) that appear only when notable; suggestions are not persisted or scheduled |
+| Weekly auto-post routine (admin Suggested Posts page) | `social-autopost`, `apps/admin` | **Done** — ADMIN-only, off by default; up to three posts a day, with a seeded default schedule (4 h apart, 06:00–22:00 only), each with on/off, Bangladesh time and content; severity-aware notable rule; skips missed or empty slots, never posts alerts; runs only in production or with `SOCIAL_AUTOPOST_ENABLED`; 7-day run history |
+| Suggested Posts menu (suggestions list moved out of Social Content) | `apps/admin` | **Done** — Auto-post routine and Suggestions tabs for admins, suggestions only for moderators |
 | Human-triggered Facebook Page publishing | `social-publishing`, `apps/admin` | **Done** — requires configured platform credentials; Instagram is not implemented |
 
 ---

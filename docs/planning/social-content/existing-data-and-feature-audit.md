@@ -69,7 +69,7 @@ Scheduled jobs are Nest `@Cron` jobs protected by PostgreSQL advisory-style lock
 
 - weather current every 15 minutes, hourly/AQ every 2 hours, daily every 12 hours;
 - GBIF daily at midnight;
-- union climate rollup daily at midnight;
+- union climate rollup daily at 01:30 server time;
 - satellite radiation daily at 01:00;
 - marine forecasts daily at 02:00;
 - flood forecasts daily at 03:00;

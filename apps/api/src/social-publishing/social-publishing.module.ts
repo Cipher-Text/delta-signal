@@ -18,5 +18,6 @@ import { SOCIAL_PUBLISH_QUEUE } from './social-publish.constants';
   ],
   controllers: [SocialPublishingController, SocialDraftPublishController],
   providers: [SocialPublishingService, SocialPublishProcessor, TokenCipherService, ImageRasterizerService, FacebookPublisher],
+  exports: [SocialPublishingService],
 })
 export class SocialPublishingModule {}

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { apiGet } from '../../../lib/api';
 import { ADMIN_ACCESS_TOKEN_COOKIE } from '../../../lib/session-constants';
@@ -45,21 +46,6 @@ type District = { id: string; name: string; division?: { name: string } };
 type AlertOption = { id: string; title: string; severity: string; district: { name: string } | null };
 type OccurrenceOption = { id: string; species: { canonicalName: string }; district: { name: string } | null; observedAt: string | null };
 type StationOption = { station: { id: string; name: string; riverName: string; districtId: string | null } };
-type NationalSuggestion = {
-  id: string;
-  cadence: string;
-  series: string;
-  direction: 'HIGHEST' | 'LOWEST';
-  headline: string;
-  reason: string;
-  quality: string;
-  sourceLabel: string;
-  windowStart: string;
-  windowEnd: string;
-  coverage: { available: number; expected: number; percentage: number };
-  sourceSnapshot: { rows: Record<string, unknown>[] };
-};
-
 const TYPES = [
   ['CURRENT_WEATHER', 'Today in Bangladesh — current conditions'],
   ['WEATHER_FORECAST', 'Rain Watch — forecast conditions'],
@@ -99,62 +85,18 @@ const SERIES_LABELS: Record<string, string> = {
 function seriesLabel(value: string) {
   return SERIES_LABELS[value] ?? label(value);
 }
-// Weekly/monthly rankings are named WEEKLY_RAIN_WATCH / MONTHLY_RAIN_WATCH by the API but create the same card type, and the
-// lowest-value series (cold, dry, clean air, low flow) create the same card type with variant=LOWEST.
-const NATIONAL_TYPE_BY_BASE: Record<string, string> = {
-  RAIN_WATCH: 'NATIONAL_RAIN_WATCH',
-  DRY_WATCH: 'NATIONAL_RAIN_WATCH',
-  AIR_QUALITY_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
-  CLEAN_AIR_WATCH: 'NATIONAL_AIR_QUALITY_WATCH',
-  HEAT_WATCH: 'NATIONAL_HEAT_WATCH',
-  COLD_WATCH: 'NATIONAL_HEAT_WATCH',
-  COASTAL_WATCH: 'NATIONAL_COASTAL_WATCH',
-  PERIOD_SUMMARY: 'NATIONAL_PERIOD_SUMMARY',
-  RIVER_WATCH: 'NATIONAL_RIVER_WATCH',
-  LOW_FLOW_WATCH: 'NATIONAL_RIVER_WATCH',
-  ALERT_WATCH: 'NATIONAL_ALERT_WATCH',
-};
-const nationalType = (series: string) => NATIONAL_TYPE_BY_BASE[series.replace(/^(WEEKLY|MONTHLY)_/, '')] ?? '';
-/** Cards that only exist when the data is notable: every lowest-value card, and River Watch. */
-const isNotableOnly = (suggestion: { series: string; direction: string }) => suggestion.direction === 'LOWEST' || suggestion.series === 'RIVER_WATCH';
-const CADENCES = [['DAILY', 'Daily'], ['WEEKLY', 'Weekly'], ['MONTHLY', 'Monthly']] as const;
-const num = (v: unknown, digits = 1) => (v == null || Number.isNaN(Number(v)) ? '—' : Number(v).toLocaleString('en-GB', { maximumFractionDigits: digits }));
-
-/** Right-hand text for a suggestion row, in the same units the card shows. */
-function rowValue(series: string, row: Record<string, unknown>): string {
-  if (series.endsWith('RAIN_WATCH') || series.endsWith('DRY_WATCH')) return `${num(row.rainfallMm)} mm`;
-  if (series.endsWith('AIR_QUALITY_WATCH') || series.endsWith('CLEAN_AIR_WATCH')) return `${num(row.pm25 ?? row.avgPm25)} µg/m³`;
-  if (series.endsWith('HEAT_WATCH') || series.endsWith('COLD_WATCH')) return `${num(row.minTemperature ?? row.apparentTemperature ?? row.avgTemperature)} °C`;
-  if (series === 'RIVER_WATCH' || series === 'LOW_FLOW_WATCH') return `${num(row.ratio)}× mean`;
-  if (series === 'COASTAL_WATCH') return `${num(row.waveHeightM)} m`;
-  if (series === 'ALERT_WATCH') return String(row.severity ?? '');
-  return '';
-}
-
-/** Plain-language lines for the period summary, which has one object rather than ranked rows. */
-function summaryLines(row: Record<string, any>): string[] {
-  return [
-    `${row.alerts?.issued ?? 0} alert${row.alerts?.issued === 1 ? '' : 's'} issued${row.alerts?.highestSeverity ? ` (highest: ${label(String(row.alerts.highestSeverity).toLowerCase())})` : ''}`,
-    row.wettest ? `Wettest (30 d): ${row.wettest.district}, ${num(row.wettest.rainfallMm, 0)} mm` : '',
-    row.hottest ? `Warmest (30 d): ${row.hottest.district}, ${num(row.hottest.avgTemperature)} °C` : '',
-    row.airQuality ? `Highest PM2.5 (30 d): ${row.airQuality.district}, ${num(row.airQuality.avgPm25, 0)} µg/m³` : '',
-  ].filter(Boolean);
-}
-
 function date(value: string | null) { return value ? new Date(value).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'; }
 
-export default async function SocialContentPage(props: { searchParams: Promise<{ success?: string; error?: string; status?: string; cadence?: string }> }) {
+export default async function SocialContentPage(props: { searchParams: Promise<{ success?: string; error?: string; status?: string }> }) {
   const params = await props.searchParams;
   const accessToken = (await cookies()).get(ADMIN_ACCESS_TOKEN_COOKIE)?.value ?? '';
   const selectedStatus = params.status && ['DRAFT', 'RENDERED', 'APPROVED', 'ARCHIVED'].includes(params.status) ? params.status : undefined;
-  const cadence = ['DAILY', 'WEEKLY', 'MONTHLY'].includes(params.cadence ?? '') ? (params.cadence as string) : 'DAILY';
-  const [drafts, districts, alerts, occurrences, stations, suggestions, platformAccounts] = await Promise.all([
+  const [drafts, districts, alerts, occurrences, stations, platformAccounts] = await Promise.all([
     apiGet<Draft[]>(`/api/v1/social-content/drafts${selectedStatus ? `?status=${selectedStatus}` : ''}`, accessToken),
     apiGet<District[]>('/api/v1/locations/districts', accessToken),
     apiGet<{ data: AlertOption[] }>('/api/v1/alerts?status=ACTIVE&pageSize=100', accessToken).catch(() => ({ data: [] })),
     apiGet<{ data: OccurrenceOption[] }>('/api/v1/biodiversity/occurrences?pageSize=100', accessToken).catch(() => ({ data: [] })),
     apiGet<StationOption[]>('/api/v1/flood/forecast', accessToken).catch(() => []),
-    apiGet<NationalSuggestion[]>(`/api/v1/social-content/suggestions/national?cadence=${cadence}`, accessToken).catch(() => []),
     apiGet<PlatformAccount[]>('/api/v1/social-content/platforms', accessToken).catch(() => []),
   ]);
   return <>
@@ -171,19 +113,10 @@ export default async function SocialContentPage(props: { searchParams: Promise<{
       <div className="form-actions"><form action={connectFacebookAction}><button className="btn btn-secondary" type="submit">Connect Facebook Page</button></form></div>
     </section>
 
-    <section className="social-suggestions">
-      <div className="section-heading"><div><h2>Suggested Posts</h2><p>Live national rankings from current environmental data. Suggestions require editorial review.</p></div><nav className="social-status-tabs" aria-label="Suggestion window">{CADENCES.map(([value, text]) => <a className={cadence === value ? 'active' : ''} href={`/social-content?${new URLSearchParams({ ...(selectedStatus ? { status: selectedStatus } : {}), cadence: value })}`} key={value}>{text}</a>)}</nav></div>
-      {suggestions.length === 0 ? <div className="empty-state">No {cadence.toLowerCase()} suggestions meet the data requirements right now.</div> : <div className="social-suggestion-grid">{suggestions.map((suggestion) => <article className="social-suggestion-card" key={suggestion.id}>
-        <div className="social-suggestion-top"><span className="badge badge-info">{label(suggestion.series)}</span>{isNotableOnly(suggestion) && <span className="tag tag-warning">Notable</span>}<span className={`tag ${suggestion.quality === 'HIGH' ? 'tag-success' : suggestion.quality === 'REVIEW' ? 'tag-warning' : 'tag-danger'}`}>{suggestion.quality === 'HIGH' ? 'Ready' : suggestion.quality === 'REVIEW' ? 'Partial data' : 'Too little data'}</span></div>
-        <h3>{suggestion.headline}</h3>
-        <p>{suggestion.reason}</p>
-        <p className="social-draft-meta">{suggestion.sourceLabel} · {date(suggestion.windowStart)} – {date(suggestion.windowEnd)} · {suggestion.coverage.available}/{suggestion.coverage.expected} covered ({suggestion.coverage.percentage}%)</p>
-        {suggestion.series === 'PERIOD_SUMMARY'
-          ? <ul className="social-ranking-list">{summaryLines(suggestion.sourceSnapshot.rows[0] ?? {}).map((line) => <li key={line}><span>{line}</span></li>)}</ul>
-          : <ol className="social-ranking-list">{suggestion.sourceSnapshot.rows.slice(0, 5).map((row, index) => <li key={`${suggestion.id}-${index}`}><strong>{index + 1}. {String(row.district ?? row.station ?? row.species ?? row.title ?? 'Bangladesh')}</strong><span>{rowValue(suggestion.series, row)}</span></li>)}</ol>}
-        <div className="form-actions"><form action={createSocialDraftAction}><input type="hidden" name="type" value={nationalType(suggestion.series)} />{suggestion.direction === 'LOWEST' && <input type="hidden" name="variant" value="LOWEST" />}<input type="hidden" name="cadence" value={suggestion.cadence} /><input type="hidden" name="format" value="PORTRAIT_4_5" /><input type="hidden" name="locale" value="en" /><button className="btn btn-primary" type="submit" disabled={!nationalType(suggestion.series)}>Create Post from Suggestion</button></form><span className="form-actions-note">Review source evidence before approval.</span></div>
-      </article>)}</div>}
-    </section>
+    <aside className="suggestions-pointer">
+      <div><strong>Looking for suggested posts?</strong><span>They now live in their own menu, together with the automatic posting routine.</span></div>
+      <Link href="/suggested-posts" className="btn btn-secondary">Open Suggested Posts</Link>
+    </aside>
 
     <details className="create-panel">
       <summary className="create-panel-summary"><span className="create-panel-label">+ Create Post</span><span className="create-panel-hint">Manual source selection — publishing is not automatic</span></summary>

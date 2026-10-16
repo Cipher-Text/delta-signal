@@ -118,7 +118,7 @@ Seeded on first boot via `OnModuleInit`: 8 divisions, 64 districts (all with Geo
 
 Owns the daily union-level climate ingestion pipeline. No HTTP endpoints — scheduler only.
 
-`LocationClimateScheduler` runs daily at midnight (`@Cron('0 0 0 * * *')`). `LocationClimateService` calls the OpenMeteo forecast API (daily temp max/min/mean, precipitation, wind speed, UV index) and air-quality API (PM2.5, PM10, ozone, UV index) in batch: up to 1,000 union coordinates per HTTP request, so 4,540 unions require just 6 requests total. The service reuses `WeatherOpenMeteoClient` exported from `WeatherModule`.
+`LocationClimateScheduler` runs daily at 01:30 server time (`@Cron('0 30 1 * * *')`). `LocationClimateService` calls the OpenMeteo forecast API (daily temp max/min/mean, precipitation, wind speed, UV index) and air-quality API (PM2.5, PM10, ozone, UV index) in batch: up to 1,000 union coordinates per HTTP request, so 4,540 unions require just 6 requests total. The service reuses `WeatherOpenMeteoClient` exported from `WeatherModule`.
 
 Raw daily results are upserted into `UnionDailyClimate` (one row per union per day, unique on `(unionId, date)`). After inserting, 30-day rolling averages are recomputed bottom-up — Union → Upazila → District → Division — via bulk `UPDATE … FROM (SELECT … GROUP BY)` SQL, updating the 11 climate columns on each geography model in a single pass per level.
 
@@ -414,9 +414,19 @@ Supported draft types include district-level `CURRENT_WEATHER`, `WEATHER_FORECAS
 
 **Retention:** `SocialContentCleanupScheduler` runs daily at 03:00 (advisory lock `SOCIAL_CONTENT_CLEANUP`) and keeps only the last 7 days (`SOCIAL_RETENTION_DAYS`). It deletes drafts created more than 7 days ago whatever their status, with their `SocialPublication` and `SocialRenderedAsset` rows in that FK order inside one transaction (the database never waits on storage), deletes their tracked images, then sweeps `social-cards/` and deletes every object older than the cutoff, which also removes the PNG copy the publisher uploads and any orphan from an earlier failed run. Outside production the sweep needs `SOCIAL_CONTENT_STORAGE_SWEEP=true`, because a developer machine may share the production bucket. `AuditEvent` rows are never deleted. The admin Social Content page tells editors about the rule.
 
+## social-autopost ✓
+
+The weekly auto-post routine behind the admin **Suggested Posts** page. Tables: `SocialAutopostSettings` (singleton, master switch off by default, target page, hashtag footer, the administrator it posts as), `SocialAutopostSlot` (three rows per weekday, `position` 0 = first, 1 = second and 2 = third post: enabled, `HH:mm` Dhaka time, content choice, card shape, last run date; unique on `(dayOfWeek, position)`; new rows default to 08:30, 13:00 and 19:30, the third as Only when notable) and `SocialAutopostRun` (outcome of each attempt, kept 7 days). `SocialAutopostScheduler` checks every minute under an advisory lock; `SocialAutopostService.runDue` claims each due slot atomically and separately, picks a suggestion with complete data (alerts are never posted automatically; AUTO prefers notable cards, leans on forecasts before noon and on air quality and heat from noon, avoids yesterday's cards and never repeats a card already posted today, so a later post is skipped when nothing different exists), creates the draft, sets the caption, renders, approves and queues the publish through `SocialPublishingService`, and records a `QUEUED`, `SKIPPED` or `FAILED` run plus a `SOCIAL_AUTOPOST_RUN` audit event. A slot more than 30 minutes late is skipped, never posted late; saving or turning on never fires for a time that already passed today. Up to three posts a day, every pair at least four hours apart, only between 06:00 and 22:00 Dhaka time (the API rejects anything else). A card is *notable* when it is a lowest-value card, River Watch, or a routine card whose top value reaches a hazard level (apparent temperature 35 °C, PM2.5 55.5 µg/m³, 44 mm rain, 2.5 m waves); `NationalSuggestion.notable` carries it. `SocialAutopostService.onModuleInit` seeds `DEFAULT_SCHEDULE` (`social-autopost.defaults.ts`) while nobody has configured the routine; see the rationale in that file. The scheduler only acts in production or with `SOCIAL_AUTOPOST_ENABLED=true`.
+
+| Method | Path | Access |
+| --- | --- | --- |
+| GET / PUT | `/social-content/autopost/config` | Admin (`social_content.publish`) |
+| POST | `/social-content/autopost/toggle` | Admin (`social_content.publish`); turning on needs `acknowledged: true`, a connected page and an enabled day |
+| GET | `/social-content/autopost/preview?day=0-6&position=0-2` | Admin (`social_content.publish`); what the post would be now, nothing is posted |
+
 ## social-publishing ✓
 
-Connects a Facebook Page and queues an explicitly requested publish action for an approved social draft. Publishing uses the `social-publish` BullMQ queue, rasterizes rendered SVG to PNG, and records each outcome in `SocialPublication`. Facebook credentials and encrypted token storage must be configured. Instagram publishing and automatic/scheduled posting are not implemented.
+Connects a Facebook Page and queues an explicitly requested publish action for an approved social draft. Publishing uses the `social-publish` BullMQ queue, rasterizes rendered SVG to PNG, and records each outcome in `SocialPublication`. Facebook credentials and encrypted token storage must be configured. Instagram publishing is not implemented. Scheduled posting is handled by `social-autopost` (below).
 
 | Method | Path | Access |
 | --- | --- | --- |
