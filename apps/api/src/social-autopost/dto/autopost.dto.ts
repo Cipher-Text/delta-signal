@@ -45,4 +45,8 @@ export class ToggleAutopostDto {
   /** Required when turning the routine on: the administrator confirms posts publish without review. */
   @IsOptional() @IsBoolean()
   acknowledged?: boolean;
+
+  /** The Page to post to, saved together with turning on, so an unsaved dropdown choice cannot be lost. */
+  @IsOptional() @IsString()
+  platformAccountId?: string;
 }

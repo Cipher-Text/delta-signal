@@ -285,7 +285,7 @@ The list endpoints return counts beside the page (types in the shared block of `
 
 ### Testing
 
-323 unit tests in 25 spec files under `apps/api/src/` (all fully mocked — no DB, no running server):
+325 unit tests in 25 spec files under `apps/api/src/` (all fully mocked — no DB, no running server):
 - `roles.guard.spec.ts` — all 6 roles, case-sensitivity regression (9 tests)
 - `jwt-auth.guard.spec.ts` — `@Public()` bypass, error handling (5 tests)
 - `auth.service.spec.ts` — register/login/refresh/logout, token rotation, audit events, `USER_LOGIN_FAILED` in all three failure branches (24 tests)

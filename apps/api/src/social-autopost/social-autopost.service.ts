@@ -222,14 +222,16 @@ export class SocialAutopostService implements OnModuleInit {
   async setEnabled(actor: JwtPayload, dto: ToggleAutopostDto, now: Date = new Date()) {
     if (actor.role !== 'ADMIN') throw new ForbiddenException('Only an administrator can turn automatic posting on or off.');
     const { settings, slots } = await this.ensureRows();
+    const platformAccountId = dto.enabled && dto.platformAccountId ? dto.platformAccountId : settings.platformAccountId;
     if (dto.enabled) {
       if (!dto.acknowledged) throw new BadRequestException('Confirm that posts will be published without review.');
-      if (!(await this.activeAccount(settings.platformAccountId))) throw new BadRequestException('Choose a connected page to post to first.');
-      if (!slots.some((s) => s.enabled)) throw new BadRequestException('Turn on at least one day first.');
+      if (!platformAccountId) throw new BadRequestException('Choose the page to post to first.');
+      if (!(await this.activeAccount(platformAccountId))) throw new BadRequestException('The chosen page is not active. Reconnect it in Social Content, then choose it again.');
+      if (!slots.some((s) => s.enabled)) throw new BadRequestException('Turn on at least one post first.');
     }
     await this.prisma.socialAutopostSettings.update({
       where: { id: SETTINGS_ID },
-      data: dto.enabled ? { enabled: true, enabledById: actor.sub, updatedById: actor.sub } : { enabled: false, updatedById: actor.sub },
+      data: dto.enabled ? { enabled: true, platformAccountId, enabledById: actor.sub, updatedById: actor.sub } : { enabled: false, updatedById: actor.sub },
     });
     // Turning on must never fire for a time that already passed today.
     if (dto.enabled) {
@@ -240,7 +242,7 @@ export class SocialAutopostService implements OnModuleInit {
         }
       }
     }
-    await this.audit('SOCIAL_AUTOPOST_TOGGLE', actor.sub, { enabled: dto.enabled });
+    await this.audit('SOCIAL_AUTOPOST_TOGGLE', actor.sub, { enabled: dto.enabled, platformAccountId: dto.enabled ? platformAccountId : undefined });
     return this.getConfig(now);
   }
 

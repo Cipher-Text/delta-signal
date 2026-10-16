@@ -49,7 +49,7 @@ export async function toggleAutopostAction(formData: FormData) {
   const accessToken = await token();
   const enabled = formData.get('enabled') === 'true';
   try {
-    await apiPost('/api/v1/social-content/autopost/toggle', { enabled, acknowledged: formData.get('acknowledged') === 'on' }, accessToken);
+    await apiPost('/api/v1/social-content/autopost/toggle', { enabled, acknowledged: formData.get('acknowledged') === 'on', ...(enabled && formData.get('platformAccountId') ? { platformAccountId: String(formData.get('platformAccountId')) } : {}) }, accessToken);
   } catch (error) {
     return back('error', fail(error));
   }

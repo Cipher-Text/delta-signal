@@ -270,7 +270,7 @@ Provider job-tracking API for scheduled external syncs. Weather, GBIF, and Flood
 | --- | --- | --- | --- | --- |
 | GET | `/social-content/autopost/config` | Admin (`social_content.publish`) | ✓ | Auto-post routine: master switch, page, caption footer, three post slots per day (`position` 0–2) with next run time, 7-day run history |
 | PUT | `/social-content/autopost/config` | Admin (`social_content.publish`) | ✓ | Save the page, caption footer and slots (`dayOfWeek` 0–6, `position` 0–2, `enabled`, `timeOfDay` HH:mm Dhaka, `content`, `format`); never posts immediately; rejects quiet hours (22:00–06:00), posts under 4 h apart and more than three a day |
-| POST | `/social-content/autopost/toggle` | Admin (`social_content.publish`) | ✓ | `{ enabled, acknowledged }`; turning on needs the acknowledgement, a connected page and an enabled day |
+| POST | `/social-content/autopost/toggle` | Admin (`social_content.publish`) | ✓ | `{ enabled, acknowledged, platformAccountId? }`; turning on needs the acknowledgement, an active connected page (the optional `platformAccountId` is saved with it, so an unsaved dropdown choice cannot be lost) and an enabled post |
 | GET | `/social-content/autopost/preview?day=0-6&position=0-2` | Admin (`social_content.publish`) | ✓ | What a post would be right now (headline, top rows, caption); posts nothing |
 | GET | `/social-content/suggestions/national?cadence=DAILY|WEEKLY|MONTHLY` | `social_content.create` | ✓ | Generate live nationwide ranked suggestions with source windows, coverage, and quality metadata; review-only |
 | GET | `/social-content/drafts` | `social_content.create` | ✓ | List reviewed social drafts |

@@ -130,15 +130,24 @@ describe('SocialAutopostService', () => {
     });
     it('needs the confirmation, a connected page and at least one enabled day', async () => {
       await expect(build().service.setEnabled(admin, { enabled: true })).rejects.toThrow(/Confirm/);
-      await expect(build({ settings: { platformAccountId: null } }).service.setEnabled(admin, { enabled: true, acknowledged: true })).rejects.toThrow(/connected page/);
-      await expect(build({ slot: { enabled: false } }).service.setEnabled(admin, { enabled: true, acknowledged: true })).rejects.toThrow(/at least one day/);
+      await expect(build({ settings: { platformAccountId: null } }).service.setEnabled(admin, { enabled: true, acknowledged: true })).rejects.toThrow(/Choose the page/);
+      await expect(build({ slot: { enabled: false } }).service.setEnabled(admin, { enabled: true, acknowledged: true })).rejects.toThrow(/at least one post/);
+    });
+    it('saves the page chosen in the turn-on form, so an unsaved dropdown cannot cause "choose a page"', async () => {
+      const { service, prisma } = build({ settings: { platformAccountId: null } });
+      await service.setEnabled(admin, { enabled: true, acknowledged: true, platformAccountId: 'acc-1' }, SAT_8);
+      expect(prisma.socialAutopostSettings.update).toHaveBeenCalledWith({ where: { id: 'default' }, data: { enabled: true, platformAccountId: 'acc-1', enabledById: 'admin-1', updatedById: 'admin-1' } });
+    });
+    it('says when the chosen page is not active', async () => {
+      const { service } = build({ account: { id: 'acc-1', status: 'REVOKED' } });
+      await expect(service.setEnabled(admin, { enabled: true, acknowledged: true, platformAccountId: 'acc-1' })).rejects.toThrow(/not active/);
     });
     it('turns on as the administrator, audits it, and never fires for a time already passed today', async () => {
       const { service, prisma } = build();
       await service.setEnabled(admin, { enabled: true, acknowledged: true }, new Date('2026-10-17T03:00:00Z'));
-      expect(prisma.socialAutopostSettings.update).toHaveBeenCalledWith({ where: { id: 'default' }, data: { enabled: true, enabledById: 'admin-1', updatedById: 'admin-1' } });
+      expect(prisma.socialAutopostSettings.update).toHaveBeenCalledWith({ where: { id: 'default' }, data: { enabled: true, platformAccountId: 'acc-1', enabledById: 'admin-1', updatedById: 'admin-1' } });
       expect(prisma.socialAutopostSlot.update).toHaveBeenCalledWith({ where: { id: 'slot_6_0' }, data: { lastRunOn: new Date('2026-10-17T00:00:00Z') } });
-      expect(prisma.auditEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({ action: 'SOCIAL_AUTOPOST_TOGGLE', meta: { enabled: true } }) });
+      expect(prisma.auditEvent.create).toHaveBeenCalledWith({ data: expect.objectContaining({ action: 'SOCIAL_AUTOPOST_TOGGLE', meta: { enabled: true, platformAccountId: 'acc-1' } }) });
     });
     it('turns off without conditions', async () => {
       const { service, prisma } = build();

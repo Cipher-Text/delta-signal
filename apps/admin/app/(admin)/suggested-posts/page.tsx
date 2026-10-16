@@ -127,6 +127,15 @@ function Routine({ config, preview, previewDay, previewPosition }: { config: Aut
           <summary className="btn btn-primary">Turn on auto-posting</summary>
           <form action={toggleAutopostAction} className="ap-confirm">
             <input type="hidden" name="enabled" value="true" />
+            {config.accounts.length > 0 && (
+              <label className="ap-field">
+                <span>Post to</span>
+                <select name="platformAccountId" defaultValue={config.platformAccount?.id ?? (config.accounts.length === 1 ? config.accounts[0].id : '')} required>
+                  <option value="" disabled>Choose a page…</option>
+                  {config.accounts.map((a) => <option key={a.id} value={a.id}>{a.displayName} · {label(a.platform)}</option>)}
+                </select>
+              </label>
+            )}
             <label className="ap-check"><input type="checkbox" name="acknowledged" required /><span>I understand that posts are published to {pageName ? <strong>{pageName}</strong> : 'the page'} automatically, without anyone reviewing them first.</span></label>
             <button className="btn btn-primary" type="submit">Turn on</button>
           </form>

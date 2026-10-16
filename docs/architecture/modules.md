@@ -421,7 +421,7 @@ The weekly auto-post routine behind the admin **Suggested Posts** page. Tables: 
 | Method | Path | Access |
 | --- | --- | --- |
 | GET / PUT | `/social-content/autopost/config` | Admin (`social_content.publish`) |
-| POST | `/social-content/autopost/toggle` | Admin (`social_content.publish`); turning on needs `acknowledged: true`, a connected page and an enabled day |
+| POST | `/social-content/autopost/toggle` | Admin (`social_content.publish`); turning on needs `acknowledged: true`, an active connected page (optional `platformAccountId` is saved with it) and an enabled post |
 | GET | `/social-content/autopost/preview?day=0-6&position=0-2` | Admin (`social_content.publish`); what the post would be now, nothing is posted |
 
 ## social-publishing ✓
